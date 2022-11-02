@@ -23,4 +23,7 @@ std::unique_ptr<CDevice> CFactory::instantiateDevice(DeviceID id, DeviceClass cl
 	}
 }
 
-CFactory& getCFactory() { static CFactory CF; return CF; }
+CFactory& getCFactory() {
+	static CFactory CF;
+	return CF;
+}
