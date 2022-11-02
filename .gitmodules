@@ -1,0 +1,6 @@
+[submodule "lib/LuaBridge3"]
+	path = lib/LuaBridge3
+	url = https://github.com/kunitoki/LuaBridge3
+[submodule "lib/protocol"]
+	path = lib/protocol
+	url = https://github.com/agra-uni-bremen/virtual-breadboard-protocol.git
