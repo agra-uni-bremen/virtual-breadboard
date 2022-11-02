@@ -16,7 +16,7 @@
 
 class LuaFactory {
 	const std::string builtin_scripts = ":/devices/lua/";
-	const std::string scriptloader = ":/devices/factory/loadscript.lua";
+	const std::string scriptloader = ":/src/device/factory/loadscript.lua";
 
 	std::unordered_map<std::string,std::string> available_devices;
 public:

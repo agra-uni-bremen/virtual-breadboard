@@ -2,8 +2,6 @@ Possible todos:
 ------------
 
  - Easier configuration?
-  - Save/export, runtime load with drop-down menu
- - Drag/drop LEDs and cables
  - Add PWM domain
  - Add more hardware
   - Switch
@@ -19,4 +17,3 @@ Possible todos:
  - Add Analog hardware
   - Resistors, Potentiometer, Analog sensors
 
-For inspiration, see simavr or https://www.onworks.net/software/app-simutron

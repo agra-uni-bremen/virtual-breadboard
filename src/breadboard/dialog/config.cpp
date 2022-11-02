@@ -84,6 +84,7 @@ void ConfigDialog::setConfig(DeviceID device, Config config) {
 		}
 		default:
 			// TODO: Reject?
+			break;
 		}
 	}
 }

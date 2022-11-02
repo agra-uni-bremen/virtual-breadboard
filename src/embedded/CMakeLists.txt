@@ -8,3 +8,6 @@ target_link_libraries(embedded PUBLIC
 	virtual-breadboard-client
 	Qt5::Widgets
 )
+set_target_properties(embedded PROPERTIES
+	AUTOMOC ON
+)

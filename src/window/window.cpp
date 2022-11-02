@@ -1,4 +1,4 @@
-#include "window.h"
+#include <window/window.h>
 
 #include <QApplication>
 #include <QDirIterator>

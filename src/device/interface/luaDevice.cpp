@@ -285,7 +285,7 @@ void LuaDevice::Graphbuf_Interface_Lua::declarePixelFormat(lua_State* L) {
 		luabridge::getGlobalNamespace(L)
 			.beginNamespace("graphbuf")
 			  .beginClass <Pixel> ("Pixel")
-			    .addConstructor <void (*) (const uint8_t, const uint8_t, const uint8_t, const uint8_t)> ()
+			    //.addConstructor <void (*) (const uint8_t, const uint8_t, const uint8_t, const uint8_t)> ()
 			    .addProperty ("r", &Pixel::r)
 			    .addProperty ("g", &Pixel::g)
 			    .addProperty ("b", &Pixel::b)

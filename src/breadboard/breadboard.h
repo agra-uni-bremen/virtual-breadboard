@@ -14,7 +14,7 @@
 #include "constants.h"
 #include "types.h"
 #include <gpio-helpers.h>
-#include <factory.h>
+#include <factory/factory.h>
 #include "dialog/keybinding.h"
 #include "dialog/config.h"
 

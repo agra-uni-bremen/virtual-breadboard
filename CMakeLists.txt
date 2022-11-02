@@ -37,15 +37,15 @@ endif()
 set(SCRIPTS ${SCRIPTS} src/device/factory/loadscript.lua)
 file(GLOB IMAGES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "./img/*.jpg" "./img/*.jpeg" "./img/*.png")
 
-
 add_subdirectory(src/device)
 add_subdirectory(src/breadboard)
 add_subdirectory(src/embedded)
 add_subdirectory(src/window)
+add_subdirectory(devices)
 
 add_executable(vp-breadboard src/main.cpp)
 target_compile_features(vp-breadboard PUBLIC cxx_std_17)
-target_link_libraries(vp-breadboard window Qt5::Widgets)
+target_link_libraries(vp-breadboard window Qt5::Widgets c-devices)
 set_target_properties(vp-breadboard PROPERTIES
 	AUTOMOC ON
 	AUTOUIC ON

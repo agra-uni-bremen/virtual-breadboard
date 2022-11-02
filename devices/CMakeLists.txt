@@ -1,6 +1,5 @@
 file(GLOB_RECURSE SRC *.cpp)
 file(GLOB_RECURSE INC *.h*)
 
-
-add_library(devices ${SRC} ${INC})
-target_link_libraries(devices device-interface)
+add_library(c-devices ${SRC} ${INC})
+target_link_libraries(c-devices device-interface)
