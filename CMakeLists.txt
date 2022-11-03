@@ -24,6 +24,11 @@ endif()
 include(CMake/AddGitSubmodule.cmake)
 include(CMake/GenerateResourceFiles.cmake)
 
+# not the nicest way of doing this: https://stackoverflow.com/questions/67385282/cmake-set-compile-options-and-compile-features-per-project
+add_compile_options(-Wall -Wextra -pedantic)
+#add_compile_options(-Wconversion) # Too strict
+add_compile_options(-Wno-sign-compare)
+
 add_git_submodule(lib/LuaBridge3)
 add_git_submodule(lib/protocol)
 
