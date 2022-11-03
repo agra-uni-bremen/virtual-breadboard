@@ -12,7 +12,6 @@ public:
 
 	template <typename Derived>
 	bool registerDeviceType() {
-		std::cout << "Register DeviceType " << Derived::classname << std::endl;
 		return deviceCreators.insert(std::make_pair(Derived::classname, [](DeviceID id) {return std::make_unique<Derived>(id);})).second;
 	}
 
