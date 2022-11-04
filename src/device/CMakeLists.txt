@@ -3,7 +3,7 @@ file(GLOB_RECURSE INC *.h*)
 
 add_library(device
 	${SRC} ${INC}
-# 	$<TARGET_OBJECTS:c-devices>		# This keeps otherwise unreferenced objects in this library
+	$<TARGET_OBJECTS:c-devices>		# This keeps otherwise unreferenced objects in this library
 )
 target_include_directories(device
 	PUBLIC
