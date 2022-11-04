@@ -50,7 +50,7 @@ add_subdirectory(devices)
 
 add_executable(vp-breadboard src/main.cpp)
 target_compile_features(vp-breadboard PUBLIC cxx_std_17)
-target_link_libraries(vp-breadboard window Qt5::Widgets -Wl,--whole-archive c-devices -Wl,--no-whole-archive)
+target_link_libraries(vp-breadboard window Qt5::Widgets)
 set_target_properties(vp-breadboard PROPERTIES
 	AUTOMOC ON
 	AUTOUIC ON
