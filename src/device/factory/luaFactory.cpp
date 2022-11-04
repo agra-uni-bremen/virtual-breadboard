@@ -135,40 +135,10 @@ LuaFactory::LuaFactory(){
 
 	//cout << "Scanning built-in devices..." << endl;
 
-	QDirIterator it(":/devices/lua");
-	while (it.hasNext()) {
-		it.next();
-		//cout << "\t" << it.fileName().toStdString() << endl;
-		QFile script_file(it.filePath());
-		if (!script_file.open(QIODevice::ReadOnly)) {
-			throw(runtime_error("Could not open file " + it.fileName().toStdString()));
-		}
-		QByteArray script = script_file.readAll();
-		const auto filepath = it.filePath().toStdString();
-
-		auto chunk = loadScriptFromString(L, script.toStdString(), it.fileName().toStdString());
-		if(!isScriptValidDevice(chunk, filepath))
-			continue;
-		const auto maybe_classname = chunk["classname"].cast<std::string>();
-		if(!maybe_classname) {
-			cerr << "[lua] Warn: script does not state a classname at '" << filepath << "'" << endl;
-			cerr << "\tError code is: " << maybe_classname.message() << endl;
-			continue;
-		}
-		const auto classname = maybe_classname.value();
-		if(available_devices.find(classname) != available_devices.end()) {
-			cerr << "[lua] Warn: '" << classname << "' from '" << filepath << "' "
-					"would overwrite device from '" << available_devices.at(classname) << "'" << endl;
-			continue;
-		}
-		available_devices.emplace(classname, filepath);
-	}
+	scanDir(builtin_scripts);
 }
 
-// TODO: Reduce code duplication for file/string load
-void LuaFactory::scanAdditionalDir(std::string dir, bool overwrite_existing) {
-	cout << "[lua] Scanning additional devices at '" << dir << "'." << endl;
-
+void LuaFactory::scanDir(std::string dir, bool overwrite_existing) {
 	QDirIterator it(dir.c_str(),
 			QStringList() << "*.lua",
 			QDir::Files, QDirIterator::Subdirectories);
@@ -188,8 +158,8 @@ void LuaFactory::scanAdditionalDir(std::string dir, bool overwrite_existing) {
 		const auto classname = maybe_classname.value();
 		if(available_devices.find(classname) != available_devices.end()) {
 			if(!overwrite_existing) {
-			cerr << "[lua] Warn: '" << classname << "' from '" << filepath << "' "
-					"would overwrite device from '" << available_devices.at(classname) << "'" << endl;
+				cerr << "[lua] Warn: '" << classname << "' from '" << filepath << "' "
+				"would overwrite device from '" << available_devices.at(classname) << "'" << endl;
 			continue;
 			} else {
 				cout << "[lua] Warn: '" << classname << "' from '" << filepath << "' "

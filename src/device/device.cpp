@@ -29,7 +29,7 @@ void Device::fromJSON(QJsonObject json) {
 					config.emplace(conf_it.key().toStdString(), ConfigElem{conf_it.value().toBool()});
 				}
 				else if(conf_it.value().isDouble()) {
-					config.emplace(conf_it.key().toStdString(), ConfigElem{(int64_t) conf_it.value().toInt()});
+					config.emplace(conf_it.key().toStdString(), ConfigElem{static_cast<int64_t>(conf_it.value().toInt())});
 				}
 				else if(conf_it.value().isString()) {
 					QByteArray value_bytes = conf_it.value().toString().toLocal8Bit();
@@ -140,8 +140,8 @@ void Device::Graphbuf_Interface::initializeBuffer() {
                        const auto offs = (y * buffer.width() + x) * 4; // heavily depends on rgba8888
                        img[offs+0] = 0;
                        img[offs+1] = 0;
-                       img[offs+2] = 255;
-                       img[offs+3] = 255;
+                       img[offs+2] = std::numeric_limits<typeof(img[offs+2])>::max()/2;		// TODO: Load actual default image
+                       img[offs+3] = std::numeric_limits<typeof(img[offs+2])>::max();
                }
        }
 }
@@ -149,16 +149,15 @@ void Device::Graphbuf_Interface::initializeBuffer() {
 void Device::Graphbuf_Interface::createBuffer(QPoint offset) {
 	Layout layout = getLayout();
 	buffer = QImage(layout.width*BB_ICON_SIZE, layout.height*BB_ICON_SIZE, QImage::Format_RGBA8888);
-	memset(buffer.bits(), 0x8F, buffer.sizeInBytes());
 	buffer.setOffset(offset);
 	initializeBuffer();
 }
 
 void Device::Graphbuf_Interface::setScale(unsigned scale) {
-	this->scale = scale;
+	m_scale = scale;
 }
 
-unsigned Device::Graphbuf_Interface::getScale() { return scale; }
+unsigned Device::Graphbuf_Interface::getScale() { return m_scale; }
 
 QImage& Device::Graphbuf_Interface::getBuffer() {
 	return buffer;

@@ -23,7 +23,7 @@ public:
 
 	LuaFactory();
 
-	void scanAdditionalDir(std::string dir, bool overwrite_existing = false);
+	void scanDir(std::string dir, bool overwrite_existing = false);
 	std::list<DeviceClass> getAvailableDevices();
 
 	bool deviceExists(DeviceClass classname);

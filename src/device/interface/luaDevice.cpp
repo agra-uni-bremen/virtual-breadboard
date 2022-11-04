@@ -113,7 +113,7 @@ gpio::Tristate LuaDevice::PIN_Interface_Lua::getPin(PinNumber num) {
 		cerr << "[LuaDevice] Device getPin returned malformed output: " << r.errorMessage() << endl;
 		return gpio::Tristate::LOW;
 	}
-	return r[0].cast<bool>() ? gpio::Tristate::HIGH : gpio::Tristate::LOW;
+	return r[0].unsafe_cast<bool>() ? gpio::Tristate::HIGH : gpio::Tristate::LOW;
 }
 
 void LuaDevice::PIN_Interface_Lua::setPin(PinNumber num, gpio::Tristate val) {
@@ -199,7 +199,7 @@ Config LuaDevice::Config_Interface_Lua::getConfig(){
 			break;
 		case LUA_TSTRING:
 			ret.emplace(
-					name, ConfigElem{(char*)value.unsafe_cast<string>().c_str()}
+					name, ConfigElem{value.unsafe_cast<string>().c_str()}
 			);
 			break;
 		default:

@@ -49,7 +49,7 @@ public:
 	};
 
 	class Graphbuf_Interface {
-		unsigned scale = 1;
+		unsigned m_scale = 1;
 	protected:
 		QImage buffer;
 	public:

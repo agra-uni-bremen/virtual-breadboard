@@ -1,6 +1,6 @@
 #include "raster.h"
 
-#include "../breadboard/constants.h"
+#include <breadboard/constants.h>
 
 DeviceRow device_getRow(QPoint pos) {
 	return pos.x() / BB_ICON_SIZE;

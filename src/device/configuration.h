@@ -67,7 +67,7 @@ struct ConfigElem {
 		type = Type::boolean;
 		value.boolean = val;
 	};
-	ConfigElem(char* val){
+	ConfigElem(const char* val){
 		type = Type::string;
 		value.string = new char[strlen(val)+1];
 		strcpy(value.string, val);
