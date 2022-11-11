@@ -101,8 +101,8 @@ bool Breadboard::loadConfigFile(QString file) {
 				continue;
 			}
 			device->fromJSON(device_desc);
-			if(device->graph && !checkDevicePosition(device->getID(), device->graph->getBuffer(),
-					device->graph->getScale(), device->graph->getBuffer().offset())) {
+			if(device->graph && checkDevicePosition(device->getID(), device->graph->getBuffer(),
+					device->graph->getScale(), device->graph->getBuffer().offset()).x()<0) {
 				cerr << "[Breadboard] Device overlaps existing device" << endl;
 				continue;
 			}

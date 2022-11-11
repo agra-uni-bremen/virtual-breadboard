@@ -53,7 +53,7 @@ class Breadboard : public QWidget {
 	void writeDevice(DeviceID id);
 
 	// Drag and Drop
-	bool checkDevicePosition(DeviceID id, QImage buffer, int scale, QPoint position, QPoint hotspot=QPoint(0,0));
+	QPoint checkDevicePosition(DeviceID id, QImage buffer, int scale, QPoint position, QPoint hotspot=QPoint(0,0));
 	bool moveDevice(Device *device, QPoint position, QPoint hotspot=QPoint(0,0));
 	void dropEvent(QDropEvent *e) override;
 	void dragEnterEvent(QDragEnterEvent *e) override;

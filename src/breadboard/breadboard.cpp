@@ -62,7 +62,8 @@ void Breadboard::timerUpdate(gpio::State state) {
 	lua_access.lock();
 	for (PinMapping& c : reading_connections) {
 		// TODO: Only if pin changed?
-		c.dev->pin->setPin(c.device_pin, state.pins[c.gpio_offs] == gpio::Pinstate::HIGH ? gpio::Tristate::HIGH : gpio::Tristate::LOW);
+		c.dev->pin->setPin(c.device_pin, state.pins[c.gpio_offs] ==
+				gpio::Pinstate::HIGH ? gpio::Tristate::HIGH : gpio::Tristate::LOW);
 	}
 
 	for (PinMapping& c : writing_connections) {
@@ -166,7 +167,8 @@ unique_ptr<Device> Breadboard::createDevice(DeviceClass classname, DeviceID id) 
 
 /* CONNECTIONS */
 
-void Breadboard::registerPin(bool synchronous, gpio::PinNumber device_pin, gpio::PinNumber global, std::string name, Device *device) {
+void Breadboard::registerPin(bool synchronous, gpio::PinNumber device_pin, gpio::PinNumber global,
+		std::string name, Device *device) {
 	if(!device->pin) {
 		cerr << "[Breadboard] Attempting to add pin connection for device '" << device->getClass() <<
 				"', but device does not implement PIN interface." << endl;
@@ -304,8 +306,10 @@ void Breadboard::scaleActiveDevice() {
 		return;
 	}
 	bool ok;
-	int scale = QInputDialog::getInt(this, "Input new scale value", "Scale", device->second->graph->getScale(), 1, 10, 1, &ok);
-	if(ok && checkDevicePosition(device->second->getID(), device->second->graph->getBuffer(), scale, device->second->graph->getBuffer().offset())) {
+	int scale = QInputDialog::getInt(this, "Input new scale value", "Scale",
+			device->second->graph->getScale(), 1, 10, 1, &ok);
+	if(ok && checkDevicePosition(device->second->getID(), device->second->graph->getBuffer(),
+			scale, device->second->graph->getBuffer().offset()).x()>=0) {
 		device->second->graph->setScale(scale);
 	}
 	menu_device_id = "";
@@ -407,7 +411,8 @@ void Breadboard::keyReleaseEvent(QKeyEvent *e)
 
 void Breadboard::mousePressEvent(QMouseEvent *e) {
 	for(auto const& [id, device] : devices) {
-		if(device->graph && getGraphicBounds(device->graph->getBuffer(), device->graph->getScale()).contains(e->pos())) {
+		if(device->graph && getGraphicBounds(device->graph->getBuffer(),
+				device->graph->getScale()).contains(e->pos())) {
 			if(e->button() == Qt::LeftButton)  {
 				if(debugmode) { // Move
 					QPoint hotspot = e->pos() - device->graph->getBuffer().offset();
@@ -464,7 +469,8 @@ void Breadboard::mouseReleaseEvent(QMouseEvent *e) {
 void Breadboard::mouseMoveEvent(QMouseEvent *e) {
 	bool device_hit = false;
 	for(auto const& [id, device] : devices) {
-		if(device->graph && getGraphicBounds(device->graph->getBuffer(), device->graph->getScale()).contains(e->pos())) {
+		if(device->graph && getGraphicBounds(device->graph->getBuffer(),
+				device->graph->getScale()).contains(e->pos())) {
 			QCursor current_cursor = cursor();
 			current_cursor.setShape(Qt::PointingHandCursor);
 			setCursor(current_cursor);
@@ -518,34 +524,36 @@ void Breadboard::dropEvent(QDropEvent *e) {
 	}
 }
 
-bool Breadboard::checkDevicePosition(DeviceID id, QImage buffer, int scale, QPoint position, QPoint hotspot) {
+QPoint Breadboard::checkDevicePosition(DeviceID id, QImage buffer, int scale, QPoint position, QPoint hotspot) {
 	QPoint upper_left = position - hotspot;
 	QRect device_bounds = QRect(upper_left, getGraphicBounds(buffer, scale).size());
 
 	if(isBreadboard()) {
 		if(bb_getRasterBounds().intersects(device_bounds)) {
 			QPoint dropPositionRaster = bb_getAbsolutePosition(bb_getRow(position), bb_getIndex(position));
-			upper_left = dropPositionRaster - device_getAbsolutePosition(device_getRow(hotspot), device_getIndex(hotspot));
+			upper_left = dropPositionRaster - device_getAbsolutePosition(device_getRow(hotspot),
+					device_getIndex(hotspot));
 			device_bounds = QRect(upper_left, device_bounds.size());
 		} else {
 			cerr << "[Breadboard] Device position invalid: Device should be at least partially on raster." << endl;
-			return false;
+			return QPoint(-1,-1);
 		}
 	}
 
 	if(!rect().contains(device_bounds)) {
 		cerr << "[Breadboard] Device position invalid: Device may not leave window view." << endl;
-		return false;
+		return QPoint(-1,-1);
 	}
 
 	for(const auto& [id_it, device_it] : devices) {
 		if(id_it == id) continue;
-		if(device_it->graph && getGraphicBounds(device_it->graph->getBuffer(), device_it->graph->getScale()).intersects(device_bounds)) {
+		if(device_it->graph && getGraphicBounds(device_it->graph->getBuffer(),
+				device_it->graph->getScale()).intersects(device_bounds)) {
 			cerr << "[Breadboard] Device position invalid: Overlaps with other device." << endl;
-			return false;
+			return QPoint(-1,-1);
 		}
 	}
-	return true;
+	return upper_left;
 }
 
 bool Breadboard::moveDevice(Device *device, QPoint position, QPoint hotspot) {
@@ -553,12 +561,14 @@ bool Breadboard::moveDevice(Device *device, QPoint position, QPoint hotspot) {
 	unsigned scale = device->graph->getScale();
 	if(!scale) scale = 1;
 
-	if(!checkDevicePosition(device->getID(), device->graph->getBuffer(), scale, position, hotspot)) {
+	QPoint upper_left = checkDevicePosition(device->getID(), device->graph->getBuffer(), scale, position, hotspot);
+
+	if(upper_left.x()<0) {
 		cerr << "[Breadboard] New device position is invalid." << endl;
 		return false;
 	}
 
-	device->graph->getBuffer().setOffset(position - hotspot);
+	device->graph->getBuffer().setOffset(upper_left);
 	device->graph->setScale(scale);
 	return true;
 }
