@@ -12,6 +12,14 @@ std::list<DeviceClass> Factory::getAvailableDevices() {
 	return devices;
 }
 
+std::list<DeviceClass> Factory::getLUADevices() {
+       return lua_factory.getAvailableDevices();
+}
+
+std::list<DeviceClass> Factory::getCDevices() {
+       return c_factory.getAvailableDevices();
+}
+
 bool Factory::deviceExists(DeviceClass classname) {
 	return lua_factory.deviceExists(classname) || c_factory.deviceExists(classname);
 }

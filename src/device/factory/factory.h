@@ -11,6 +11,8 @@ class Factory {
 public:
 	void scanAdditionalDir(std::string dir, bool overwrite_existing = false);
 	std::list<DeviceClass> getAvailableDevices();
+	std::list<DeviceClass> getLUADevices();
+	std::list<DeviceClass> getCDevices();
 
 	bool deviceExists(DeviceClass classname);
 	std::unique_ptr<Device> instantiateDevice(DeviceID id, DeviceClass classname);

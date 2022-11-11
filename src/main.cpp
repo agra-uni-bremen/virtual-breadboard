@@ -1,10 +1,12 @@
-#include <QApplication>
 #include "window/window.h"
+#include "device/factory/factory.h"
+
+#include <QApplication>
+#include <QDirIterator>
 
 #include <string>
 #include <vector>
 #include <iostream>
-#include <QDirIterator>
 
 class InputParser{
     public:
@@ -55,17 +57,21 @@ int main(int argc, char* argv[]) {
 			std::cout << std::endl;
         }
         std::cout << "\t-s <custom_device_folder>" << std::endl;
+        Factory factory;
         std::cout << "\t\t\t Builtin scripted devices:";
-        {
-        	QDirIterator it(":/devices/lua");
-			if(!it.hasNext())
-				std::cout << " NONE";
-			while (it.hasNext()) {
-				it.next();
-				std::cout << std::endl << "\t\t\t   " << it.fileName().toStdString();
-			}
-			std::cout << std::endl;
-        }
+        std::list<DeviceClass> lua_devices = factory.getLUADevices();
+		if(!lua_devices.size()) std::cout << " NONE";
+		for(DeviceClass device : lua_devices) {
+			   std::cout << std::endl << "\t\t\t   " << device;
+		}
+		std::cout << std::endl;
+		std::cout << "\t\t\t Builtin C++ devices:";
+		std::list<DeviceClass> c_devices = factory.getCDevices();
+		if(!c_devices.size()) std::cout << " NONE";
+		for(DeviceClass device : c_devices) {
+			   std::cout << std::endl << "\t\t\t   " << device;
+		 }
+		std::cout << std::endl;
         std::cout << "\t--overwrite \tCustom scripts will take priority in registry" << std::endl;
 		std::cout << "\t-d <target_host> (default " << host << ")" << std::endl;
         std::cout << "\t-p <portnumber>\t (default " << port << ")" << std::endl;
