@@ -145,8 +145,14 @@ void LuaFactory::scanDir(std::string dir, bool overwrite_existing) {
 	while (it.hasNext()) {
 		it.next();
 		//cout << "\t" << it.fileName().toStdString() << endl;
+		QFile script_file(it.filePath());
+		if (!script_file.open(QIODevice::ReadOnly)) {
+			throw(runtime_error("Could not open file " + it.fileName().toStdString()));
+		}
+		QByteArray script = script_file.readAll();
 		const auto filepath = it.filePath().toStdString();
-		auto chunk = loadScriptFromFile(L,  filepath);
+
+		auto chunk = loadScriptFromString(L, script.toStdString(), it.fileName().toStdString());
 		if(!isScriptValidDevice(chunk, filepath))
 			continue;
 		const auto maybe_classname = chunk["classname"].cast<std::string>();
@@ -158,13 +164,14 @@ void LuaFactory::scanDir(std::string dir, bool overwrite_existing) {
 		const auto classname = maybe_classname.value();
 		if(available_devices.find(classname) != available_devices.end()) {
 			if(!overwrite_existing) {
-				cerr << "[lua] Warn: '" << classname << "' from '" << filepath << "' "
-				"would overwrite device from '" << available_devices.at(classname) << "'" << endl;
-			continue;
+				cerr << "[lua] Warn: '" << classname << "' from '" << filepath << "' was ignored as it "
+						"would overwrite device from '" << available_devices.at(classname) << "'" << endl;
+				continue;
 			} else {
-				cout << "[lua] Warn: '" << classname << "' from '" << filepath << "' "
+				cerr << "[lua] Warn: '" << classname << "' from '" << filepath << "' "
 						"overwrites device from '" << available_devices.at(classname) << "'" << endl;
 			}
+			continue;
 		}
 		available_devices.emplace(classname, filepath);
 	}
