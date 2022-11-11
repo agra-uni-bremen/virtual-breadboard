@@ -1,9 +1,9 @@
 #pragma once
 
+#include <device/device.hpp>
+
 #include <QDialog>
 #include <QFormLayout>
-
-#include <device/device.hpp>
 
 class KeybindingDialog : public QDialog {
 	Q_OBJECT

@@ -1,10 +1,10 @@
 #pragma once
 
-#include <QDialog>
-#include <QFormLayout>
-
 #include <device/configuration.h>
 #include <device/device.hpp>
+
+#include <QDialog>
+#include <QFormLayout>
 
 class ConfigDialog : public QDialog {
 	Q_OBJECT

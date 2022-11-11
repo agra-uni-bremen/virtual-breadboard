@@ -1,7 +1,7 @@
 #pragma once
+#include "configuration.h"
 
 #include <QPoint>
-#include "configuration.h"
 
 DeviceRow device_getRow(QPoint pos);
 DeviceIndex device_getIndex(QPoint pos);

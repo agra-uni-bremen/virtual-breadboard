@@ -2,7 +2,6 @@
 
 #include <interface/cDevice.h>
 
-
 #include <iostream>
 
 

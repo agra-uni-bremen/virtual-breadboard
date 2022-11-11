@@ -1,9 +1,9 @@
 #pragma once
 
-#include <QWidget>
-
 #include <embedded.h>
 #include <breadboard.h>
+
+#include <QWidget>
 
 class Central : public QWidget {
 	Q_OBJECT

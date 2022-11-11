@@ -1,9 +1,8 @@
 #include "keybinding.h"
+#include "keyedit.h"
 
 #include <QHBoxLayout>
 #include <QPushButton>
-
-#include "keyedit.h"
 
 KeybindingDialog::KeybindingDialog(QWidget *parent) : QDialog(parent) {
 	layout = new QFormLayout(this);

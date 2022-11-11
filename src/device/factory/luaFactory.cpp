@@ -24,9 +24,10 @@ extern "C"
 }
 #include <LuaBridge/LuaBridge.h>
 
+#include <QDirIterator>
+
 #include <filesystem>
 #include <exception>
-#include <QDirIterator>
 #include <memory> // unique_ptr
 
 

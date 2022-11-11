@@ -1,8 +1,10 @@
 #include "device.hpp"
+
 #include <breadboard/constants.h>
 
 #include <QKeySequence>
 #include <QJsonArray>
+
 #include <iostream>
 
 Device::Device(const DeviceID id) : m_id(id) {

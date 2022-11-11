@@ -1,10 +1,10 @@
 #pragma once
 
+#include "central.h"
+
 #include <QMainWindow>
 #include <QLabel>
 #include <QMenu>
-
-#include "central.h"
 
 class MainWindow : public QMainWindow {
 	Q_OBJECT

@@ -1,6 +1,7 @@
+#include "cDevice.h"
+
 #include <stdexcept>
 #include <iostream>
-#include "cDevice.h"
 
 CDevice::CDevice(DeviceID id) : Device(id) {}
 CDevice::~CDevice() {}

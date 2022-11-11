@@ -4,10 +4,10 @@
  *  Created on: Sep 30, 2021
  *      Author: dwd
  */
-#include <QKeySequence>
-
-#include "luaDevice.hpp"
 #include "../configuration.h" // for Pixel
+#include "luaDevice.hpp"
+
+#include <QKeySequence>
 
 using std::string;
 using std::cout;

@@ -1,4 +1,7 @@
 #pragma once
+#include "configuration.h"
+
+#include <gpio-common.hpp>
 
 #include <cstring>
 #include <string>
@@ -8,9 +11,6 @@
 
 #include <QImage>
 #include <QJsonObject>
-
-#include <gpio-common.hpp>
-#include "configuration.h"
 
 typedef std::string DeviceID;
 typedef std::string DeviceClass;

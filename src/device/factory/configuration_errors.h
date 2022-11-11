@@ -1,8 +1,8 @@
 #pragma once
 
-#include <stdexcept>
-
 #include "../configuration.h"
+
+#include <stdexcept>
 
 class device_not_found_error : std::runtime_error {
 

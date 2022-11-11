@@ -1,5 +1,13 @@
 #pragma once
 
+#include "constants.h"
+#include "types.h"
+#include "dialog/keybinding.h"
+#include "dialog/config.h"
+
+#include <gpio-helpers.h>
+#include <factory/factory.h>
+
 #include <QWidget>
 #include <QMouseEvent>
 #include <QKeyEvent>
@@ -10,13 +18,6 @@
 #include <unordered_map>
 #include <list>
 #include <mutex> // TODO: FIXME: Create one Lua state per device that uses asyncs like SPI and synchronous pins
-
-#include "constants.h"
-#include "types.h"
-#include <gpio-helpers.h>
-#include <factory/factory.h>
-#include "dialog/keybinding.h"
-#include "dialog/config.h"
 
 class Breadboard : public QWidget {
 	Q_OBJECT

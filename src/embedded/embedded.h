@@ -1,8 +1,8 @@
 #pragma once
 
-#include <QWidget>
-
 #include <gpio-client.hpp>
+
+#include <QWidget>
 
 class Embedded : public QWidget {
 	Q_OBJECT
