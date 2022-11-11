@@ -7,6 +7,7 @@
 #include <QMimeData>
 #include <QDrag>
 #include <QInputDialog>
+#include <QToolTip>
 
 using namespace std;
 
@@ -469,11 +470,13 @@ void Breadboard::mouseReleaseEvent(QMouseEvent *e) {
 void Breadboard::mouseMoveEvent(QMouseEvent *e) {
 	bool device_hit = false;
 	for(auto const& [id, device] : devices) {
-		if(device->graph && getGraphicBounds(device->graph->getBuffer(),
-				device->graph->getScale()).contains(e->pos())) {
+		QRect device_bounds = getGraphicBounds(device->graph->getBuffer(), device->graph->getScale());
+		if(device->graph && device_bounds.contains(e->pos())) {
 			QCursor current_cursor = cursor();
 			current_cursor.setShape(Qt::PointingHandCursor);
 			setCursor(current_cursor);
+			string tooltip = "<b>"+device->getClass()+"</b><br><\br>"+id;
+			QToolTip::showText(mapToGlobal(e->pos()), QString::fromStdString(tooltip), this, device_bounds);
 			device_hit = true;
 		}
 	}
