@@ -1,5 +1,5 @@
 #pragma once
-#include "configuration.h"
+#include "types.h"
 
 #include <gpio-common.hpp>
 
@@ -14,6 +14,9 @@
 
 typedef std::string DeviceID;
 typedef std::string DeviceClass;
+
+typedef unsigned DeviceRow;
+typedef unsigned DeviceIndex;
 
 class Device {
 protected:
@@ -49,20 +52,39 @@ public:
 	};
 
 	class Graphbuf_Interface {
-		unsigned m_scale = 1;
 	protected:
 		QImage buffer;
+
+		struct Layout {
+			unsigned width = 1; // as raster rows
+			unsigned height = 1; // as raster indexes
+			std::string data_type = "rgba";	// Currently ignored and always RGBA8888
+		};
+
+		// TODO: Add a scheme that only alpha channel is changed?
+		//       either rgb may be negative (don't change)
+		//       or just another function (probably better)
+		typedef unsigned Xoffset;
+		typedef unsigned Yoffset;
+		struct Pixel {
+			uint8_t r;
+			uint8_t g;
+			uint8_t b;
+			uint8_t a;
+		};
+		void setPixel(const Xoffset, const Yoffset, Pixel);
+		Pixel getPixel(const Xoffset, const Yoffset);
+	private:
+		unsigned m_scale = 1;
+		virtual Layout getLayout();
 	public:
 		Graphbuf_Interface();
 		virtual ~Graphbuf_Interface();
-		virtual Layout getLayout();
 		virtual void initializeBuffer();
 		virtual void createBuffer(QPoint offset);
 		void setScale(unsigned scale);
 		unsigned getScale();
 		QImage& getBuffer();
-		void setPixel(const Xoffset, const Yoffset, Pixel);
-		Pixel getPixel(const Xoffset, const Yoffset);
 	};
 
 	class Input_Interface {

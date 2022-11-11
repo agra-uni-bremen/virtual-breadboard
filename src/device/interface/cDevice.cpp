@@ -15,12 +15,12 @@ PinLayout CDevice::PIN_Interface_C::getPinLayout() {
 	return layout;
 }
 
-void CDevice::PIN_Interface_C::setPin(PinNumber num, gpio::Tristate val) {
+void CDevice::PIN_Interface_C::setPin(PinNumber, gpio::Tristate) {
 	std::cerr << "[CDevice] Warning: setPin was not implemented "
 			"for device " << device->getClass() << "." << std::endl;
 }
 
-gpio::Tristate CDevice::PIN_Interface_C::getPin(PinNumber num) {
+gpio::Tristate CDevice::PIN_Interface_C::getPin(PinNumber) {
 	std::cerr << "[CDevice] Warning: getPin was not implemented "
 			"for device " << device->getClass() << "." << std::endl;
 	return gpio::Tristate::LOW;
@@ -31,7 +31,7 @@ gpio::Tristate CDevice::PIN_Interface_C::getPin(PinNumber num) {
 CDevice::SPI_Interface_C::SPI_Interface_C(CDevice* device) : device(device) {}
 CDevice::SPI_Interface_C::~SPI_Interface_C() {}
 
-gpio::SPI_Response CDevice::SPI_Interface_C::send(gpio::SPI_Command byte) {
+gpio::SPI_Response CDevice::SPI_Interface_C::send(gpio::SPI_Command) {
 	std::cerr << "[CDevice] Warning: SPI::send was not implemented "
 			"for device " << device->getClass() << "." << std::endl;
 	return 0;
@@ -56,7 +56,7 @@ bool CDevice::Config_Interface_C::setConfig(Config conf) {
 CDevice::Graphbuf_Interface_C::Graphbuf_Interface_C(CDevice* device) : device(device) {}
 CDevice::Graphbuf_Interface_C::~Graphbuf_Interface_C() {}
 
-Layout CDevice::Graphbuf_Interface_C::getLayout() { return layout; }
+Device::Graphbuf_Interface::Layout CDevice::Graphbuf_Interface_C::getLayout() { return layout; }
 void CDevice::Graphbuf_Interface_C::initializeBuffer() {
 	std::cerr << "[CDevice] Warning: initialize graph buffer was not "
 			"implemented for device " << device->getClass() << "." << std::endl;
@@ -67,12 +67,12 @@ void CDevice::Graphbuf_Interface_C::initializeBuffer() {
 CDevice::Input_Interface_C::Input_Interface_C(CDevice* device) : device(device) {}
 CDevice::Input_Interface_C::~Input_Interface_C() {}
 
-void CDevice::Input_Interface_C::onClick(bool active) {
+void CDevice::Input_Interface_C::onClick(bool) {
 	std::cerr << "[CDevice] Warning: onClick was not implemented "
 			"for device " << device->getClass() << "." << std::endl;
 }
 
-void CDevice::Input_Interface_C::onKeypress(Key key, bool active) {
+void CDevice::Input_Interface_C::onKeypress(Key, bool) {
 	std::cerr << "[CDevice] Warning: onKeypress was not implemented "
 			"for device " << device->getClass() << "." << std::endl;
 }

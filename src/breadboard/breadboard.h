@@ -22,6 +22,28 @@
 class Breadboard : public QWidget {
 	Q_OBJECT
 
+	struct SPI_IOF_Request {
+		gpio::PinNumber gpio_offs;	// calculated from "global pin"
+		gpio::PinNumber global_pin;
+		bool noresponse;
+		GpioClient::OnChange_SPI fun;
+	};
+
+	struct PIN_IOF_Request {
+		gpio::PinNumber gpio_offs;	// calculated from "global pin"
+		gpio::PinNumber global_pin;
+		gpio::PinNumber device_pin;
+		GpioClient::OnChange_PIN fun;
+	};
+
+	struct PinMapping{
+		gpio::PinNumber gpio_offs;	// calculated from "global pin"
+		gpio::PinNumber global_pin;
+		gpio::PinNumber device_pin;
+		std::string name;
+		Device* dev;
+	};
+
 	std::mutex lua_access;		//TODO: Use multiple Lua states per 'async called' device
 	Factory factory;
 	std::unordered_map<DeviceID,std::unique_ptr<Device>> devices;

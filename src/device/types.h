@@ -75,34 +75,3 @@ struct ConfigElem {
 };
 typedef std::string ConfigDescription;
 typedef std::unordered_map<ConfigDescription,ConfigElem> Config;
-
-// GraphBufInterface
-
-typedef unsigned DeviceRow;
-typedef unsigned DeviceIndex;
-
-struct Layout {
-	unsigned width = 1; // as raster rows
-	unsigned height = 1; // as raster indexes
-	std::string data_type = "rgba";	// Currently ignored and always RGBA8888
-};
-
-// TODO: Add a scheme that only alpha channel is changed?
-//       either rgb may be negative (don't change)
-//       or just another function (probably better)
-typedef unsigned Xoffset;
-typedef unsigned Yoffset;
-struct Pixel {
-	uint8_t r;
-	uint8_t g;
-	uint8_t b;
-	uint8_t a;
-};
-
-// TODO: Move this to OLED
-struct State {
-	unsigned column = 0;
-	unsigned page = 0;
-	uint8_t contrast = 255;
-	bool display_on = true;
-};

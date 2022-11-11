@@ -131,7 +131,7 @@ Device::Graphbuf_Interface::Graphbuf_Interface() {
        initializeBuffer();
 }
 
-Layout Device::Graphbuf_Interface::getLayout() {
+Device::Graphbuf_Interface::Layout Device::Graphbuf_Interface::getLayout() {
        return Layout();
 }
 
@@ -178,7 +178,7 @@ void Device::Graphbuf_Interface::setPixel(const Xoffset x, const Yoffset y, Pixe
 	img[offs+3] = p.a;
 }
 
-Pixel Device::Graphbuf_Interface::getPixel(const Xoffset x, const Yoffset y) {
+Device::Graphbuf_Interface::Pixel Device::Graphbuf_Interface::getPixel(const Xoffset x, const Yoffset y) {
 	auto* img = getBuffer().bits();
 	if(x >= buffer.width() || y >= buffer.height()) {
 		std::cerr << "[Device] WARN: device read accessing graphbuffer out of bounds!" << std::endl;

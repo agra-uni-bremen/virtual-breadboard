@@ -4,7 +4,6 @@
  *  Created on: Sep 30, 2021
  *      Author: dwd
  */
-#include "../configuration.h" // for Pixel
 #include "luaDevice.hpp"
 
 #include <QKeySequence>
@@ -247,7 +246,7 @@ LuaDevice::Graphbuf_Interface_Lua::Graphbuf_Interface_Lua(luabridge::LuaRef& ref
 
 LuaDevice::Graphbuf_Interface_Lua::~Graphbuf_Interface_Lua() {}
 
-Layout LuaDevice::Graphbuf_Interface_Lua::getLayout() {
+Device::Graphbuf_Interface::Layout LuaDevice::Graphbuf_Interface_Lua::getLayout() {
 	Layout ret;
 	LuaResult r = m_getGraphBufferLayout();
 	if(!r || r.size() != 1 || !r[0].isTable() || r[0].length() != 3) {

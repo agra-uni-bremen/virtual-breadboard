@@ -1,6 +1,6 @@
 #include "cFactory.h"
 
-#include "configuration_errors.h"
+#include "errors.h"
 
 std::list<DeviceClass> CFactory::getAvailableDevices() {
 	std::list<DeviceClass> devices;

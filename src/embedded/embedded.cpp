@@ -45,13 +45,13 @@ bool Embedded::gpioConnected() {
 
 void Embedded::registerIOF_PIN(PinNumber gpio_offs, GpioClient::OnChange_PIN fun) {
 	if(!gpio.isIOFactive(gpio_offs)) {
-		const bool success= gpio.registerPINOnChange(gpio_offs, fun);
+		gpio.registerPINOnChange(gpio_offs, fun);
 	}
 }
 
 void Embedded::registerIOF_SPI(PinNumber gpio_offs, GpioClient::OnChange_SPI fun, bool no_response) {
 	if(!gpio.isIOFactive(gpio_offs)) {
-		const bool success = gpio.registerSPIOnChange(gpio_offs, fun, no_response);
+		gpio.registerSPIOnChange(gpio_offs, fun, no_response);
 	}
 }
 

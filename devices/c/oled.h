@@ -17,6 +17,14 @@ const uint8_t COMMANDS [8] = {COL_LOW, COL_HIGH, PUMP_VOLTAGE, DISPLAY_START_LIN
 
 
 class OLED : public CDevice {
+
+	struct State {
+		unsigned column = 0;
+		unsigned page = 0;
+		uint8_t contrast = 255;
+		bool display_on = true;
+	};
+
 	bool is_data = false;
 	State state;
 

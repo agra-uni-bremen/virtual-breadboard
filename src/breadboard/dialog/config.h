@@ -1,6 +1,5 @@
 #pragma once
 
-#include <device/configuration.h>
 #include <device/device.hpp>
 
 #include <QDialog>

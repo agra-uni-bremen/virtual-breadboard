@@ -5,9 +5,7 @@
  *      Author: pp
  */
 #include "luaFactory.hpp"
-#include "../configuration.h"
-#include "configuration_errors.h"
-#include "device/device.hpp"
+#include "errors.h"
 extern "C"
 {
 #if __has_include(<lua5.3/lua.h>)

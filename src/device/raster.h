@@ -1,5 +1,6 @@
 #pragma once
-#include "configuration.h"
+
+#include "device.hpp"
 
 #include <QPoint>
 

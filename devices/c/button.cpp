@@ -62,6 +62,6 @@ void Button::Button_Input::onClick(bool active) {
 	button_graph->draw();
 }
 
-void Button::Button_Input::onKeypress(int key, bool active) {
+void Button::Button_Input::onKeypress(int, bool active) {
 	onClick(active);
 }

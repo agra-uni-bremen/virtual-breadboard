@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../configuration.h"
+#include "../types.h"
 
 #include <stdexcept>
 

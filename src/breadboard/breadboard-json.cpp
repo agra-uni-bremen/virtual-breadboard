@@ -22,27 +22,6 @@ void Breadboard::defaultBackground() {
 	setFixedSize(bkgnd_size);
 }
 
-void Breadboard::clear() {
-	vector<gpio::PinNumber> iofs;
-	for(auto const& [id,spi] : spi_channels) {
-		iofs.push_back(spi.gpio_offs);
-	}
-	for(auto const& [id,pin] : pin_channels) {
-		iofs.push_back(pin.gpio_offs);
-	}
-	emit(closeAllIOFs(iofs));
-
-	defaultBackground();
-}
-
-void Breadboard::clearConnections() {
-	spi_channels.clear();
-	pin_channels.clear();
-	writing_connections.clear();
-	reading_connections.clear();
-	devices.clear();
-}
-
 void Breadboard::additionalLuaDir(string additional_device_dir, bool overwrite_integrated_devices) {
 	if(additional_device_dir.size() != 0) {
 		factory.scanAdditionalDir(additional_device_dir, overwrite_integrated_devices);
@@ -153,8 +132,8 @@ bool Breadboard::loadConfigFile(QString file) {
 				if(device->conf)
 					cout << "\t\timplements conf" << endl;
 				if(device->graph)
-					cout << "\t\timplements graphbuf (" << device->graph->getLayout().width << "x" <<
-					device->graph->getLayout().height << " pixel)"<< endl;
+					cout << "\t\timplements graphbuf (" << device->graph->getBuffer().width() << "x" <<
+					device->graph->getBuffer().height() << " pixel)"<< endl;
 			}
 
 			cout << "Active pin connections:" << endl;
