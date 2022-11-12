@@ -27,7 +27,7 @@ public:
 	const DeviceID& getID() const;
 	virtual const DeviceClass getClass() const = 0;
 
-	void fromJSON(QJsonObject json);
+	void fromJSON(QJsonObject json, unsigned iconSizeMinimum);
 	QJsonObject toJSON();
 
 	class PIN_Interface {
@@ -78,10 +78,9 @@ public:
 		unsigned m_scale = 1;
 		virtual Layout getLayout();
 	public:
-		Graphbuf_Interface();
 		virtual ~Graphbuf_Interface();
 		virtual void initializeBuffer();
-		virtual void createBuffer(QPoint offset);
+		virtual void createBuffer(unsigned iconSizeMinimum, QPoint offset=QPoint(0,0));
 		void setScale(unsigned scale);
 		unsigned getScale();
 		QImage& getBuffer();

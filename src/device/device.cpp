@@ -17,7 +17,7 @@ const DeviceID& Device::getID() const {
 	return m_id;
 }
 
-void Device::fromJSON(QJsonObject json) {
+void Device::fromJSON(QJsonObject json, unsigned iconSizeMinimum) {
 	if(json.contains("conf") && json["conf"].isObject()) {
 		if(!conf) {
 			std::cerr << "[Device] config for device '" << getClass() << "' sets"
@@ -72,7 +72,7 @@ void Device::fromJSON(QJsonObject json) {
 			QJsonObject graphics = json["graphics"].toObject();
 			const QJsonArray offs_desc = graphics["offs"].toArray();
 			QPoint offs(offs_desc[0].toInt(), offs_desc[1].toInt());
-			graph->createBuffer(offs);
+			graph->createBuffer(iconSizeMinimum, offs);
 			unsigned scale = graphics["scale"].toInt();
 			graph->setScale(scale);
 		}
@@ -126,11 +126,6 @@ Device::Config_Interface::~Config_Interface() {}
 Device::Graphbuf_Interface::~Graphbuf_Interface() {}
 Device::Input_Interface::~Input_Interface() {}
 
-Device::Graphbuf_Interface::Graphbuf_Interface() {
-       createBuffer(QPoint(0,0));
-       initializeBuffer();
-}
-
 Device::Graphbuf_Interface::Layout Device::Graphbuf_Interface::getLayout() {
        return Layout();
 }
@@ -148,9 +143,10 @@ void Device::Graphbuf_Interface::initializeBuffer() {
        }
 }
 
-void Device::Graphbuf_Interface::createBuffer(QPoint offset) {
+void Device::Graphbuf_Interface::createBuffer(unsigned iconSizeMinimum, QPoint offset) {
+	if(!buffer.isNull()) return;
 	Layout layout = getLayout();
-	buffer = QImage(layout.width*BB_ICON_SIZE, layout.height*BB_ICON_SIZE, QImage::Format_RGBA8888);
+	buffer = QImage(layout.width*iconSizeMinimum, layout.height*iconSizeMinimum, QImage::Format_RGBA8888);
 	buffer.setOffset(offset);
 	initializeBuffer();
 }

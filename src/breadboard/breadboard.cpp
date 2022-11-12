@@ -1,6 +1,4 @@
 #include "breadboard.h"
-#include "raster.h"
-#include "device/raster.h"
 
 #include <QTimer>
 #include <QInputDialog>
@@ -47,7 +45,8 @@ Breadboard::Breadboard() : QWidget() {
 		add_device->addAction(device_action);
 	}
 
-	defaultBackground();
+	setFixedSize(DEFAULT_SIZE);
+	setBackground(DEFAULT_PATH);
 }
 
 Breadboard::~Breadboard() {
@@ -64,13 +63,13 @@ bool Breadboard::toggleDebug() {
 
 QPoint Breadboard::checkDevicePosition(DeviceID id, QImage buffer, int scale, QPoint position, QPoint hotspot) {
 	QPoint upper_left = position - hotspot;
-	QRect device_bounds = QRect(upper_left, getGraphicBounds(buffer, scale).size());
+	QRect device_bounds = QRect(upper_left, getDistortedGraphicBounds(buffer, scale).size());
 
 	if(isBreadboard()) {
-		if(bb_getRasterBounds().intersects(device_bounds)) {
-			QPoint dropPositionRaster = bb_getAbsolutePosition(bb_getRow(position), bb_getIndex(position));
-			upper_left = dropPositionRaster - device_getAbsolutePosition(device_getRow(hotspot),
-					device_getIndex(hotspot));
+		if(getRasterBounds().intersects(device_bounds)) {
+			QPoint dropPositionRaster = getAbsolutePosition(getRow(position), getIndex(position));
+			upper_left = dropPositionRaster - getDeviceAbsolutePosition(getDeviceRow(hotspot),
+					getDeviceIndex(hotspot));
 			device_bounds = QRect(upper_left, device_bounds.size());
 		} else {
 			cerr << "[Breadboard] Device position invalid: Device should be at least partially on raster." << endl;
@@ -85,13 +84,13 @@ QPoint Breadboard::checkDevicePosition(DeviceID id, QImage buffer, int scale, QP
 
 	for(const auto& [id_it, device_it] : devices) {
 		if(id_it == id) continue;
-		if(device_it->graph && getGraphicBounds(device_it->graph->getBuffer(),
+		if(device_it->graph && getDistortedGraphicBounds(device_it->graph->getBuffer(),
 				device_it->graph->getScale()).intersects(device_bounds)) {
 			cerr << "[Breadboard] Device position invalid: Overlaps with other device." << endl;
 			return QPoint(-1,-1);
 		}
 	}
-	return upper_left;
+	return getMinimumPosition(upper_left);
 }
 
 bool Breadboard::moveDevice(Device *device, QPoint position, QPoint hotspot) {
@@ -132,7 +131,7 @@ bool Breadboard::addDevice(DeviceClass classname, QPoint pos) {
 
 	unique_ptr<Device> device = factory.instantiateDevice(id, classname);
 	if(!device->graph) return false;
-	device->graph->createBuffer(pos);
+	device->graph->createBuffer(iconSizeMinimum(), pos);
 	if(moveDevice(device.get(), pos)) {
 		devices.insert(make_pair(id, std::move(device)));
 		return true;
@@ -161,13 +160,13 @@ unique_ptr<Device> Breadboard::createDevice(DeviceClass classname, DeviceID id) 
 
 void Breadboard::openContextMenu(QPoint pos) {
 	for(auto const& [id, device] : devices) {
-		if(device->graph && getGraphicBounds(device->graph->getBuffer(), device->graph->getScale()).contains(pos)) {
+		if(device->graph && getDistortedGraphicBounds(device->graph->getBuffer(), device->graph->getScale()).contains(pos)) {
 			menu_device_id = id;
 			device_menu->popup(mapToGlobal(pos));
 			return;
 		}
 	}
-	if(isBreadboard() && !bb_isOnRaster(pos)) return;
+	if(isBreadboard() && !isOnRaster(pos)) return;
 	add_device->popup(mapToGlobal(pos));
 }
 

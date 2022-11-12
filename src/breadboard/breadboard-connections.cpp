@@ -98,7 +98,8 @@ void Breadboard::clear() {
 	}
 	emit(closeAllIOFs(iofs));
 
-	defaultBackground();
+	setMinimumSize(DEFAULT_SIZE);
+	setBackground(DEFAULT_PATH);
 }
 
 void Breadboard::clearConnections() {

@@ -55,6 +55,7 @@ class Breadboard : public QWidget {
 
 	bool debugmode = false;
 	QString bkgnd_path;
+	QPixmap bkgnd;
 
 	DeviceID menu_device_id;
 	QMenu *device_menu;
@@ -63,7 +64,8 @@ class Breadboard : public QWidget {
 	QErrorMessage *error_dialog;
 	QMenu *add_device;
 
-	void defaultBackground();
+	void setBackground(QString path);
+	void updateBackground();
 
 	// Device
 	std::unique_ptr<Device> createDevice(DeviceClass classname, DeviceID device_id);
@@ -89,6 +91,26 @@ class Breadboard : public QWidget {
 	void mousePressEvent(QMouseEvent *e) override;
 	void mouseReleaseEvent(QMouseEvent *e) override;
 	void mouseMoveEvent(QMouseEvent *e) override;
+
+	// Raster
+	DeviceRow getDeviceRow(QPoint pos);
+	DeviceIndex getDeviceIndex(QPoint pos);
+	std::pair<DeviceRow,DeviceIndex> getDeviceRasterPosition(QPoint pos);
+	QPoint getDeviceAbsolutePosition(DeviceRow row, DeviceIndex index);
+
+	QRect getRasterBounds();
+	bool isOnRaster(QPoint pos);
+	Row getRow(QPoint pos);
+	Index getIndex(QPoint pos);
+	std::pair<Row,Index> getRasterPosition(QPoint pos);
+	QPoint getAbsolutePosition(Row row, Index index);
+
+	unsigned iconSizeMinimum();
+	QRect getDistortedRect(unsigned x, unsigned y, unsigned width, unsigned height);
+	QRect getDistortedGraphicBounds(QImage buffer, unsigned scale);
+	QPoint getDistortedPosition(QPoint pos);
+	QSize getDistortedSize(QSize minimum);
+	QPoint getMinimumPosition(QPoint pos);
 
 public:
 	Breadboard();

@@ -9,17 +9,18 @@ constexpr bool debug_logging = false;
 
 /* JSON */
 
-void Breadboard::defaultBackground() {
-	bkgnd_path = DEFAULT_PATH;
-	QSize bkgnd_size = DEFAULT_SIZE;
-	QPixmap bkgnd(bkgnd_path);
-	bkgnd = bkgnd.scaled(bkgnd_size, Qt::IgnoreAspectRatio);
-	QPalette palette;
-	palette.setBrush(QPalette::Window, bkgnd);
-	this->setPalette(palette);
-	this->setAutoFillBackground(true);
+void Breadboard::setBackground(QString path) {
+	bkgnd_path = path;
+	bkgnd = QPixmap(bkgnd_path);
+	updateBackground();
+	setAutoFillBackground(true);
+}
 
-	setFixedSize(bkgnd_size);
+void Breadboard::updateBackground() {
+   QPixmap new_bkgnd = bkgnd.scaled(size(), Qt::IgnoreAspectRatio);
+   QPalette palette;
+   palette.setBrush(QPalette::Window, new_bkgnd);
+   setPalette(palette);
 }
 
 void Breadboard::additionalLuaDir(string additional_device_dir, bool overwrite_integrated_devices) {
@@ -50,18 +51,11 @@ bool Breadboard::loadConfigFile(QString file) {
 
 	if(config_root.contains("window") && config_root["window"].isObject()) {
 		QJsonObject window = config_root["window"].toObject();
-		bkgnd_path = window["background"].toString();
 		unsigned windowsize_x = window["windowsize"].toArray().at(0).toInt();
 		unsigned windowsize_y = window["windowsize"].toArray().at(1).toInt();
-		QSize bkgnd_size = QSize(windowsize_x, windowsize_y);
 
-		QPixmap bkgnd(bkgnd_path);
-		bkgnd = bkgnd.scaled(bkgnd_size, Qt::IgnoreAspectRatio);
-		QPalette palette;
-		palette.setBrush(QPalette::Window, bkgnd);
-		this->setPalette(palette);
-		this->setAutoFillBackground(true);
-		setFixedSize(bkgnd_size);
+		setFixedSize(windowsize_x, windowsize_y);
+		setBackground(window["background"].toString());
 	}
 
 	if(config_root.contains("devices") && config_root["devices"].isArray()) {
@@ -79,7 +73,8 @@ bool Breadboard::loadConfigFile(QString file) {
 				cerr << "[Breadboard] could not create device '" << classname << "'." << endl;
 				continue;
 			}
-			device->fromJSON(device_desc);
+			device->fromJSON(device_desc, iconSizeMinimum());
+			if(device->graph) device->graph->createBuffer(iconSizeMinimum());
 			if(device->graph && checkDevicePosition(device->getID(), device->graph->getBuffer(),
 					device->graph->getScale(), device->graph->getBuffer().offset()).x()<0) {
 				cerr << "[Breadboard] Device overlaps existing device" << endl;
