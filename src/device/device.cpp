@@ -7,9 +7,7 @@
 
 #include <iostream>
 
-Device::Device(const DeviceID id) : m_id(id) {
-	if(!graph) graph = std::make_unique<Graphbuf_Interface>();
-}
+Device::Device(const DeviceID id) : m_id(id) {}
 
 Device::~Device() {}
 
@@ -17,7 +15,7 @@ const DeviceID& Device::getID() const {
 	return m_id;
 }
 
-void Device::fromJSON(QJsonObject json, unsigned iconSizeMinimum) {
+void Device::fromJSON(QJsonObject json) {
 	if(json.contains("conf") && json["conf"].isObject()) {
 		if(!conf) {
 			std::cerr << "[Device] config for device '" << getClass() << "' sets"
@@ -64,18 +62,12 @@ void Device::fromJSON(QJsonObject json, unsigned iconSizeMinimum) {
 	}
 
 	if(json.contains("graphics") && json["graphics"].isObject()) {
-		if(!graph) {
-			std::cerr << "[Device] Config for device '" << getClass() << "' contains graph info, "
-					"but device does not implement graph interface" << std::endl;
-		}
-		else {
-			QJsonObject graphics = json["graphics"].toObject();
-			const QJsonArray offs_desc = graphics["offs"].toArray();
-			QPoint offs(offs_desc[0].toInt(), offs_desc[1].toInt());
-			graph->createBuffer(iconSizeMinimum, offs);
-			unsigned scale = graphics["scale"].toInt();
-			graph->setScale(scale);
-		}
+		QJsonObject graphics = json["graphics"].toObject();
+		unsigned scale = graphics["scale"].toInt();
+		setScale(scale);
+	}
+	else {
+		std::cerr << "[Device] Config does not specify scale and position correctly." << std::endl;
 	}
 }
 
@@ -83,6 +75,15 @@ QJsonObject Device::toJSON() {
 	QJsonObject json;
 	json["class"] = QString::fromStdString(getClass());
 	json["id"] = QString::fromStdString(getID());
+
+	QJsonObject graph_json;
+	QJsonArray offs_json;
+	offs_json.append(getBuffer().offset().x());
+	offs_json.append(getBuffer().offset().y());
+	graph_json["offs"] = offs_json;
+	graph_json["scale"] = (int) getScale();
+	json["graphics"] = graph_json;
+
 	if(conf) {
 		QJsonObject conf_json;
 		for(auto const& [desc, elem] : conf->getConfig()) {
@@ -108,29 +109,14 @@ QJsonObject Device::toJSON() {
 			json["keybindings"] = keybindings_json;
 		}
 	}
-	if(graph) {
-		QJsonObject graph_json;
-		QJsonArray offs_json;
-		offs_json.append(graph->getBuffer().offset().x());
-		offs_json.append(graph->getBuffer().offset().y());
-		graph_json["offs"] = offs_json;
-		graph_json["scale"] = (int) graph->getScale();
-		json["graphics"] = graph_json;
-	}
 	return json;
 }
 
-Device::PIN_Interface::~PIN_Interface() {}
-Device::SPI_Interface::~SPI_Interface() {}
-Device::Config_Interface::~Config_Interface() {}
-Device::Graphbuf_Interface::~Graphbuf_Interface() {}
-Device::Input_Interface::~Input_Interface() {}
-
-Device::Graphbuf_Interface::Layout Device::Graphbuf_Interface::getLayout() {
+Device::Layout Device::getLayout() {
        return Layout();
 }
 
-void Device::Graphbuf_Interface::initializeBuffer() {
+void Device::initializeBuffer() {
        auto *img = buffer.bits();
        for(unsigned x=0; x<buffer.width(); x++) {
                for(unsigned y=0; y<buffer.height(); y++) {
@@ -143,7 +129,7 @@ void Device::Graphbuf_Interface::initializeBuffer() {
        }
 }
 
-void Device::Graphbuf_Interface::createBuffer(unsigned iconSizeMinimum, QPoint offset) {
+void Device::createBuffer(unsigned iconSizeMinimum, QPoint offset) {
 	if(!buffer.isNull()) return;
 	Layout layout = getLayout();
 	buffer = QImage(layout.width*iconSizeMinimum, layout.height*iconSizeMinimum, QImage::Format_RGBA8888);
@@ -151,17 +137,17 @@ void Device::Graphbuf_Interface::createBuffer(unsigned iconSizeMinimum, QPoint o
 	initializeBuffer();
 }
 
-void Device::Graphbuf_Interface::setScale(unsigned scale) {
+void Device::setScale(unsigned scale) {
 	m_scale = scale;
 }
 
-unsigned Device::Graphbuf_Interface::getScale() { return m_scale; }
+unsigned Device::getScale() { return m_scale; }
 
-QImage& Device::Graphbuf_Interface::getBuffer() {
+QImage& Device::getBuffer() {
 	return buffer;
 }
 
-void Device::Graphbuf_Interface::setPixel(const Xoffset x, const Yoffset y, Pixel p) {
+void Device::setPixel(const Xoffset x, const Yoffset y, Pixel p) {
 	auto* img = getBuffer().bits();
 	if(x >= buffer.width() || y >= buffer.height()) {
 		std::cerr << "[Device] WARN: device write accessing graphbuffer out of bounds!" << std::endl;
@@ -174,7 +160,7 @@ void Device::Graphbuf_Interface::setPixel(const Xoffset x, const Yoffset y, Pixe
 	img[offs+3] = p.a;
 }
 
-Device::Graphbuf_Interface::Pixel Device::Graphbuf_Interface::getPixel(const Xoffset x, const Yoffset y) {
+Device::Pixel Device::getPixel(const Xoffset x, const Yoffset y) {
 	auto* img = getBuffer().bits();
 	if(x >= buffer.width() || y >= buffer.height()) {
 		std::cerr << "[Device] WARN: device read accessing graphbuffer out of bounds!" << std::endl;
@@ -188,6 +174,11 @@ Device::Graphbuf_Interface::Pixel Device::Graphbuf_Interface::getPixel(const Xof
 				static_cast<uint8_t>(img[offs+3])
 	};
 }
+
+Device::PIN_Interface::~PIN_Interface() {}
+Device::SPI_Interface::~SPI_Interface() {}
+Device::Config_Interface::~Config_Interface() {}
+Device::Input_Interface::~Input_Interface() {}
 
 void Device::Input_Interface::setKeys(Keys bindings) {
 	keybindings = bindings;

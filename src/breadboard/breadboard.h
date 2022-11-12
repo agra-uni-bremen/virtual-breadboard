@@ -68,7 +68,7 @@ class Breadboard : public QWidget {
 	void updateBackground();
 
 	// Device
-	std::unique_ptr<Device> createDevice(DeviceClass classname, DeviceID device_id);
+	bool addDevice(DeviceClass classname, QPoint pos, DeviceID id="");
 	void removeDevice(DeviceID id);
 
 	// Connections
@@ -136,7 +136,6 @@ public:
 
 public slots:
 	void connectionUpdate(bool active);
-	bool addDevice(DeviceClass classname, QPoint pos);
 
 private slots:
 	void openContextMenu(QPoint pos);

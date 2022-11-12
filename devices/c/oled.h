@@ -33,24 +33,20 @@ public:
 	~OLED();
 
 	inline static DeviceClass classname = "oled";
-	const DeviceClass getClass() const;
+	const DeviceClass getClass() const override;
+
+	void initializeBuffer() override;
 
 	class OLED_PIN : public CDevice::PIN_Interface_C {
 	public:
 		OLED_PIN(CDevice* device);
-		void setPin(PinNumber num, gpio::Tristate val);
+		void setPin(PinNumber num, gpio::Tristate val) override;
 	};
 
 	class OLED_SPI : public CDevice::SPI_Interface_C {
 	public:
 		OLED_SPI(CDevice* device);
-		gpio::SPI_Response send(gpio::SPI_Command byte);
-	};
-
-	class OLED_Graph : public CDevice::Graphbuf_Interface_C {
-	public:
-		OLED_Graph(CDevice* device);
-		void initializeBuffer();
+		gpio::SPI_Response send(gpio::SPI_Command byte) override;
 	};
 };
 

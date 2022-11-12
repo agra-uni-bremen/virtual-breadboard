@@ -63,10 +63,10 @@ bool Breadboard::toggleDebug() {
 
 QPoint Breadboard::checkDevicePosition(DeviceID id, QImage buffer, int scale, QPoint position, QPoint hotspot) {
 	QPoint upper_left = position - hotspot;
-	QRect device_bounds = QRect(upper_left, getDistortedGraphicBounds(buffer, scale).size());
+	QRect device_bounds = QRect(upper_left, getDistortedGraphicBounds(buffer, scale).size()); // TODO
 
 	if(isBreadboard()) {
-		if(getRasterBounds().intersects(device_bounds)) {
+		if(getRasterBounds().intersects(device_bounds)) { // TODO
 			QPoint dropPositionRaster = getAbsolutePosition(getRow(position), getIndex(position));
 			upper_left = dropPositionRaster - getDeviceAbsolutePosition(getDeviceRow(hotspot),
 					getDeviceIndex(hotspot));
@@ -84,8 +84,8 @@ QPoint Breadboard::checkDevicePosition(DeviceID id, QImage buffer, int scale, QP
 
 	for(const auto& [id_it, device_it] : devices) {
 		if(id_it == id) continue;
-		if(device_it->graph && getDistortedGraphicBounds(device_it->graph->getBuffer(),
-				device_it->graph->getScale()).intersects(device_bounds)) {
+		if(getDistortedGraphicBounds(device_it->getBuffer(),
+				device_it->getScale()).intersects(device_bounds)) {
 			cerr << "[Breadboard] Device position invalid: Overlaps with other device." << endl;
 			return QPoint(-1,-1);
 		}
@@ -94,44 +94,57 @@ QPoint Breadboard::checkDevicePosition(DeviceID id, QImage buffer, int scale, QP
 }
 
 bool Breadboard::moveDevice(Device *device, QPoint position, QPoint hotspot) {
-	if(!device || !device->graph) return false;
-	unsigned scale = device->graph->getScale();
+	if(!device) return false;
+	unsigned scale = device->getScale();
 	if(!scale) scale = 1;
 
-	QPoint upper_left = checkDevicePosition(device->getID(), device->graph->getBuffer(), scale, position, hotspot);
+	QPoint upper_left = checkDevicePosition(device->getID(), device->getBuffer(), scale, position, hotspot);
 
 	if(upper_left.x()<0) {
 		cerr << "[Breadboard] New device position is invalid." << endl;
 		return false;
 	}
 
-	device->graph->getBuffer().setOffset(upper_left);
-	device->graph->setScale(scale);
+	device->getBuffer().setOffset(upper_left);
+	device->setScale(scale);
 	return true;
 }
 
-bool Breadboard::addDevice(DeviceClass classname, QPoint pos) {
-	DeviceID id;
-	if(devices.size() < std::numeric_limits<unsigned>::max()) {
-		id = std::to_string(devices.size());
+bool Breadboard::addDevice(DeviceClass classname, QPoint pos, DeviceID id) {
+	if(!id.size()) {
+		if(devices.size() < std::numeric_limits<unsigned>::max()) {
+			id = std::to_string(devices.size());
+		}
+		else {
+			std::set<unsigned> used_ids;
+			for(auto const& [id_it, device_it] : devices) {
+				used_ids.insert(std::stoi(id_it));
+			}
+			unsigned id_int = 0;
+			for(unsigned used_id : used_ids) {
+				if(used_id > id_int)
+					break;
+				id_int++;
+			}
+			id = std::to_string(id_int);
+		}
 	}
-	else {
-		std::set<unsigned> used_ids;
-		for(auto const& [id_it, device_it] : devices) {
-			used_ids.insert(std::stoi(id_it));
-		}
-		unsigned id_int = 0;
-		for(unsigned used_id : used_ids) {
-			if(used_id > id_int)
-				break;
-			id_int++;
-		}
-		id = std::to_string(id_int);
+
+	if(!id.size()) {
+		cerr << "[Breadboard] Device ID cannot be empty string!" << endl;
+		return false;
+	}
+	if(!factory.deviceExists(classname)) {
+		cerr << "[Breadboard] Class name '" << classname << "' invalid." << endl;
+		return false;
+	}
+	if(devices.find(id) != devices.end()) {
+		cerr << "[Breadboard] Another device with the ID '" << id << "' already exists!" << endl;
+		return false;
 	}
 
 	unique_ptr<Device> device = factory.instantiateDevice(id, classname);
-	if(!device->graph) return false;
-	device->graph->createBuffer(iconSizeMinimum(), pos);
+	device->createBuffer(iconSizeMinimum(), pos);
 	if(moveDevice(device.get(), pos)) {
 		devices.insert(make_pair(id, std::move(device)));
 		return true;
@@ -140,27 +153,11 @@ bool Breadboard::addDevice(DeviceClass classname, QPoint pos) {
 	return false;
 }
 
-unique_ptr<Device> Breadboard::createDevice(DeviceClass classname, DeviceID id) {
-	if(!id.size()) {
-		cerr << "[Breadboard] Device ID cannot be empty string!" << endl;
-		return 0;
-	}
-	if(!factory.deviceExists(classname)) {
-		cerr << "[Breadboard] Add device: class name '" << classname << "' invalid." << endl;
-		return 0;
-	}
-	if(devices.find(id) != devices.end()) {
-		cerr << "[Breadboard] Another device with the ID '" << id << "' is already instatiated!" << endl;
-		return 0;
-	}
-	return factory.instantiateDevice(id, classname);
-}
-
 /* Context Menu */
 
 void Breadboard::openContextMenu(QPoint pos) {
 	for(auto const& [id, device] : devices) {
-		if(device->graph && getDistortedGraphicBounds(device->graph->getBuffer(), device->graph->getScale()).contains(pos)) {
+		if(getDistortedGraphicBounds(device->getBuffer(), device->getScale()).contains(pos)) {
 			menu_device_id = id;
 			device_menu->popup(mapToGlobal(pos));
 			return;
@@ -178,16 +175,16 @@ void Breadboard::removeActiveDevice() {
 
 void Breadboard::scaleActiveDevice() {
 	auto device = devices.find(menu_device_id);
-	if(device == devices.end() || !device->second->graph) {
-		error_dialog->showMessage("Device does not implement graph interface.");
+	if(device == devices.end()) {
+		error_dialog->showMessage("Could not find device");
 		return;
 	}
 	bool ok;
 	int scale = QInputDialog::getInt(this, "Input new scale value", "Scale",
-			device->second->graph->getScale(), 1, 10, 1, &ok);
-	if(ok && checkDevicePosition(device->second->getID(), device->second->graph->getBuffer(),
-			scale, device->second->graph->getBuffer().offset()).x()>=0) {
-		device->second->graph->setScale(scale);
+			device->second->getScale(), 1, 10, 1, &ok);
+	if(ok && checkDevicePosition(device->second->getID(), device->second->getBuffer(),
+			scale, device->second->getBuffer().offset()).x()>=0) {
+		device->second->setScale(scale);
 	}
 	menu_device_id = "";
 }

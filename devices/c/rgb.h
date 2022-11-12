@@ -9,19 +9,15 @@ public:
 	~RGB();
 
 	inline static DeviceClass classname = "rgb";
-	const DeviceClass getClass() const;
+	const DeviceClass getClass() const override;
+
+	void initializeBuffer() override;
+	void draw(PinNumber num, bool val);
 
 	class RGB_Pin : public CDevice::PIN_Interface_C {
 	public:
 		RGB_Pin(CDevice* device);
-		void setPin(PinNumber num, gpio::Tristate val);
-	};
-
-	class RGB_Graph : public CDevice::Graphbuf_Interface_C {
-	public:
-		RGB_Graph(CDevice* device);
-		void initializeBuffer();
-		void draw(PinNumber num, bool val);
+		void setPin(PinNumber num, gpio::Tristate val) override;
 	};
 };
 

@@ -3,17 +3,19 @@
 #include <device.hpp>
 
 class CDevice : public Device {
+protected:
+	Layout layout;
 public:
 	class PIN_Interface_C : public Device::PIN_Interface {
 	protected:
 		CDevice* device;
-		PinLayout layout;
+		PinLayout pinLayout;
 	public:
 		PIN_Interface_C(CDevice* device);
 		~PIN_Interface_C();
-		PinLayout getPinLayout();
-		gpio::Tristate getPin(PinNumber num); // implement this
-		void setPin(PinNumber num, gpio::Tristate val);	// implement this
+		PinLayout getPinLayout() override;
+		gpio::Tristate getPin(PinNumber num) override; // implement this
+		void setPin(PinNumber num, gpio::Tristate val) override;	// implement this
 	};
 
 	class SPI_Interface_C : public Device::SPI_Interface {
@@ -22,7 +24,7 @@ public:
 	public:
 		SPI_Interface_C(CDevice* device);
 		~SPI_Interface_C();
-		gpio::SPI_Response send(gpio::SPI_Command byte); // implement this
+		gpio::SPI_Response send(gpio::SPI_Command byte) override; // implement this
 	};
 
 	class Config_Interface_C : public Device::Config_Interface {
@@ -32,19 +34,8 @@ public:
 	public:
 		Config_Interface_C(CDevice *device);
 		~Config_Interface_C();
-		Config getConfig();
-		bool setConfig(Config conf);
-	};
-
-	class Graphbuf_Interface_C : public Device::Graphbuf_Interface {
-	protected:
-		CDevice* device;
-		Layout layout;
-	public:
-		Graphbuf_Interface_C(CDevice* device);
-		~Graphbuf_Interface_C();
-		Layout getLayout();
-		void initializeBuffer(); // implement this
+		Config getConfig() override;
+		bool setConfig(Config conf) override;
 	};
 
 	class Input_Interface_C : public Device::Input_Interface {
@@ -53,10 +44,12 @@ public:
 	public:
 		Input_Interface_C(CDevice* device);
 		~Input_Interface_C();
-		void onClick(bool active);
-		void onKeypress(Key key, bool active);
+		void onClick(bool active) override;
+		void onKeypress(Key key, bool active) override;
 	};
 
 	CDevice(DeviceID id);
 	~CDevice();
+
+	Layout getLayout() override;
 };

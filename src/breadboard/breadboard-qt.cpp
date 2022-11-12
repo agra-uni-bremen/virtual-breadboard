@@ -63,40 +63,38 @@ void Breadboard::keyReleaseEvent(QKeyEvent *e)
 
 void Breadboard::mousePressEvent(QMouseEvent *e) {
 	for(auto const& [id, device] : devices) {
-		if(device->graph) {
-			QImage buffer = device->graph->getBuffer();
-			unsigned scale = device->graph->getScale();
-			if(!scale) scale = 1;
-			QRect buffer_bounds = getDistortedGraphicBounds(buffer, scale);
-			if(buffer_bounds.contains(e->pos()) && e->button() == Qt::LeftButton)  {
-				if(debugmode) { // Move
-					QPoint hotspot = e->pos() - buffer_bounds.topLeft();
+		QImage buffer = device->getBuffer();
+		unsigned scale = device->getScale();
+		if(!scale) scale = 1;
+		QRect buffer_bounds = getDistortedGraphicBounds(buffer, scale);
+		if(buffer_bounds.contains(e->pos()) && e->button() == Qt::LeftButton)  {
+			if(debugmode) { // Move
+				QPoint hotspot = e->pos() - buffer_bounds.topLeft();
 
-					QByteArray itemData;
-					QDataStream dataStream(&itemData, QIODevice::WriteOnly);
-					dataStream << QString::fromStdString(id) << hotspot;
+				QByteArray itemData;
+				QDataStream dataStream(&itemData, QIODevice::WriteOnly);
+				dataStream << QString::fromStdString(id) << hotspot;
 
-					buffer = buffer.scaled(buffer_bounds.size());
+				buffer = buffer.scaled(buffer_bounds.size());
 
-					QMimeData *mimeData = new QMimeData;
-					mimeData->setData(DEVICE_DRAG_TYPE, itemData);
-					QDrag *drag = new QDrag(this);
-					drag->setMimeData(mimeData);
-					drag->setPixmap(QPixmap::fromImage(buffer));
-					drag->setHotSpot(hotspot);
+				QMimeData *mimeData = new QMimeData;
+				mimeData->setData(DEVICE_DRAG_TYPE, itemData);
+				QDrag *drag = new QDrag(this);
+				drag->setMimeData(mimeData);
+				drag->setPixmap(QPixmap::fromImage(buffer));
+				drag->setHotSpot(hotspot);
 
-					drag->exec(Qt::MoveAction);
-				}
-				else { // Input
-					if(device->input) {
-						lua_access.lock();
-						device->input->onClick(true);
-						lua_access.unlock();
-						writeDevice(id);
-					}
-				}
-				return;
+				drag->exec(Qt::MoveAction);
 			}
+			else { // Input
+				if(device->input) {
+					lua_access.lock();
+					device->input->onClick(true);
+					lua_access.unlock();
+					writeDevice(id);
+				}
+			}
+			return;
 		}
 	}
 	update();
@@ -121,16 +119,14 @@ void Breadboard::mouseReleaseEvent(QMouseEvent *e) {
 void Breadboard::mouseMoveEvent(QMouseEvent *e) {
 	bool device_hit = false;
 	for(auto const& [id, device] : devices) {
-		if(device->graph) {
-			QRect device_bounds = getDistortedGraphicBounds(device->graph->getBuffer(), device->graph->getScale());
-			if(device_bounds.contains(e->pos())) {
-				QCursor current_cursor = cursor();
-				current_cursor.setShape(Qt::PointingHandCursor);
-				setCursor(current_cursor);
-				string tooltip = "<b>"+device->getClass()+"</b><br><\br>"+id;
-				QToolTip::showText(mapToGlobal(e->pos()), QString::fromStdString(tooltip), this, device_bounds);
-				device_hit = true;
-			}
+		QRect device_bounds = getDistortedGraphicBounds(device->getBuffer(), device->getScale());
+		if(device_bounds.contains(e->pos())) {
+			QCursor current_cursor = cursor();
+			current_cursor.setShape(Qt::PointingHandCursor);
+			setCursor(current_cursor);
+			string tooltip = "<b>"+device->getClass()+"</b><br><\br>"+id;
+			QToolTip::showText(mapToGlobal(e->pos()), QString::fromStdString(tooltip), this, device_bounds);
+			device_hit = true;
 		}
 	}
 	if(!device_hit) {
@@ -212,13 +208,11 @@ void Breadboard::paintEvent(QPaintEvent*) {
 
 	// Graph Buffers
 	for (auto& [id, device] : devices) {
-		if(device->graph) {
-			QImage buffer = device->graph->getBuffer();
-			QRect graphic_bounds = getDistortedGraphicBounds(buffer, device->graph->getScale());
-			painter.drawImage(graphic_bounds.topLeft(), buffer.scaled(graphic_bounds.size()));
-			if(debugmode) {
-				painter.drawRect(graphic_bounds);
-			}
+		QImage buffer = device->getBuffer();
+		QRect graphic_bounds = getDistortedGraphicBounds(buffer, device->getScale());
+		painter.drawImage(graphic_bounds.topLeft(), buffer.scaled(graphic_bounds.size()));
+		if(debugmode) {
+			painter.drawRect(graphic_bounds);
 		}
 	}
 

@@ -4,42 +4,22 @@
 
 RGB::RGB(DeviceID id) : CDevice(id) {
 	pin = std::make_unique<RGB_Pin>(this);
-	graph = std::make_unique<RGB_Graph>(this);
+	layout = Layout{1,1,"rgba"};
 }
 
 RGB::~RGB() {}
 
 const DeviceClass RGB::getClass() const { return classname; }
 
-/* PIN */
-
-RGB::RGB_Pin::RGB_Pin(CDevice* device) : CDevice::PIN_Interface_C(device) {
-	layout = PinLayout();
-	layout.emplace(0, PinDesc{PinDesc::Dir::input, "r"});
-	layout.emplace(1, PinDesc{PinDesc::Dir::input, "g"});
-	layout.emplace(2, PinDesc{PinDesc::Dir::input, "b"});
-}
-
-void RGB::RGB_Pin::setPin(PinNumber num, gpio::Tristate val) {
-	if(num <= 2) {
-		RGB_Graph* rgb_graph = static_cast<RGB_Graph*>(device->graph.get());
-		rgb_graph->draw(num, val == gpio::Tristate::HIGH);
-	}
-}
-
 /* Graph */
 
-RGB::RGB_Graph::RGB_Graph(CDevice* device) : CDevice::Graphbuf_Interface_C(device) {
-	layout = Layout{1, 1, "rgba"};
-}
-
-void RGB::RGB_Graph::initializeBuffer() {
+void RGB::initializeBuffer() {
 	for(PinNumber num=0; num<=2; num++) {
 		draw(0, false);
 	}
 }
 
-void RGB::RGB_Graph::draw(PinNumber num, bool val) {
+void RGB::draw(PinNumber num, bool val) {
 	if(num > 2) { return; }
 	int extent_center = ceil(buffer.width()/(float)2);
 	Pixel cur = getPixel(extent_center, extent_center);
@@ -61,5 +41,21 @@ void RGB::RGB_Graph::draw(PinNumber num, bool val) {
 			img[offs+2] = cur.b;
 			img[offs+3] = (uint8_t)norm_lumen;
 		}
+	}
+}
+
+/* PIN */
+
+RGB::RGB_Pin::RGB_Pin(CDevice* device) : CDevice::PIN_Interface_C(device) {
+	pinLayout = PinLayout();
+	pinLayout.emplace(0, PinDesc{PinDesc::Dir::input, "r"});
+	pinLayout.emplace(1, PinDesc{PinDesc::Dir::input, "g"});
+	pinLayout.emplace(2, PinDesc{PinDesc::Dir::input, "b"});
+}
+
+void RGB::RGB_Pin::setPin(PinNumber num, gpio::Tristate val) {
+	if(num <= 2) {
+		RGB* rgb_device = static_cast<RGB*>(device);
+		rgb_device->draw(num, val == gpio::Tristate::HIGH);
 	}
 }

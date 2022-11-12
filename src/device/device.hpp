@@ -20,15 +20,44 @@ typedef unsigned DeviceIndex;
 
 class Device {
 protected:
+
 	DeviceID m_id;
+	QImage buffer;
+
+	struct Layout {
+		unsigned width = 1; // as raster rows
+		unsigned height = 1; // as raster indexes
+		std::string data_type = "rgba";	// Currently ignored and always RGBA8888
+	};
+
+	// TODO: Add a scheme that only alpha channel is changed?
+	//       either rgb may be negative (don't change)
+	//       or just another function (probably better)
+	typedef unsigned Xoffset;
+	typedef unsigned Yoffset;
+	struct Pixel {
+		uint8_t r;
+		uint8_t g;
+		uint8_t b;
+		uint8_t a;
+	};
+	void setPixel(const Xoffset, const Yoffset, Pixel);
+	Pixel getPixel(const Xoffset, const Yoffset);
+	virtual Layout getLayout();
 
 public:
 
 	const DeviceID& getID() const;
 	virtual const DeviceClass getClass() const = 0;
 
-	void fromJSON(QJsonObject json, unsigned iconSizeMinimum);
+	void fromJSON(QJsonObject json);
 	QJsonObject toJSON();
+
+	virtual void initializeBuffer();
+	virtual void createBuffer(unsigned iconSizeMinimum, QPoint offset=QPoint(0,0));
+	void setScale(unsigned scale);
+	unsigned getScale();
+	QImage& getBuffer();
 
 	class PIN_Interface {
 	public:
@@ -51,41 +80,6 @@ public:
 		virtual bool setConfig(Config conf) = 0;
 	};
 
-	class Graphbuf_Interface {
-	protected:
-		QImage buffer;
-
-		struct Layout {
-			unsigned width = 1; // as raster rows
-			unsigned height = 1; // as raster indexes
-			std::string data_type = "rgba";	// Currently ignored and always RGBA8888
-		};
-
-		// TODO: Add a scheme that only alpha channel is changed?
-		//       either rgb may be negative (don't change)
-		//       or just another function (probably better)
-		typedef unsigned Xoffset;
-		typedef unsigned Yoffset;
-		struct Pixel {
-			uint8_t r;
-			uint8_t g;
-			uint8_t b;
-			uint8_t a;
-		};
-		void setPixel(const Xoffset, const Yoffset, Pixel);
-		Pixel getPixel(const Xoffset, const Yoffset);
-	private:
-		unsigned m_scale = 1;
-		virtual Layout getLayout();
-	public:
-		virtual ~Graphbuf_Interface();
-		virtual void initializeBuffer();
-		virtual void createBuffer(unsigned iconSizeMinimum, QPoint offset=QPoint(0,0));
-		void setScale(unsigned scale);
-		unsigned getScale();
-		QImage& getBuffer();
-	};
-
 	class Input_Interface {
 	public:
 		Keys keybindings;
@@ -100,9 +94,11 @@ public:
 	std::unique_ptr<PIN_Interface> pin;
 	std::unique_ptr<SPI_Interface> spi;
 	std::unique_ptr<Config_Interface> conf;
-	std::unique_ptr<Graphbuf_Interface> graph;
 	std::unique_ptr<Input_Interface> input;
 
 	Device(DeviceID id);
 	virtual ~Device();
+
+private:
+	unsigned m_scale = 1;
 };

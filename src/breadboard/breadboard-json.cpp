@@ -67,19 +67,18 @@ bool Breadboard::loadConfigFile(QString file) {
 			QJsonObject device_desc = device_description.toObject();
 			const string& classname = device_desc["class"].toString("undefined").toStdString();
 			const string& id = device_desc["id"].toString("undefined").toStdString();
+			QJsonObject graphics = device_desc["graphics"].toObject();
+			const QJsonArray offs_desc = graphics["offs"].toArray();
+			QPoint offs(offs_desc[0].toInt(), offs_desc[1].toInt());
 
-			unique_ptr<Device> device = createDevice(classname, id);
-			if(!device) {
+			if(!addDevice(classname, offs, id)) {
 				cerr << "[Breadboard] could not create device '" << classname << "'." << endl;
 				continue;
 			}
-			device->fromJSON(device_desc, iconSizeMinimum());
-			if(device->graph) device->graph->createBuffer(iconSizeMinimum());
-			if(device->graph && checkDevicePosition(device->getID(), device->graph->getBuffer(),
-					device->graph->getScale(), device->graph->getBuffer().offset()).x()<0) {
-				cerr << "[Breadboard] Device overlaps existing device" << endl;
-				continue;
-			}
+			auto device = devices.find(id);
+			if(device == devices.end()) continue;
+
+			device->second->fromJSON(device_desc);
 
 			if(device_desc.contains("spi") && device_desc["spi"].isObject()) {
 				const QJsonObject spi = device_desc["spi"].toObject();
@@ -90,7 +89,7 @@ bool Breadboard::loadConfigFile(QString file) {
 				}
 				const gpio::PinNumber cs = spi["cs_pin"].toInt();
 				const bool noresponse = spi["noresponse"].toBool(true);
-				registerSPI(cs, noresponse, device.get());
+				registerSPI(cs, noresponse, device->second.get());
 			}
 
 			if(device_desc.contains("pins") && device_desc["pins"].isArray()) {
@@ -108,17 +107,16 @@ bool Breadboard::loadConfigFile(QString file) {
 					const bool synchronous = pin["synchronous"].toBool(false);
 					const string pin_name = pin["name"].toString("undef").toStdString();
 
-					registerPin(synchronous, device_pin, global_pin, pin_name, device.get());
+					registerPin(synchronous, device_pin, global_pin, pin_name, device->second.get());
 				}
 			}
-
-			devices.insert(make_pair(id, std::move(device)));
 		}
 
 		if(debug_logging) {
 			cout << "Instatiated devices:" << endl;
 			for (auto& [id, device] : devices) {
 				cout << "\t" << id << " of class " << device->getClass() << endl;
+				cout << "\t minimum buffer size " << device->getBuffer().width() << "x" << device->getBuffer().height() << " pixel." << endl;
 
 				if(device->pin)
 					cout << "\t\timplements PIN" << endl;
@@ -126,9 +124,6 @@ bool Breadboard::loadConfigFile(QString file) {
 					cout << "\t\timplements SPI" << endl;
 				if(device->conf)
 					cout << "\t\timplements conf" << endl;
-				if(device->graph)
-					cout << "\t\timplements graphbuf (" << device->graph->getBuffer().width() << "x" <<
-					device->graph->getBuffer().height() << " pixel)"<< endl;
 			}
 
 			cout << "Active pin connections:" << endl;
