@@ -25,6 +25,7 @@ class MainWindow : public QMainWindow {
 	void removeJsonDir(QString dir);
 
 public:
-	MainWindow(QString configfile, std::string additional_device_dir, const std::string host, const std::string port, bool overwrite_integrated_devices=false, QWidget *parent=0);
+	MainWindow(std::string additional_device_dir, const std::string host, const std::string port, bool overwrite_integrated_devices=false, QWidget *parent=0);
 	~MainWindow();
+	void loadJSON(QString configfile);
 };

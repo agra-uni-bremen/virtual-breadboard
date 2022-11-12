@@ -12,7 +12,6 @@ Central::Central(const std::string host, const std::string port, QWidget *parent
 	QVBoxLayout *layout = new QVBoxLayout(this);
 	layout->addWidget(embedded);
 	layout->addWidget(breadboard);
-	layout->setSizeConstraint(QLayout::SetFixedSize);
 
 	QTimer *timer = new QTimer(this);
 	connect(timer, &QTimer::timeout, this, &Central::timerUpdate);

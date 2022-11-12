@@ -13,6 +13,10 @@ class Embedded : public QWidget {
 	const std::string port;
 	bool connected = false;
 
+	QPixmap bkgnd;
+
+	void resizeEvent(QResizeEvent *e);
+
 public:
 	Embedded(const std::string host, const std::string port);
 	~Embedded();

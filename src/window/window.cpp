@@ -7,14 +7,13 @@
 #include <QFileDialog>
 #include <QLayout>
 
-MainWindow::MainWindow(QString configfile, std::string additional_device_dir,
+MainWindow::MainWindow(std::string additional_device_dir,
 		const std::string host, const std::string port,
 		bool overwrite_integrated_devices, QWidget *parent) : QMainWindow(parent) {
 	setWindowTitle("MainWindow");
 
 	central = new Central(host, port, this);
 	central->loadLUA(additional_device_dir, overwrite_integrated_devices);
-	central->loadJSON(configfile);
 	setCentralWidget(central);
 	connect(central, &Central::connectionUpdate, [this](bool active){
 		connection_label->setText(active ? "Connected" : "Disconnected");
@@ -22,11 +21,13 @@ MainWindow::MainWindow(QString configfile, std::string additional_device_dir,
 	connect(central, &Central::sendStatus, this->statusBar(), &QStatusBar::showMessage);
 
 	createDropdown();
-
-	layout()->setSizeConstraint(QLayout::SetFixedSize);
 }
 
 MainWindow::~MainWindow() {
+}
+
+void MainWindow::loadJSON(QString configfile) {
+	central->loadJSON(configfile);
 }
 
 void MainWindow::saveJSON(QString file) {
@@ -66,7 +67,7 @@ void MainWindow::loadJsonDirEntries(QString dir) {
 		QString file = it.next();
 		QAction *cur = new QAction(file.right(file.size()-(dir.size() + 1)));
 		connect(cur, &QAction::triggered, [this, file](){
-			central->loadJSON(file);
+			loadJSON(file);
 		});
 		(*dir_menu)->addAction(cur);
 	}

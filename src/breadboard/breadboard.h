@@ -91,6 +91,7 @@ class Breadboard : public QWidget {
 	void mousePressEvent(QMouseEvent *e) override;
 	void mouseReleaseEvent(QMouseEvent *e) override;
 	void mouseMoveEvent(QMouseEvent *e) override;
+	void resizeEvent(QResizeEvent *e) override;
 
 	// Raster
 	DeviceRow getDeviceRow(QPoint pos);

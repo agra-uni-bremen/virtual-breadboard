@@ -45,7 +45,7 @@ Breadboard::Breadboard() : QWidget() {
 		add_device->addAction(device_action);
 	}
 
-	setFixedSize(DEFAULT_SIZE);
+	setMinimumSize(DEFAULT_SIZE);
 	setBackground(DEFAULT_PATH);
 }
 

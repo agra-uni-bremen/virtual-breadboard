@@ -111,9 +111,9 @@ int main(int argc, char* argv[]) {
     	overwrite_integrated_devices = input.cmdOptionExists("--overwrite");
     }
 
-	MainWindow w(QString(configfile.c_str()), scriptpath.c_str(), host.c_str(), port.c_str(),
-			overwrite_integrated_devices);
+	MainWindow w(scriptpath.c_str(), host.c_str(), port.c_str(), overwrite_integrated_devices);
 	w.show();
+	w.loadJSON(QString(configfile.c_str()));
 
 	return a.exec();
 }

@@ -54,7 +54,7 @@ bool Breadboard::loadConfigFile(QString file) {
 		unsigned windowsize_x = window["windowsize"].toArray().at(0).toInt();
 		unsigned windowsize_y = window["windowsize"].toArray().at(1).toInt();
 
-		setFixedSize(windowsize_x, windowsize_y);
+		setMinimumSize(windowsize_x, windowsize_y);
 		setBackground(window["background"].toString());
 	}
 

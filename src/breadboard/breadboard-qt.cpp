@@ -182,6 +182,10 @@ void Breadboard::dropEvent(QDropEvent *e) {
 
 /* PAINT */
 
+void Breadboard::resizeEvent(QResizeEvent*) {
+	updateBackground();
+}
+
 void Breadboard::paintEvent(QPaintEvent*) {
 	QPainter painter(this);
 	painter.setRenderHint(QPainter::Antialiasing);

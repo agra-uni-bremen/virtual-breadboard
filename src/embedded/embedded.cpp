@@ -6,18 +6,19 @@ using namespace gpio;
 using namespace std;
 
 Embedded::Embedded(const std::string host, const std::string port) : QWidget(), host(host), port(port) {
-	QSize bkgnd_size = QSize(417, 231);
-	QString bkgnd_path = ":/img/virtual_hifive.png";
-	QPixmap bkgnd(bkgnd_path);
-	bkgnd = bkgnd.scaled(bkgnd_size, Qt::IgnoreAspectRatio);
-	QPalette palette;
-	palette.setBrush(QPalette::Window, bkgnd);
-	this->setPalette(palette);
+	bkgnd = QPixmap(":/img/virtual_hifive.png");
 	this->setAutoFillBackground(true);
-	setFixedSize(bkgnd_size);
+	setMinimumSize(417, 231);
 }
 
 Embedded::~Embedded() {}
+
+void Embedded::resizeEvent(QResizeEvent *e) {
+   QPixmap new_bkgnd = bkgnd.scaled(size(), Qt::IgnoreAspectRatio);
+   QPalette palette;
+   palette.setBrush(QPalette::Window, new_bkgnd);
+   setPalette(palette);
+}
 
 /* GPIO */
 
