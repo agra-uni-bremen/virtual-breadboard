@@ -23,47 +23,47 @@ void Breadboard::updateBackground() {
    setPalette(palette);
 }
 
-void Breadboard::additionalLuaDir(string additional_device_dir, bool overwrite_integrated_devices) {
-	if(additional_device_dir.size() != 0) {
+void Breadboard::additionalLuaDir(const string& additional_device_dir, bool overwrite_integrated_devices) {
+	if(!additional_device_dir.empty()) {
 		factory.scanAdditionalDir(additional_device_dir, overwrite_integrated_devices);
 	}
 }
 
-bool Breadboard::loadConfigFile(QString file) {
-	QFile confFile(file);
-	if (!confFile.open(QIODevice::ReadOnly)) {
-		cerr << "[Breadboard] Could not open config file " << endl;
-		return false;
-	}
+bool Breadboard::loadConfigFile(const QString& file) {
+    QFile confFile(file);
+    if (!confFile.open(QIODevice::ReadOnly)) {
+        std::cerr << "[Breadboard] Could not open config file " << std::endl;
+        return false;
+    }
 
-	QByteArray  raw_file = confFile.readAll();
-	QJsonParseError error;
-	QJsonDocument json_doc = QJsonDocument::fromJson(raw_file, &error);
-	if(json_doc.isNull())
-	{
-		cerr << "[Breadboard] Config seems to be invalid: ";
-		cerr << error.errorString().toStdString() << endl;
-		return false;
-	}
-	QJsonObject config_root = json_doc.object();
+    QByteArray raw_file = confFile.readAll();
+    QJsonParseError error;
+    QJsonDocument json_doc = QJsonDocument::fromJson(raw_file, &error);
+    if(json_doc.isNull())
+    {
+        std::cerr << "[Breadboard] Config seems to be invalid: ";
+        std::cerr << error.errorString().toStdString() << std::endl;
+        return false;
+    }
+    QJsonObject json = json_doc.object();
 
-	clear();
+    clear();
 
-	if(config_root.contains("window") && config_root["window"].isObject()) {
-		QJsonObject window = config_root["window"].toObject();
-		unsigned windowsize_x = window["windowsize"].toArray().at(0).toInt();
-		unsigned windowsize_y = window["windowsize"].toArray().at(1).toInt();
+    if(json.contains("window") && json["window"].isObject()) {
+        QJsonObject window = json["window"].toObject();
+        unsigned windowsize_x = window["windowsize"].toArray().at(0).toInt();
+        unsigned windowsize_y = window["windowsize"].toArray().at(1).toInt();
 
-		setMinimumSize(windowsize_x, windowsize_y);
-		setBackground(window["background"].toString());
-	}
+        setMinimumSize(windowsize_x, windowsize_y);
+        setBackground(window["background"].toString());
+    }
 
-	if(config_root.contains("devices") && config_root["devices"].isArray()) {
-		QJsonArray device_descriptions = config_root["devices"].toArray();
+	if(json.contains("devices") && json["devices"].isArray()) {
+		QJsonArray device_descriptions = json["devices"].toArray();
 		devices.reserve(device_descriptions.count());
 		if(debug_logging)
 			cout << "[Breadboard] reserving space for " << device_descriptions.count() << " devices." << endl;
-		for(const QJsonValue& device_description : device_descriptions) {
+		for(const auto& device_description : device_descriptions) {
 			QJsonObject device_desc = device_description.toObject();
 			const string& classname = device_desc["class"].toString("undefined").toStdString();
 			const string& id = device_desc["id"].toString("undefined").toStdString();
@@ -71,7 +71,7 @@ bool Breadboard::loadConfigFile(QString file) {
 			const QJsonArray offs_desc = graphics["offs"].toArray();
 			QPoint offs(offs_desc[0].toInt(), offs_desc[1].toInt());
 
-			if(!addDevice(classname, offs, id)) {
+			if(!addDevice(classname, getDistortedPosition(offs), id)) {
 				cerr << "[Breadboard] could not create device '" << classname << "'." << endl;
 				continue;
 			}
@@ -94,7 +94,7 @@ bool Breadboard::loadConfigFile(QString file) {
 
 			if(device_desc.contains("pins") && device_desc["pins"].isArray()) {
 				QJsonArray pin_descriptions = device_desc["pins"].toArray();
-				for (const QJsonValue& pin_desc : pin_descriptions) {
+				for (const auto& pin_desc : pin_descriptions) {
 					const QJsonObject pin = pin_desc.toObject();
 					if(!pin.contains("device_pin") ||
 							!pin.contains("global_pin")) {
@@ -147,7 +147,7 @@ bool Breadboard::loadConfigFile(QString file) {
 	return true;
 }
 
-bool Breadboard::saveConfigFile(QString file) {
+bool Breadboard::saveConfigFile(const QString& file) {
 	QFile confFile(file);
 	if(!confFile.open(QIODevice::WriteOnly)) {
 		cerr << "[Breadboard] Could not open config file" << endl;
@@ -159,8 +159,8 @@ bool Breadboard::saveConfigFile(QString file) {
 		QJsonObject window;
 		window["background"] = bkgnd_path;
 		QJsonArray windowsize;
-		windowsize.append(size().width());
-		windowsize.append(size().height());
+		windowsize.append(minimumSize().width());
+		windowsize.append(minimumSize().height());
 		window["windowsize"] = windowsize;
 		current_state["window"] = window;
 	}
@@ -201,7 +201,7 @@ bool Breadboard::saveConfigFile(QString file) {
 			pin_json["global_pin"] = pin->second.global_pin;
 			pins_json.append(pin_json);
 		}
-		if(pins_json.size()) {
+		if(!pins_json.empty()) {
 			dev_json["pins"] = pins_json;
 		}
 		devices_json.append(dev_json);

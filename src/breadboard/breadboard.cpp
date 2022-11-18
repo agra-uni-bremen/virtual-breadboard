@@ -10,23 +10,23 @@ Breadboard::Breadboard() : QWidget() {
 	setAcceptDrops(true);
 	setMouseTracking(true);
 
-	QTimer *timer = new QTimer(this);
+	auto *timer = new QTimer(this);
 	connect(timer, &QTimer::timeout, this, [this]{update();});
 	timer->start(1000/30);
 
 	setContextMenuPolicy(Qt::CustomContextMenu);
 	connect(this, &QWidget::customContextMenuRequested, this, &Breadboard::openContextMenu);
 	device_menu = new QMenu(this);
-	QAction *delete_device = new QAction("Delete");
+	auto *delete_device = new QAction("Delete");
 	connect(delete_device, &QAction::triggered, this, &Breadboard::removeActiveDevice);
 	device_menu->addAction(delete_device);
-	QAction *scale_device = new QAction("Scale");
+	auto *scale_device = new QAction("Scale");
 	connect(scale_device, &QAction::triggered, this, &Breadboard::scaleActiveDevice);
 	device_menu->addAction(scale_device);
-	QAction *keybinding_device = new QAction("Edit Keybindings");
+	auto *keybinding_device = new QAction("Edit Keybindings");
 	connect(keybinding_device, &QAction::triggered, this, &Breadboard::keybindingActiveDevice);
 	device_menu->addAction(keybinding_device);
-	QAction *config_device = new QAction("Edit configurations");
+	auto *config_device = new QAction("Edit configurations");
 	connect(config_device, &QAction::triggered, this, &Breadboard::configActiveDevice);
 	device_menu->addAction(config_device);
 
@@ -37,8 +37,8 @@ Breadboard::Breadboard() : QWidget() {
 	error_dialog = new QErrorMessage(this);
 
 	add_device = new QMenu(this);
-	for(DeviceClass device : factory.getAvailableDevices()) {
-		QAction *device_action = new QAction(QString::fromStdString(device));
+	for(const DeviceClass& device : factory.getAvailableDevices()) {
+		auto *device_action = new QAction(QString::fromStdString(device));
 		connect(device_action, &QAction::triggered, [this, device](){
 			addDevice(device, mapFromGlobal(add_device->pos()));
 		});
@@ -49,10 +49,8 @@ Breadboard::Breadboard() : QWidget() {
 	setBackground(DEFAULT_PATH);
 }
 
-Breadboard::~Breadboard() {
-}
+Breadboard::~Breadboard() = default;
 
-std::list<DeviceClass> Breadboard::getAvailableDevices() { return factory.getAvailableDevices(); }
 bool Breadboard::isBreadboard() { return bkgnd_path == DEFAULT_PATH; }
 bool Breadboard::toggleDebug() {
 	debugmode = !debugmode;
@@ -61,25 +59,25 @@ bool Breadboard::toggleDebug() {
 
 /* DEVICE */
 
-QPoint Breadboard::checkDevicePosition(DeviceID id, QImage buffer, int scale, QPoint position, QPoint hotspot) {
+QPoint Breadboard::checkDevicePosition(const DeviceID& id, const QImage& buffer, int scale, QPoint position, QPoint hotspot) {
 	QPoint upper_left = position - hotspot;
-	QRect device_bounds = QRect(upper_left, getDistortedGraphicBounds(buffer, scale).size()); // TODO
+	QRect device_bounds = QRect(upper_left, getDistortedGraphicBounds(buffer, scale).size());
 
 	if(isBreadboard()) {
-		if(getRasterBounds().intersects(device_bounds)) { // TODO
+		if(getRasterBounds().intersects(device_bounds)) {
 			QPoint dropPositionRaster = getAbsolutePosition(getRow(position), getIndex(position));
 			upper_left = dropPositionRaster - getDeviceAbsolutePosition(getDeviceRow(hotspot),
 					getDeviceIndex(hotspot));
 			device_bounds = QRect(upper_left, device_bounds.size());
 		} else {
 			cerr << "[Breadboard] Device position invalid: Device should be at least partially on raster." << endl;
-			return QPoint(-1,-1);
+			return {-1,-1};
 		}
 	}
 
 	if(!rect().contains(device_bounds)) {
 		cerr << "[Breadboard] Device position invalid: Device may not leave window view." << endl;
-		return QPoint(-1,-1);
+		return {-1,-1};
 	}
 
 	for(const auto& [id_it, device_it] : devices) {
@@ -87,7 +85,7 @@ QPoint Breadboard::checkDevicePosition(DeviceID id, QImage buffer, int scale, QP
 		if(getDistortedGraphicBounds(device_it->getBuffer(),
 				device_it->getScale()).intersects(device_bounds)) {
 			cerr << "[Breadboard] Device position invalid: Overlaps with other device." << endl;
-			return QPoint(-1,-1);
+			return {-1,-1};
 		}
 	}
 	return getMinimumPosition(upper_left);
@@ -110,8 +108,8 @@ bool Breadboard::moveDevice(Device *device, QPoint position, QPoint hotspot) {
 	return true;
 }
 
-bool Breadboard::addDevice(DeviceClass classname, QPoint pos, DeviceID id) {
-	if(!id.size()) {
+bool Breadboard::addDevice(const DeviceClass& classname, QPoint pos, DeviceID id) {
+	if(id.empty()) {
 		if(devices.size() < std::numeric_limits<unsigned>::max()) {
 			id = std::to_string(devices.size());
 		}
@@ -130,7 +128,7 @@ bool Breadboard::addDevice(DeviceClass classname, QPoint pos, DeviceID id) {
 		}
 	}
 
-	if(!id.size()) {
+	if(id.empty()) {
 		cerr << "[Breadboard] Device ID cannot be empty string!" << endl;
 		return false;
 	}
@@ -168,7 +166,7 @@ void Breadboard::openContextMenu(QPoint pos) {
 }
 
 void Breadboard::removeActiveDevice() {
-	if(!menu_device_id.size()) return;
+	if(menu_device_id.empty()) return;
 	removeDevice(menu_device_id);
 	menu_device_id = "";
 }
@@ -200,7 +198,7 @@ void Breadboard::keybindingActiveDevice() {
 	device_keys->exec();
 }
 
-void Breadboard::changeKeybindingActiveDevice(DeviceID device_id, Keys keys) {
+void Breadboard::changeKeybindingActiveDevice(const DeviceID& device_id, Keys keys) {
 	auto device = devices.find(device_id);
 	if(device == devices.end() || !device->second->input) {
 		error_dialog->showMessage("Device does not implement input interface.");
@@ -220,7 +218,7 @@ void Breadboard::configActiveDevice() {
 	device_config->exec();
 }
 
-void Breadboard::changeConfigActiveDevice(DeviceID device_id, Config config) {
+void Breadboard::changeConfigActiveDevice(const DeviceID& device_id, Config config) {
 	auto device = devices.find(device_id);
 	if(device == devices.end() || !device->second->conf) {
 		error_dialog->showMessage("Device does not implement config interface.");

@@ -1,54 +1,56 @@
 {
     "devices": [
         {
-            "class": "rgb",
-            "graphics": {
-                "offs": [
-                    137,
-                    62
-                ],
-                "scale": 2
+            "class": "DHT22",
+            "conf": {
+                "humidity": 70,
+                "temperature": 22
             },
-            "id": "rgb",
-            "pins": [
-                {
-                    "device_pin": 0,
-                    "global_pin": 6,
-                    "name": "r"
-                },
-                {
-                    "device_pin": 1,
-                    "global_pin": 3,
-                    "name": "g"
-                },
-                {
-                    "device_pin": 2,
-                    "global_pin": 5,
-                    "name": "b"
-                }
-            ]
-        },
-        {
-            "class": "button",
             "graphics": {
                 "offs": [
-                    89,
-                    62
+                    233,
+                    50
                 ],
                 "scale": 1
             },
-            "id": "reverse_count",
-            "keybindings": [
-                "D",
-                "Up"
-            ],
+            "id": "tempsens2"
+        },
+        {
+            "class": "SSD1106",
+            "graphics": {
+                "offs": [
+                    245,
+                    86
+                ],
+                "scale": 1
+            },
+            "id": "display",
             "pins": [
                 {
                     "device_pin": 1,
-                    "global_pin": 3,
-                    "name": "output"
+                    "global_pin": 16,
+                    "synchronous": true
                 }
-            ]
+            ],
+            "spi": {
+                "cs_pin": 15,
+                "noresponse": true
+            }
+        },
+        {
+            "class": "DHT22",
+            "conf": {
+                "humidity": 70,
+                "temperature": 22
+            },
+            "graphics": {
+                "offs": [
+                    245,
+                    50
+                ],
+                "scale": 1
+            },
+            "id": "tempsens1"
         },
         {
             "class": "sevensegment",
@@ -104,56 +106,54 @@
             ]
         },
         {
-            "class": "DHT22",
-            "conf": {
-                "humidity": 70,
-                "temperature": 22
-            },
+            "class": "button",
             "graphics": {
                 "offs": [
-                    257,
+                    101,
                     50
                 ],
                 "scale": 1
             },
-            "id": "tempsens1"
-        },
-        {
-            "class": "SSD1106",
-            "graphics": {
-                "offs": [
-                    245,
-                    98
-                ],
-                "scale": 1
-            },
-            "id": "display",
+            "id": "reverse_count",
+            "keybindings": [
+                "D",
+                "Up"
+            ],
             "pins": [
                 {
                     "device_pin": 1,
-                    "global_pin": 16,
-                    "synchronous": true
+                    "global_pin": 3,
+                    "name": "output"
                 }
-            ],
-            "spi": {
-                "cs_pin": 15,
-                "noresponse": true
-            }
+            ]
         },
         {
-            "class": "DHT22",
-            "conf": {
-                "humidity": 70,
-                "temperature": 22
-            },
+            "class": "rgb",
             "graphics": {
                 "offs": [
-                    245,
+                    137,
                     50
                 ],
-                "scale": 1
+                "scale": 2
             },
-            "id": "tempsens2"
+            "id": "rgb",
+            "pins": [
+                {
+                    "device_pin": 0,
+                    "global_pin": 6,
+                    "name": "r"
+                },
+                {
+                    "device_pin": 1,
+                    "global_pin": 3,
+                    "name": "g"
+                },
+                {
+                    "device_pin": 2,
+                    "global_pin": 5,
+                    "name": "b"
+                }
+            ]
         }
     ]
 }

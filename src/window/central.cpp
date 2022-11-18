@@ -57,10 +57,10 @@ void Central::closeDeviceIOFs(std::vector<gpio::PinNumber> gpio_offs, DeviceID d
 
 void Central::loadJSON(QString file) {
 	emit(sendStatus("Loading config file " + file, 10000));
-	if(!breadboard->loadConfigFile(file)) {
-		emit(sendStatus("Config file " + file + " invalid.", 10000));
-		return;
-	}
+    if(!breadboard->loadConfigFile(file)) {
+        std::cerr << "[Central] Could not open config file " << std::endl;
+        return;
+    }
 	if(breadboard->isBreadboard()) {
 		embedded->show();
 	}

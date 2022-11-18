@@ -68,7 +68,7 @@ class Breadboard : public QWidget {
 	void updateBackground();
 
 	// Device
-	bool addDevice(DeviceClass classname, QPoint pos, DeviceID id="");
+	bool addDevice(const DeviceClass& classname, QPoint pos, DeviceID id="");
 	void removeDevice(DeviceID id);
 
 	// Connections
@@ -78,7 +78,7 @@ class Breadboard : public QWidget {
 	void writeDevice(DeviceID id);
 
 	// Drag and Drop
-	QPoint checkDevicePosition(DeviceID id, QImage buffer, int scale, QPoint position, QPoint hotspot=QPoint(0,0));
+	QPoint checkDevicePosition(const DeviceID& id, const QImage& buffer, int scale, QPoint position, QPoint hotspot=QPoint(0,0));
 	bool moveDevice(Device *device, QPoint position, QPoint hotspot=QPoint(0,0));
 	void dropEvent(QDropEvent *e) override;
 	void dragEnterEvent(QDragEnterEvent *e) override;
@@ -108,7 +108,7 @@ class Breadboard : public QWidget {
 
 	unsigned iconSizeMinimum();
 	QRect getDistortedRect(unsigned x, unsigned y, unsigned width, unsigned height);
-	QRect getDistortedGraphicBounds(QImage buffer, unsigned scale);
+	QRect getDistortedGraphicBounds(const QImage& buffer, unsigned scale);
 	QPoint getDistortedPosition(QPoint pos);
 	QSize getDistortedSize(QSize minimum);
 	QPoint getMinimumPosition(QPoint pos);
@@ -120,9 +120,9 @@ public:
 	bool toggleDebug();
 
 	// JSON
-	bool loadConfigFile(QString file);
-	bool saveConfigFile(QString file);
-	void additionalLuaDir(std::string additional_device_dir, bool overwrite_integrated_devices);
+    bool loadConfigFile(const QString& file);
+	bool saveConfigFile(const QString& file);
+	void additionalLuaDir(const std::string& additional_device_dir, bool overwrite_integrated_devices);
 	void clear();
 	void clearConnections();
 
@@ -132,7 +132,6 @@ public:
 
 	// Devices
 	void removeDeviceObjects(DeviceID id);
-	std::list<DeviceClass> getAvailableDevices();
 
 public slots:
 	void connectionUpdate(bool active);
@@ -142,9 +141,9 @@ private slots:
 	void removeActiveDevice();
 	void scaleActiveDevice();
 	void keybindingActiveDevice();
-	void changeKeybindingActiveDevice(DeviceID device, Keys keys);
+	void changeKeybindingActiveDevice(const DeviceID& device, Keys keys);
 	void configActiveDevice();
-	void changeConfigActiveDevice(DeviceID device, Config config);
+	void changeConfigActiveDevice(const DeviceID& device, Config config);
 
 signals:
 	void registerIOF_PIN(gpio::PinNumber gpio_offs, GpioClient::OnChange_PIN fun);
