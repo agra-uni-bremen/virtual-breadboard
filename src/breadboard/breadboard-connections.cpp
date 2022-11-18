@@ -25,9 +25,10 @@ void Breadboard::registerPin(bool synchronous, gpio::PinNumber device_pin, gpio:
 					" This is not supported for inout-pins and unnecessary for output pins." << endl;
 			return;
 		}
-		m_pin_channels.emplace(device->getID(), PIN_IOF_Request{translatePinToGpioOffs(global),
-                                                                global, device_pin,
-                                                                [this, device, device_pin](gpio::Tristate pin) {
+		m_pin_channels.emplace(device->getID(), PIN_IOF_Request{.gpio_offs= translatePinToGpioOffs(global),
+                                                                .global_pin = global,
+                                                                .device_pin = device_pin,
+                                                                .fun = [this, device, device_pin](gpio::Tristate pin) {
 				m_lua_access.lock();
 				device->m_pin->setPin(device_pin, pin);
 				m_lua_access.unlock();
@@ -53,9 +54,10 @@ void Breadboard::registerSPI(gpio::PinNumber global, bool noresponse, Device *de
 				"', but device does not implement SPI interface." << endl;
 		return;
 	}
-	m_spi_channels.emplace(device->getID(), SPI_IOF_Request{translatePinToGpioOffs(global),
-                                                            global, noresponse,
-                                                            [this, device](gpio::SPI_Command cmd){
+	m_spi_channels.emplace(device->getID(), SPI_IOF_Request{.gpio_offs = translatePinToGpioOffs(global),
+                                                            .global_pin = global,
+                                                            .noresponse = noresponse,
+                                                            .fun = [this, device](gpio::SPI_Command cmd){
 			m_lua_access.lock();
 			const gpio::SPI_Response ret = device->m_spi->send(cmd);
 			m_lua_access.unlock();

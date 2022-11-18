@@ -97,7 +97,7 @@ void MainWindow::addJsonDir(const QString& dir) {
 void MainWindow::createDropdown() {
     m_config = menuBar()->addMenu("Config");
 	auto load_config_file = new QAction("Load JSON file");
-	load_config_file->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_O));
+	load_config_file->setShortcut(QKeySequence(QKeySequence::Open));
 	connect(load_config_file, &QAction::triggered, [this](){
 		QString path = QFileDialog::getOpenFileName(parentWidget(), "Select JSON file",
 				QDir::currentPath(), "JSON files (*.json)");
@@ -105,7 +105,7 @@ void MainWindow::createDropdown() {
 	});
 	m_config->addAction(load_config_file);
 	auto save_config = new QAction("Save to JSON file");
-	save_config->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_S));
+	save_config->setShortcut(QKeySequence(QKeySequence::Save));
 	connect(save_config, &QAction::triggered, [this](){
 		QString path = QFileDialog::getSaveFileName(parentWidget(), "Select JSON file",
 				QDir::currentPath(), "JSON files (*.json)");
@@ -114,11 +114,11 @@ void MainWindow::createDropdown() {
 	});
 	m_config->addAction(save_config);
 	auto clear_breadboard = new QAction("Clear breadboard");
-	clear_breadboard->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_D));
+	clear_breadboard->setShortcut(QKeySequence(QKeySequence::Delete));
 	connect(clear_breadboard, &QAction::triggered, m_central, &Central::clearBreadboard);
 	m_config->addAction(clear_breadboard);
 	auto load_config_dir = new QAction("Add JSON directory");
-	load_config_dir->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_A));
+	load_config_dir->setShortcut(QKeySequence("CTRL+A"));
 	connect(load_config_dir, &QAction::triggered, [this](){
 		QString path = QFileDialog::getExistingDirectory(parentWidget(), "Open Directory",
 				QDir::currentPath(), QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
@@ -153,7 +153,7 @@ void MainWindow::createDropdown() {
 	window->addAction(debug);
 	window->addSeparator();
 	auto quit = new QAction("Quit");
-	quit->setShortcut(QKeySequence(Qt::Key_Q));
+	quit->setShortcut(QKeySequence(QKeySequence::Quit));
 	connect(quit, &QAction::triggered, [this](){
 		m_central->destroyConnection();
 		QApplication::quit();
