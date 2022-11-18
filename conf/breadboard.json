@@ -1,6 +1,17 @@
 {
     "devices": [
         {
+            "class": "bme280",
+            "graphics": {
+                "offs": [
+                    125,
+                    123
+                ],
+                "scale": 1
+            },
+            "id": "7"
+        },
+        {
             "class": "DHT22",
             "conf": {
                 "humidity": 70,
@@ -8,49 +19,89 @@
             },
             "graphics": {
                 "offs": [
-                    233,
-                    50
+                    5,
+                    122
                 ],
                 "scale": 1
             },
             "id": "tempsens2"
         },
         {
-            "class": "SSD1106",
+            "class": "LED",
+            "conf": {
+                "colour_b": 10,
+                "colour_g": 10,
+                "colour_r": 255
+            },
             "graphics": {
                 "offs": [
-                    245,
+                    137,
                     86
                 ],
                 "scale": 1
             },
-            "id": "display",
-            "pins": [
-                {
-                    "device_pin": 1,
-                    "global_pin": 16,
-                    "synchronous": true
-                }
-            ],
-            "spi": {
-                "cs_pin": 15,
-                "noresponse": true
-            }
+            "id": "6"
         },
         {
-            "class": "DHT22",
-            "conf": {
-                "humidity": 70,
-                "temperature": 22
-            },
+            "class": "rgb",
             "graphics": {
                 "offs": [
-                    245,
+                    137,
                     50
+                ],
+                "scale": 2
+            },
+            "id": "rgb",
+            "pins": [
+                {
+                    "device_pin": 0,
+                    "global_pin": 6,
+                    "name": "r"
+                },
+                {
+                    "device_pin": 1,
+                    "global_pin": 3,
+                    "name": "g"
+                },
+                {
+                    "device_pin": 2,
+                    "global_pin": 5,
+                    "name": "b"
+                }
+            ]
+        },
+        {
+            "class": "button_lua",
+            "graphics": {
+                "offs": [
+                    101,
+                    74
                 ],
                 "scale": 1
             },
-            "id": "tempsens1"
+            "id": "9"
+        },
+        {
+            "class": "RTC_0815",
+            "graphics": {
+                "offs": [
+                    65,
+                    123
+                ],
+                "scale": 1
+            },
+            "id": "4"
+        },
+        {
+            "class": "SSD1106",
+            "graphics": {
+                "offs": [
+                    221,
+                    51
+                ],
+                "scale": 1
+            },
+            "id": "8"
         },
         {
             "class": "sevensegment",
@@ -128,32 +179,15 @@
             ]
         },
         {
-            "class": "rgb",
+            "class": "oled",
             "graphics": {
                 "offs": [
-                    137,
-                    50
+                    353,
+                    51
                 ],
-                "scale": 2
+                "scale": 1
             },
-            "id": "rgb",
-            "pins": [
-                {
-                    "device_pin": 0,
-                    "global_pin": 6,
-                    "name": "r"
-                },
-                {
-                    "device_pin": 1,
-                    "global_pin": 3,
-                    "name": "g"
-                },
-                {
-                    "device_pin": 2,
-                    "global_pin": 5,
-                    "name": "b"
-                }
-            ]
+            "id": "5"
         }
     ]
 }
