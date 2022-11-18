@@ -3,13 +3,13 @@
 #include <cFactory.h>
 
 class Button : public CDevice {
-	bool active = false;
+	bool m_active = false;
 
 public:
-	Button(DeviceID id);
+	Button(const DeviceID& id);
 	~Button();
 
-	inline static DeviceClass classname = "button";
+	inline static DeviceClass m_classname = "button";
 	const DeviceClass getClass() const override;
 
 	void initializeBuffer() override;

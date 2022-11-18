@@ -16,18 +16,18 @@ using luabridge::LuaRef;
 using luabridge::LuaResult;
 
 
-LuaDevice::LuaDevice(const DeviceID id, LuaRef env, lua_State* l) : Device(id), m_env(env), L(l){
+LuaDevice::LuaDevice(const DeviceID& id, LuaRef env, lua_State* l) : Device(id), m_env(env), L(l){
 	if(PIN_Interface_Lua::implementsInterface(m_env)) {
-		pin = std::make_unique<PIN_Interface_Lua>(m_env);
+        m_pin = std::make_unique<PIN_Interface_Lua>(m_env);
 	}
 	if(SPI_Interface_Lua::implementsInterface(m_env)) {
-		spi = std::make_unique<SPI_Interface_Lua>(m_env);
+        m_spi = std::make_unique<SPI_Interface_Lua>(m_env);
 	}
 	if(Config_Interface_Lua::implementsInterface(m_env)) {
-		conf = std::make_unique<Config_Interface_Lua>(m_env);
+        m_conf = std::make_unique<Config_Interface_Lua>(m_env);
 	}
 	if(Input_Interface_Lua::implementsInterface(m_env)) {
-		input = std::make_unique<Input_Interface_Lua>(m_env);
+        m_input = std::make_unique<Input_Interface_Lua>(m_env);
 	}
 
 	if(implementsGraphFunctions()) {
@@ -35,7 +35,7 @@ LuaDevice::LuaDevice(const DeviceID id, LuaRef env, lua_State* l) : Device(id), 
 	}
 };
 
-LuaDevice::~LuaDevice() {}
+LuaDevice::~LuaDevice() = default;
 
 const DeviceClass LuaDevice::getClass() const {
 	// If Device exists, classname is known to exist of correct type
@@ -152,8 +152,8 @@ void LuaDevice::createBuffer(unsigned iconSizeMinimum, QPoint offset) {
 	};
 
 	registerGlobalFunctionAndInsertLocalAlias<>("setGraphbuffer", setBuf);
-	m_env["buffer_width"] = buffer.width();
-	m_env["buffer_height"] = buffer.height();
+	m_env["buffer_width"] = m_buffer.width();
+	m_env["buffer_height"] = m_buffer.height();
 	initializeBuffer();
 }
 
@@ -164,7 +164,7 @@ LuaDevice::PIN_Interface_Lua::PIN_Interface_Lua(LuaRef& ref) :
 		cerr << "[LuaDevice] WARN: Device " << ref << " not implementing interface" << endl;
 }
 
-LuaDevice::PIN_Interface_Lua::~PIN_Interface_Lua() {}
+LuaDevice::PIN_Interface_Lua::~PIN_Interface_Lua() = default;
 
 bool LuaDevice::PIN_Interface_Lua::implementsInterface(const luabridge::LuaRef& ref) {
 	// TODO: Better checks
@@ -244,7 +244,7 @@ LuaDevice::SPI_Interface_Lua::SPI_Interface_Lua(LuaRef& ref) :
 		cerr << "[LuaDevice] " << ref << " not implementing SPI interface" << endl;
 }
 
-LuaDevice::SPI_Interface_Lua::~SPI_Interface_Lua() {}
+LuaDevice::SPI_Interface_Lua::~SPI_Interface_Lua() = default;
 
 
 gpio::SPI_Response LuaDevice::SPI_Interface_Lua::send(gpio::SPI_Command byte) {
@@ -269,7 +269,7 @@ LuaDevice::Config_Interface_Lua::Config_Interface_Lua(luabridge::LuaRef& ref) :
 
 };
 
-LuaDevice::Config_Interface_Lua::~Config_Interface_Lua() {}
+LuaDevice::Config_Interface_Lua::~Config_Interface_Lua() = default;
 
 bool LuaDevice::Config_Interface_Lua::implementsInterface(const luabridge::LuaRef& ref) {
 	return !ref["getConfig"].isNil() && !ref["setConfig"].isNil();
@@ -355,7 +355,7 @@ LuaDevice::Input_Interface_Lua::Input_Interface_Lua(luabridge::LuaRef& ref) : m_
 		cerr << "[LuaDevice] WARN: Device " << ref << " not implementing interface" << endl;
 }
 
-LuaDevice::Input_Interface_Lua::~Input_Interface_Lua() {}
+LuaDevice::Input_Interface_Lua::~Input_Interface_Lua() = default;
 
 void LuaDevice::Input_Interface_Lua::onClick(bool active) {
 	m_onClick(active);

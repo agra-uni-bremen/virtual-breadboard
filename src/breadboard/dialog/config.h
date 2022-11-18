@@ -8,18 +8,18 @@
 class ConfigDialog : public QDialog {
 	Q_OBJECT
 
-	QFormLayout *layout;
-	Config config;
-	DeviceID device;
+	QFormLayout *m_layout;
+	Config m_config;
+	DeviceID m_device;
 
-	void addValue(ConfigDescription name, QWidget* value);
-	void addInt(ConfigDescription name, int value);
-	void addBool(ConfigDescription name, bool value);
-	void addString(ConfigDescription name, QString value);
+	void addValue(const ConfigDescription& name, QWidget* value);
+	void addInt(const ConfigDescription& name, int value);
+	void addBool(const ConfigDescription& name, bool value);
+	void addString(const ConfigDescription& name, const QString& value);
 
 public:
 	ConfigDialog(QWidget* parent);
-	void setConfig(DeviceID device, Config config);
+	void setConfig(DeviceID device, const Config& config);
 
 public slots:
 	void accept() override;

@@ -5,10 +5,10 @@
 class Sevensegment : public CDevice {
 
 public:
-	Sevensegment(DeviceID id);
+	Sevensegment(const DeviceID& id);
 	~Sevensegment();
 
-	inline static DeviceClass classname = "sevensegment";
+	inline static DeviceClass m_classname = "sevensegment";
 	const DeviceClass getClass() const override;
 
 	void initializeBuffer() override;

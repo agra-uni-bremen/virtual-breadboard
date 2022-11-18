@@ -93,7 +93,7 @@ public:
 		static bool implementsInterface(const luabridge::LuaRef& ref);
 	};
 
-	LuaDevice(DeviceID id, luabridge::LuaRef env, lua_State* L);
+	LuaDevice(const DeviceID& id, luabridge::LuaRef env, lua_State* L);
 	~LuaDevice();
 
 	Layout getLayout() override;

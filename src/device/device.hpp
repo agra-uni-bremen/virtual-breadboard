@@ -22,7 +22,7 @@ class Device {
 protected:
 
 	DeviceID m_id;
-	QImage buffer;
+	QImage m_buffer;
 
 	struct Layout {
 		unsigned width = 1; // as raster rows
@@ -54,9 +54,9 @@ public:
 	QJsonObject toJSON();
 
 	virtual void initializeBuffer();
-	virtual void createBuffer(unsigned iconSizeMinimum, QPoint offset=QPoint(0,0));
+	virtual void createBuffer(unsigned iconSizeMinimum, QPoint offset);
 	void setScale(unsigned scale);
-	unsigned getScale();
+	unsigned getScale() const;
 	QImage& getBuffer();
 
 	class PIN_Interface {
@@ -87,16 +87,16 @@ public:
 		virtual void onClick(bool active) = 0;
 		virtual void onKeypress(Key key, bool active) = 0;
 		void setKeys(Keys bindings);
-		Keys getKeys();
+		Keys getKeys() const;
 	};
 
 
-	std::unique_ptr<PIN_Interface> pin;
-	std::unique_ptr<SPI_Interface> spi;
-	std::unique_ptr<Config_Interface> conf;
-	std::unique_ptr<Input_Interface> input;
+	std::unique_ptr<PIN_Interface> m_pin;
+	std::unique_ptr<SPI_Interface> m_spi;
+	std::unique_ptr<Config_Interface> m_conf;
+	std::unique_ptr<Input_Interface> m_input;
 
-	Device(DeviceID id);
+	Device(const DeviceID& id);
 	virtual ~Device();
 
 private:

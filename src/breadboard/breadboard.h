@@ -44,38 +44,40 @@ class Breadboard : public QWidget {
 		Device* dev;
 	};
 
-	std::mutex lua_access;		//TODO: Use multiple Lua states per 'async called' device
-	Factory factory;
+	std::mutex m_lua_access;		//TODO: Use multiple Lua states per 'async called' device
+	Factory m_factory;
 	std::unordered_map<DeviceID,std::unique_ptr<Device>> m_devices;
-	std::unordered_map<DeviceID,SPI_IOF_Request> spi_channels;
-	std::unordered_map<DeviceID,PIN_IOF_Request> pin_channels;
+	std::unordered_map<DeviceID,SPI_IOF_Request> m_spi_channels;
+	std::unordered_map<DeviceID,PIN_IOF_Request> m_pin_channels;
 
-	std::list<PinMapping> reading_connections;		// Semantic subject to change
-	std::list<PinMapping> writing_connections;
+	std::list<PinMapping> m_reading_connections;		// Semantic subject to change
+	std::list<PinMapping> m_writing_connections;
 
-	bool debugmode = false;
-	QString bkgnd_path;
-	QPixmap bkgnd;
+	bool m_debugmode = false;
+	QString m_bkgnd_path;
+	QPixmap m_bkgnd;
 
-	DeviceID menu_device_id;
-	QMenu *device_menu;
-	KeybindingDialog *device_keys;
-	ConfigDialog *device_config;
-	QErrorMessage *error_dialog;
-	QMenu *add_device;
+	DeviceID m_menu_device_id;
+	QMenu *m_device_menu;
+    QAction *m_device_menu_key;
+    QAction *m_device_menu_conf;
+	KeybindingDialog *m_device_keys;
+	ConfigDialog *m_device_config;
+	QErrorMessage *m_error_dialog;
+	QMenu *m_add_device;
 
 	void setBackground(QString path);
 	void updateBackground();
 
 	// Device
 	bool addDevice(const DeviceClass& classname, QPoint pos, DeviceID id="");
-	void removeDevice(DeviceID id);
+	void removeDevice(const DeviceID& id);
 
 	// Connections
 	void registerPin(bool synchronous, gpio::PinNumber device_pin, gpio::PinNumber global, std::string name, Device *device);
 	void registerSPI(gpio::PinNumber global, bool noresponse, Device *device);
 
-	void writeDevice(DeviceID id);
+	void writeDevice(const DeviceID& id);
 
 	// Drag and Drop
 	QPoint checkDevicePosition(const DeviceID& id, const QImage& buffer, int scale, QPoint position, QPoint hotspot=QPoint(0,0));
@@ -131,7 +133,7 @@ public:
 	bool isBreadboard();
 
 	// Devices
-	void removeDeviceObjects(DeviceID id);
+	void removeDeviceObjects(const DeviceID& id);
 
 public slots:
 	void connectionUpdate(bool active);

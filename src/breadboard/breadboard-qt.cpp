@@ -10,7 +10,7 @@ using namespace std;
 /* User input */
 
 void Breadboard::keyPressEvent(QKeyEvent *e) {
-	if(!debugmode) {
+	if(!m_debugmode) {
 		switch (e->key()) {
 		case Qt::Key_0: {
 			uint8_t until = 6;
@@ -27,12 +27,12 @@ void Breadboard::keyPressEvent(QKeyEvent *e) {
 		}
 		default:
 			for(auto const& [id, device] : m_devices) {
-				if(device->input) {
-					Keys device_keys = device->input->getKeys();
+				if(device->m_input) {
+					Keys device_keys = device->m_input->getKeys();
 					if(device_keys.find(e->key()) != device_keys.end()) {
-						lua_access.lock();
-						device->input->onKeypress(e->key(), true);
-						lua_access.unlock();
+						m_lua_access.lock();
+						device->m_input->onKeypress(e->key(), true);
+						m_lua_access.unlock();
 						writeDevice(id);
 					}
 				}
@@ -45,14 +45,14 @@ void Breadboard::keyPressEvent(QKeyEvent *e) {
 
 void Breadboard::keyReleaseEvent(QKeyEvent *e)
 {
-	if(!debugmode) {
+	if(!m_debugmode) {
 		for(auto const& [id, device] : m_devices) {
-			if(device->input) {
-				Keys device_keys = device->input->getKeys();
+			if(device->m_input) {
+				Keys device_keys = device->m_input->getKeys();
 				if(device_keys.find(e->key()) != device_keys.end()) {
-					lua_access.lock();
-					device->input->onKeypress(e->key(), false);
-					lua_access.unlock();
+					m_lua_access.lock();
+					device->m_input->onKeypress(e->key(), false);
+					m_lua_access.unlock();
 					writeDevice(id);
 				}
 			}
@@ -68,7 +68,7 @@ void Breadboard::mousePressEvent(QMouseEvent *e) {
 		if(!scale) scale = 1;
 		QRect buffer_bounds = getDistortedGraphicBounds(buffer, scale);
 		if(buffer_bounds.contains(e->pos()) && e->button() == Qt::LeftButton)  {
-			if(debugmode) { // Move
+			if(m_debugmode) { // Move
 				QPoint hotspot = e->pos() - buffer_bounds.topLeft();
 
 				QByteArray itemData;
@@ -77,9 +77,9 @@ void Breadboard::mousePressEvent(QMouseEvent *e) {
 
 				buffer = buffer.scaled(buffer_bounds.size());
 
-				QMimeData *mimeData = new QMimeData;
+				auto *mimeData = new QMimeData;
 				mimeData->setData(DEVICE_DRAG_TYPE, itemData);
-				QDrag *drag = new QDrag(this);
+				auto *drag = new QDrag(this);
 				drag->setMimeData(mimeData);
 				drag->setPixmap(QPixmap::fromImage(buffer));
 				drag->setHotSpot(hotspot);
@@ -87,10 +87,10 @@ void Breadboard::mousePressEvent(QMouseEvent *e) {
 				drag->exec(Qt::MoveAction);
 			}
 			else { // Input
-				if(device->input) {
-					lua_access.lock();
-					device->input->onClick(true);
-					lua_access.unlock();
+				if(device->m_input) {
+					m_lua_access.lock();
+					device->m_input->onClick(true);
+					m_lua_access.unlock();
 					writeDevice(id);
 				}
 			}
@@ -103,11 +103,11 @@ void Breadboard::mousePressEvent(QMouseEvent *e) {
 void Breadboard::mouseReleaseEvent(QMouseEvent *e) {
 	for(auto const& [id, device] : m_devices) {
 		if(e->button() == Qt::LeftButton) {
-			if(!debugmode) {
-				if(device->input) {
-					lua_access.lock();
-					device->input->onClick(false);
-					lua_access.unlock();
+			if(!m_debugmode) {
+				if(device->m_input) {
+					m_lua_access.lock();
+					device->m_input->onClick(false);
+					m_lua_access.unlock();
 					writeDevice(id);
 				}
 			}
@@ -200,7 +200,7 @@ void Breadboard::paintEvent(QPaintEvent*) {
 		painter.restore();
 	}
 
-	if(debugmode) {
+	if(m_debugmode) {
 		QColor red("red");
 		red.setAlphaF(0.5);
 		painter.setBrush(QBrush(red));
@@ -211,7 +211,7 @@ void Breadboard::paintEvent(QPaintEvent*) {
 		QImage buffer = device->getBuffer();
 		QRect graphic_bounds = getDistortedGraphicBounds(buffer, device->getScale());
 		painter.drawImage(graphic_bounds.topLeft(), buffer.scaled(graphic_bounds.size()));
-		if(debugmode) {
+		if(m_debugmode) {
 			painter.drawRect(graphic_bounds);
 		}
 	}

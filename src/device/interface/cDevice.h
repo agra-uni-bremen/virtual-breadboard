@@ -4,12 +4,12 @@
 
 class CDevice : public Device {
 protected:
-	Layout layout;
+	Layout m_layout;
 public:
 	class PIN_Interface_C : public Device::PIN_Interface {
 	protected:
-		CDevice* device;
-		PinLayout pinLayout;
+		CDevice* m_device;
+		PinLayout m_pinLayout;
 	public:
 		PIN_Interface_C(CDevice* device);
 		~PIN_Interface_C();
@@ -20,7 +20,7 @@ public:
 
 	class SPI_Interface_C : public Device::SPI_Interface {
 	protected:
-		CDevice* device;
+		CDevice* m_device;
 	public:
 		SPI_Interface_C(CDevice* device);
 		~SPI_Interface_C();
@@ -29,8 +29,8 @@ public:
 
 	class Config_Interface_C : public Device::Config_Interface {
 	protected:
-		CDevice* device;
-		Config config;
+		CDevice* m_device;
+		Config m_config;
 	public:
 		Config_Interface_C(CDevice *device);
 		~Config_Interface_C();
@@ -40,7 +40,7 @@ public:
 
 	class Input_Interface_C : public Device::Input_Interface {
 	protected:
-		CDevice* device;
+		CDevice* m_device;
 	public:
 		Input_Interface_C(CDevice* device);
 		~Input_Interface_C();
@@ -48,7 +48,7 @@ public:
 		void onKeypress(Key key, bool active) override;
 	};
 
-	CDevice(DeviceID id);
+	CDevice(const DeviceID& id);
 	~CDevice();
 
 	Layout getLayout() override;

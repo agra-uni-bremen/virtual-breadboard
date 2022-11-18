@@ -25,14 +25,14 @@ class OLED : public CDevice {
 		bool display_on = true;
 	};
 
-	bool is_data = false;
-	State state;
+	bool m_is_data = false;
+	State m_state;
 
 public:
-	OLED(DeviceID id);
+	OLED(const DeviceID& id);
 	~OLED();
 
-	inline static DeviceClass classname = "oled";
+	inline static DeviceClass m_classname = "oled";
 	const DeviceClass getClass() const override;
 
 	void initializeBuffer() override;

@@ -5,16 +5,16 @@
 using namespace gpio;
 using namespace std;
 
-Embedded::Embedded(const std::string host, const std::string port) : QWidget(), host(host), port(port) {
-	bkgnd = QPixmap(":/img/virtual_hifive.png");
+Embedded::Embedded(const std::string& host, const std::string& port) : QWidget(), m_host(host), m_port(port) {
+    m_bkgnd = QPixmap(":/img/virtual_hifive.png");
 	this->setAutoFillBackground(true);
 	setMinimumSize(417, 231);
 }
 
-Embedded::~Embedded() {}
+Embedded::~Embedded() = default;
 
 void Embedded::resizeEvent(QResizeEvent*) {
-   QPixmap new_bkgnd = bkgnd.scaled(size(), Qt::IgnoreAspectRatio);
+   QPixmap new_bkgnd = m_bkgnd.scaled(size(), Qt::IgnoreAspectRatio);
    QPalette palette;
    palette.setBrush(QPalette::Window, new_bkgnd);
    setPalette(palette);
@@ -23,13 +23,13 @@ void Embedded::resizeEvent(QResizeEvent*) {
 /* GPIO */
 
 bool Embedded::timerUpdate() { // return: new connection?
-	if(connected && !gpio.update()) {
+	if(m_connected && !m_gpio.update()) {
 		emit(connectionLost());
-		connected = false;
+        m_connected = false;
 	}
-	if(!connected) {
-		connected = gpio.setupConnection(host.c_str(), port.c_str());
-		if(connected) {
+	if(!m_connected) {
+        m_connected = m_gpio.setupConnection(m_host.c_str(), m_port.c_str());
+		if(m_connected) {
 			return true;
 		}
 	}
@@ -37,35 +37,35 @@ bool Embedded::timerUpdate() { // return: new connection?
 }
 
 State Embedded::getState() {
-	return gpio.state;
+	return m_gpio.state;
 }
 
-bool Embedded::gpioConnected() {
-	return connected;
+bool Embedded::gpioConnected() const {
+	return m_connected;
 }
 
 void Embedded::registerIOF_PIN(PinNumber gpio_offs, GpioClient::OnChange_PIN fun) {
-	if(!gpio.isIOFactive(gpio_offs)) {
-		gpio.registerPINOnChange(gpio_offs, fun);
+	if(!m_gpio.isIOFactive(gpio_offs)) {
+		m_gpio.registerPINOnChange(gpio_offs, fun);
 	}
 }
 
 void Embedded::registerIOF_SPI(PinNumber gpio_offs, GpioClient::OnChange_SPI fun, bool no_response) {
-	if(!gpio.isIOFactive(gpio_offs)) {
-		gpio.registerSPIOnChange(gpio_offs, fun, no_response);
+	if(!m_gpio.isIOFactive(gpio_offs)) {
+		m_gpio.registerSPIOnChange(gpio_offs, fun, no_response);
 	}
 }
 
 void Embedded::closeIOF(PinNumber gpio_offs) {
-	gpio.closeIOFunction(gpio_offs);
+	m_gpio.closeIOFunction(gpio_offs);
 }
 
 void Embedded::destroyConnection() {
-	gpio.destroyConnection();
+	m_gpio.destroyConnection();
 }
 
 void Embedded::setBit(gpio::PinNumber gpio_offs, gpio::Tristate state) {
-	if(connected) {
-		gpio.setBit(gpio_offs, state);
+	if(m_connected) {
+		m_gpio.setBit(gpio_offs, state);
 	}
 }

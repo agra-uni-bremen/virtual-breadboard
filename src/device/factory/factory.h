@@ -5,8 +5,8 @@
 
 
 class Factory {
-	LuaFactory lua_factory;
-	CFactory c_factory = getCFactory();
+	LuaFactory m_lua_factory;
+	CFactory m_c_factory = getCFactory();
 
 public:
 	void scanAdditionalDir(std::string dir, bool overwrite_existing = false);
@@ -14,6 +14,6 @@ public:
 	std::list<DeviceClass> getLUADevices();
 	std::list<DeviceClass> getCDevices();
 
-	bool deviceExists(DeviceClass classname);
-	std::unique_ptr<Device> instantiateDevice(DeviceID id, DeviceClass classname);
+	bool deviceExists(const DeviceClass& classname);
+	std::unique_ptr<Device> instantiateDevice(const DeviceID& id, const DeviceClass& classname);
 };

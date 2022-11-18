@@ -1,6 +1,7 @@
 #include "breadboard.h"
 
 #include <iostream>
+#include <cmath>
 
 /* Device */
 
@@ -86,16 +87,6 @@ QSize Breadboard::getDistortedSize(QSize minimum) {
 }
 
 QPoint Breadboard::getMinimumPosition(QPoint pos) {
-    unsigned pos_x = pos.x();
-    unsigned pos_y = pos.y();
-    unsigned minWidth = minimumWidth();
-    int i_width = width();
-    unsigned width = (unsigned)i_width;
-    unsigned minHeight = minimumHeight();
-    int i_height = height();
-    unsigned height = (unsigned)i_height;
-    // unsigned x, y, q. ceil(x/y) = q = (x+y-1)/y
-    unsigned q_x = ((pos_x*minWidth)+width-1)/width;
-    unsigned q_y = ((pos_y*minHeight)+height-1)/height;
-    return {(int)q_x, (int)q_y};
+    return {(int)std::ceil((pos.x()*minimumWidth())/(float)width()),
+            (int)std::ceil((pos.y()*minimumHeight())/(float)height())};
 }

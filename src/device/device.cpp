@@ -7,9 +7,9 @@
 
 #include <iostream>
 
-Device::Device(const DeviceID id) : m_id(id) {}
+Device::Device(const DeviceID& id) : m_id(id) {}
 
-Device::~Device() {}
+Device::~Device() = default;
 
 const DeviceID& Device::getID() const {
 	return m_id;
@@ -17,7 +17,7 @@ const DeviceID& Device::getID() const {
 
 void Device::fromJSON(QJsonObject json) {
 	if(json.contains("conf") && json["conf"].isObject()) {
-		if(!conf) {
+		if(!m_conf) {
 			std::cerr << "[Device] config for device '" << getClass() << "' sets"
 					" a Config Interface, but device does not implement it" << std::endl;
 		}
@@ -39,25 +39,25 @@ void Device::fromJSON(QJsonObject json) {
 					std::cerr << "[Device] Invalid conf element type" << std::endl;
 				}
 			}
-			conf->setConfig(config);
+			m_conf->setConfig(config);
 		}
 	}
 
 	if(json.contains("keybindings") && json["keybindings"].isArray()) {
-		if(!input) {
+		if(!m_input) {
 			std::cerr << "[Device] config for device '" << getClass() << "' sets"
 					" keybindings, but device does not implement input interface" << std::endl;
 		}
 		else {
 			QJsonArray bindings = json["keybindings"].toArray();
 			Keys keys;
-			for(const QJsonValue& binding : bindings) {
+			for(const auto & binding : bindings) {
 				QKeySequence binding_sequence = QKeySequence(binding.toString());
 				if(binding_sequence.count()) {
 					keys.emplace(binding_sequence[0]);
 				}
 			}
-			input->setKeys(keys);
+			m_input->setKeys(keys);
 		}
 	}
 
@@ -84,9 +84,9 @@ QJsonObject Device::toJSON() {
 	graph_json["scale"] = (int) getScale();
 	json["graphics"] = graph_json;
 
-	if(conf) {
+	if(m_conf) {
 		QJsonObject conf_json;
-		for(auto const& [desc, elem] : conf->getConfig()) {
+		for(auto const& [desc, elem] : m_conf->getConfig()) {
 			if(elem.type == ConfigElem::Type::integer) {
 				conf_json[QString::fromStdString(desc)] = (int) elem.value.integer;
 			}
@@ -99,9 +99,9 @@ QJsonObject Device::toJSON() {
 		}
 		json["conf"] = conf_json;
 	}
-	if(input) {
-		Keys keys = input->getKeys();
-		if(keys.size()) {
+	if(m_input) {
+		Keys keys = m_input->getKeys();
+		if(!keys.empty()) {
 			QJsonArray keybindings_json;
 			for(const Key& key : keys) {
 				keybindings_json.append(QJsonValue(QKeySequence(key).toString()));
@@ -113,14 +113,14 @@ QJsonObject Device::toJSON() {
 }
 
 Device::Layout Device::getLayout() {
-       return Layout();
+       return {};
 }
 
 void Device::initializeBuffer() {
-       auto *img = buffer.bits();
-       for(unsigned x=0; x<buffer.width(); x++) {
-               for(unsigned y=0; y<buffer.height(); y++) {
-                       const auto offs = (y * buffer.width() + x) * 4; // heavily depends on rgba8888
+       auto *img = m_buffer.bits();
+       for(unsigned x=0; x < m_buffer.width(); x++) {
+               for(unsigned y=0; y < m_buffer.height(); y++) {
+                       const auto offs = (y * m_buffer.width() + x) * 4; // heavily depends on rgba8888
                        img[offs+0] = 0;
                        img[offs+1] = 0;
                        img[offs+2] = std::numeric_limits<typeof(img[offs+2])>::max()/2;		// TODO: Load actual default image
@@ -130,10 +130,10 @@ void Device::initializeBuffer() {
 }
 
 void Device::createBuffer(unsigned iconSizeMinimum, QPoint offset) {
-	if(!buffer.isNull()) return;
+	if(!m_buffer.isNull()) return;
 	Layout layout = getLayout();
-	buffer = QImage(layout.width*iconSizeMinimum, layout.height*iconSizeMinimum, QImage::Format_RGBA8888);
-	buffer.setOffset(offset);
+    m_buffer = QImage(layout.width * iconSizeMinimum, layout.height * iconSizeMinimum, QImage::Format_RGBA8888);
+	m_buffer.setOffset(offset);
 	initializeBuffer();
 }
 
@@ -141,19 +141,19 @@ void Device::setScale(unsigned scale) {
 	m_scale = scale;
 }
 
-unsigned Device::getScale() { return m_scale; }
+unsigned Device::getScale() const { return m_scale; }
 
 QImage& Device::getBuffer() {
-	return buffer;
+	return m_buffer;
 }
 
 void Device::setPixel(const Xoffset x, const Yoffset y, Pixel p) {
 	auto* img = getBuffer().bits();
-	if(x >= buffer.width() || y >= buffer.height()) {
+	if(x >= m_buffer.width() || y >= m_buffer.height()) {
 		std::cerr << "[Device] WARN: device write accessing graphbuffer out of bounds!" << std::endl;
 		return;
 	}
-	const auto offs = (y * buffer.width() + x) * 4; // heavily depends on rgba8888
+	const auto offs = (y * m_buffer.width() + x) * 4; // heavily depends on rgba8888
 	img[offs+0] = p.r;
 	img[offs+1] = p.g;
 	img[offs+2] = p.b;
@@ -162,11 +162,11 @@ void Device::setPixel(const Xoffset x, const Yoffset y, Pixel p) {
 
 Device::Pixel Device::getPixel(const Xoffset x, const Yoffset y) {
 	auto* img = getBuffer().bits();
-	if(x >= buffer.width() || y >= buffer.height()) {
+	if(x >= m_buffer.width() || y >= m_buffer.height()) {
 		std::cerr << "[Device] WARN: device read accessing graphbuffer out of bounds!" << std::endl;
 		return Pixel{0,0,0,0};
 	}
-	const auto& offs = (y * buffer.width() + x) * 4; // heavily depends on rgba8888
+	const auto& offs = (y * m_buffer.width() + x) * 4; // heavily depends on rgba8888
 	return Pixel{
 		static_cast<uint8_t>(img[offs+0]),
 				static_cast<uint8_t>(img[offs+1]),
@@ -175,15 +175,15 @@ Device::Pixel Device::getPixel(const Xoffset x, const Yoffset y) {
 	};
 }
 
-Device::PIN_Interface::~PIN_Interface() {}
-Device::SPI_Interface::~SPI_Interface() {}
-Device::Config_Interface::~Config_Interface() {}
-Device::Input_Interface::~Input_Interface() {}
+Device::PIN_Interface::~PIN_Interface() = default;
+Device::SPI_Interface::~SPI_Interface() = default;
+Device::Config_Interface::~Config_Interface() = default;
+Device::Input_Interface::~Input_Interface() = default;
 
 void Device::Input_Interface::setKeys(Keys bindings) {
 	keybindings = bindings;
 }
 
-Keys Device::Input_Interface::getKeys() {
+Keys Device::Input_Interface::getKeys() const {
 	return keybindings;
 }

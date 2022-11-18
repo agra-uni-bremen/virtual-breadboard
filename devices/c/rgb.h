@@ -5,10 +5,10 @@
 class RGB : public CDevice {
 
 public:
-	RGB(DeviceID id);
+	RGB(const DeviceID& id);
 	~RGB();
 
-	inline static DeviceClass classname = "rgb";
+	inline static DeviceClass m_classname = "rgb";
 	const DeviceClass getClass() const override;
 
 	void initializeBuffer() override;
