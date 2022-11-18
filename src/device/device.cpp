@@ -4,6 +4,7 @@
 
 #include <QKeySequence>
 #include <QJsonArray>
+#include <QPixmap>
 
 #include <iostream>
 
@@ -117,16 +118,11 @@ Device::Layout Device::getLayout() {
 }
 
 void Device::initializeBuffer() {
-       auto *img = m_buffer.bits();
-       for(unsigned x=0; x < m_buffer.width(); x++) {
-               for(unsigned y=0; y < m_buffer.height(); y++) {
-                       const auto offs = (y * m_buffer.width() + x) * 4; // heavily depends on rgba8888
-                       img[offs+0] = 0;
-                       img[offs+1] = 0;
-                       img[offs+2] = std::numeric_limits<typeof(img[offs+2])>::max()/2;		// TODO: Load actual default image
-                       img[offs+3] = std::numeric_limits<typeof(img[offs+2])>::max();
-               }
-       }
+    QPoint offset = m_buffer.offset();
+    QSize size = m_buffer.size();
+    m_buffer = QImage(":/img/default.png");
+    m_buffer = m_buffer.scaled(size);
+    m_buffer.setOffset(offset);
 }
 
 void Device::createBuffer(unsigned iconSizeMinimum, QPoint offset) {

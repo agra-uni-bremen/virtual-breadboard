@@ -25,8 +25,8 @@ protected:
 	QImage m_buffer;
 
 	struct Layout {
-		unsigned width = 1; // as raster rows
-		unsigned height = 1; // as raster indexes
+		unsigned width = 5; // as raster rows
+		unsigned height = 5; // as raster indexes
 		std::string data_type = "rgba";	// Currently ignored and always RGBA8888
 	};
 
