@@ -60,7 +60,7 @@ bool Breadboard::loadConfigFile(const QString& file) {
 
 	if(json.contains("devices") && json["devices"].isArray()) {
 		QJsonArray device_descriptions = json["devices"].toArray();
-		devices.reserve(device_descriptions.count());
+		m_devices.reserve(device_descriptions.count());
 		if(debug_logging)
 			cout << "[Breadboard] reserving space for " << device_descriptions.count() << " devices." << endl;
 		for(const auto& device_description : device_descriptions) {
@@ -75,8 +75,8 @@ bool Breadboard::loadConfigFile(const QString& file) {
 				cerr << "[Breadboard] could not create device '" << classname << "'." << endl;
 				continue;
 			}
-			auto device = devices.find(id);
-			if(device == devices.end()) continue;
+			auto device = m_devices.find(id);
+			if(device == m_devices.end()) continue;
 
 			device->second->fromJSON(device_desc);
 
@@ -114,7 +114,7 @@ bool Breadboard::loadConfigFile(const QString& file) {
 
 		if(debug_logging) {
 			cout << "Instatiated devices:" << endl;
-			for (auto& [id, device] : devices) {
+			for (auto& [id, device] : m_devices) {
 				cout << "\t" << id << " of class " << device->getClass() << endl;
 				cout << "\t minimum buffer size " << device->getBuffer().width() << "x" << device->getBuffer().height() << " pixel." << endl;
 
@@ -165,7 +165,7 @@ bool Breadboard::saveConfigFile(const QString& file) {
 		current_state["window"] = window;
 	}
 	QJsonArray devices_json;
-	for(auto const& [id, device] : devices) {
+	for(auto const& [id, device] : m_devices) {
 		QJsonObject dev_json = device->toJSON();
 		auto spi = spi_channels.find(id);
 		if(spi != spi_channels.end()) {

@@ -13,7 +13,7 @@ Embedded::Embedded(const std::string host, const std::string port) : QWidget(), 
 
 Embedded::~Embedded() {}
 
-void Embedded::resizeEvent(QResizeEvent *e) {
+void Embedded::resizeEvent(QResizeEvent*) {
    QPixmap new_bkgnd = bkgnd.scaled(size(), Qt::IgnoreAspectRatio);
    QPalette palette;
    palette.setBrush(QPalette::Window, new_bkgnd);

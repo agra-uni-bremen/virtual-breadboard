@@ -26,7 +26,7 @@ void Breadboard::keyPressEvent(QKeyEvent *e) {
 			break;
 		}
 		default:
-			for(auto const& [id, device] : devices) {
+			for(auto const& [id, device] : m_devices) {
 				if(device->input) {
 					Keys device_keys = device->input->getKeys();
 					if(device_keys.find(e->key()) != device_keys.end()) {
@@ -46,7 +46,7 @@ void Breadboard::keyPressEvent(QKeyEvent *e) {
 void Breadboard::keyReleaseEvent(QKeyEvent *e)
 {
 	if(!debugmode) {
-		for(auto const& [id, device] : devices) {
+		for(auto const& [id, device] : m_devices) {
 			if(device->input) {
 				Keys device_keys = device->input->getKeys();
 				if(device_keys.find(e->key()) != device_keys.end()) {
@@ -62,7 +62,7 @@ void Breadboard::keyReleaseEvent(QKeyEvent *e)
 }
 
 void Breadboard::mousePressEvent(QMouseEvent *e) {
-	for(auto const& [id, device] : devices) {
+	for(auto const& [id, device] : m_devices) {
 		QImage buffer = device->getBuffer();
 		unsigned scale = device->getScale();
 		if(!scale) scale = 1;
@@ -101,7 +101,7 @@ void Breadboard::mousePressEvent(QMouseEvent *e) {
 }
 
 void Breadboard::mouseReleaseEvent(QMouseEvent *e) {
-	for(auto const& [id, device] : devices) {
+	for(auto const& [id, device] : m_devices) {
 		if(e->button() == Qt::LeftButton) {
 			if(!debugmode) {
 				if(device->input) {
@@ -118,7 +118,7 @@ void Breadboard::mouseReleaseEvent(QMouseEvent *e) {
 
 void Breadboard::mouseMoveEvent(QMouseEvent *e) {
 	bool device_hit = false;
-	for(auto const& [id, device] : devices) {
+	for(auto const& [id, device] : m_devices) {
 		QRect device_bounds = getDistortedGraphicBounds(device->getBuffer(), device->getScale());
 		if(device_bounds.contains(e->pos())) {
 			QCursor current_cursor = cursor();
@@ -163,7 +163,7 @@ void Breadboard::dropEvent(QDropEvent *e) {
 		QPoint hotspot;
 		dataStream >> q_id >> hotspot;
 
-		if(moveDevice(devices.at(q_id.toStdString()).get(), e->pos(), hotspot)) {
+		if(moveDevice(m_devices.at(q_id.toStdString()).get(), e->pos(), hotspot)) {
 			e->acceptProposedAction();
 		} else {
 			e->ignore();
@@ -207,7 +207,7 @@ void Breadboard::paintEvent(QPaintEvent*) {
 	}
 
 	// Graph Buffers
-	for (auto& [id, device] : devices) {
+	for (auto& [id, device] : m_devices) {
 		QImage buffer = device->getBuffer();
 		QRect graphic_bounds = getDistortedGraphicBounds(buffer, device->getScale());
 		painter.drawImage(graphic_bounds.topLeft(), buffer.scaled(graphic_bounds.size()));

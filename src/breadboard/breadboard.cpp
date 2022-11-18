@@ -80,7 +80,7 @@ QPoint Breadboard::checkDevicePosition(const DeviceID& id, const QImage& buffer,
 		return {-1,-1};
 	}
 
-	for(const auto& [id_it, device_it] : devices) {
+	for(const auto& [id_it, device_it] : m_devices) {
 		if(id_it == id) continue;
 		if(getDistortedGraphicBounds(device_it->getBuffer(),
 				device_it->getScale()).intersects(device_bounds)) {
@@ -110,12 +110,12 @@ bool Breadboard::moveDevice(Device *device, QPoint position, QPoint hotspot) {
 
 bool Breadboard::addDevice(const DeviceClass& classname, QPoint pos, DeviceID id) {
 	if(id.empty()) {
-		if(devices.size() < std::numeric_limits<unsigned>::max()) {
-			id = std::to_string(devices.size());
+		if(m_devices.size() < std::numeric_limits<unsigned>::max()) {
+			id = std::to_string(m_devices.size());
 		}
 		else {
 			std::set<unsigned> used_ids;
-			for(auto const& [id_it, device_it] : devices) {
+			for(auto const& [id_it, device_it] : m_devices) {
 				used_ids.insert(std::stoi(id_it));
 			}
 			unsigned id_int = 0;
@@ -136,7 +136,7 @@ bool Breadboard::addDevice(const DeviceClass& classname, QPoint pos, DeviceID id
 		cerr << "[Breadboard] Class name '" << classname << "' invalid." << endl;
 		return false;
 	}
-	if(devices.find(id) != devices.end()) {
+	if(m_devices.find(id) != m_devices.end()) {
 		cerr << "[Breadboard] Another device with the ID '" << id << "' already exists!" << endl;
 		return false;
 	}
@@ -144,7 +144,7 @@ bool Breadboard::addDevice(const DeviceClass& classname, QPoint pos, DeviceID id
 	unique_ptr<Device> device = factory.instantiateDevice(id, classname);
 	device->createBuffer(iconSizeMinimum(), pos);
 	if(moveDevice(device.get(), pos)) {
-		devices.insert(make_pair(id, std::move(device)));
+		m_devices.insert(make_pair(id, std::move(device)));
 		return true;
 	}
 	cerr << "[Breadboard] Could not place new " << classname << " device" << endl;
@@ -154,7 +154,7 @@ bool Breadboard::addDevice(const DeviceClass& classname, QPoint pos, DeviceID id
 /* Context Menu */
 
 void Breadboard::openContextMenu(QPoint pos) {
-	for(auto const& [id, device] : devices) {
+	for(auto const& [id, device] : m_devices) {
 		if(getDistortedGraphicBounds(device->getBuffer(), device->getScale()).contains(pos)) {
 			menu_device_id = id;
 			device_menu->popup(mapToGlobal(pos));
@@ -172,8 +172,8 @@ void Breadboard::removeActiveDevice() {
 }
 
 void Breadboard::scaleActiveDevice() {
-	auto device = devices.find(menu_device_id);
-	if(device == devices.end()) {
+	auto device = m_devices.find(menu_device_id);
+	if(device == m_devices.end()) {
 		error_dialog->showMessage("Could not find device");
 		return;
 	}
@@ -188,8 +188,8 @@ void Breadboard::scaleActiveDevice() {
 }
 
 void Breadboard::keybindingActiveDevice() {
-	auto device = devices.find(menu_device_id);
-	if(device == devices.end() || !device->second->input) {
+	auto device = m_devices.find(menu_device_id);
+	if(device == m_devices.end() || !device->second->input) {
 		error_dialog->showMessage("Device does not implement input interface.");
 		return;
 	}
@@ -199,8 +199,8 @@ void Breadboard::keybindingActiveDevice() {
 }
 
 void Breadboard::changeKeybindingActiveDevice(const DeviceID& device_id, Keys keys) {
-	auto device = devices.find(device_id);
-	if(device == devices.end() || !device->second->input) {
+	auto device = m_devices.find(device_id);
+	if(device == m_devices.end() || !device->second->input) {
 		error_dialog->showMessage("Device does not implement input interface.");
 		return;
 	}
@@ -208,8 +208,8 @@ void Breadboard::changeKeybindingActiveDevice(const DeviceID& device_id, Keys ke
 }
 
 void Breadboard::configActiveDevice() {
-	auto device = devices.find(menu_device_id);
-	if(device == devices.end() || !device->second->conf) {
+	auto device = m_devices.find(menu_device_id);
+	if(device == m_devices.end() || !device->second->conf) {
 		error_dialog->showMessage("Device does not implement config interface.");
 		return;
 	}
@@ -219,8 +219,8 @@ void Breadboard::configActiveDevice() {
 }
 
 void Breadboard::changeConfigActiveDevice(const DeviceID& device_id, Config config) {
-	auto device = devices.find(device_id);
-	if(device == devices.end() || !device->second->conf) {
+	auto device = m_devices.find(device_id);
+	if(device == m_devices.end() || !device->second->conf) {
 		error_dialog->showMessage("Device does not implement config interface.");
 		return;
 	}

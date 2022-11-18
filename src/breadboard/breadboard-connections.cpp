@@ -85,7 +85,7 @@ void Breadboard::removeDeviceObjects(DeviceID id) {
 	spi_channels.erase(id);
 	writing_connections.remove_if([id](PinMapping map){return map.dev->getID() == id;});
 	reading_connections.remove_if([id](PinMapping map){return map.dev->getID() == id;});
-	devices.erase(id);
+	m_devices.erase(id);
 }
 
 void Breadboard::clear() {
@@ -107,7 +107,7 @@ void Breadboard::clearConnections() {
 	pin_channels.clear();
 	writing_connections.clear();
 	reading_connections.clear();
-	devices.clear();
+	m_devices.clear();
 }
 
 /* Update */
