@@ -59,6 +59,3 @@ set_target_properties(vp-breadboard PROPERTIES
 add_qt_resource(vp-breadboard configs FILES ${CONFIGS})
 add_qt_resource(vp-breadboard scripts FILES ${SCRIPTS})
 add_qt_resource(vp-breadboard images FILES ${IMAGES})
-
-#target_link_libraries(vp-breadboard Qt5::Widgets pthread LuaBridge ${LUA_LIB} virtual-breadboard-client)
-

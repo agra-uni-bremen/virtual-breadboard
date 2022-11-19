@@ -1,49 +1,28 @@
 #include "button.h"
 
 
-Button::Button(DeviceID id) : CDevice(id) {
-	graph = std::make_unique<Button_Graph>(this);
-	input = std::make_unique<Button_Input>(this);
-	pin = std::make_unique<Button_PIN>(this);
+Button::Button(const DeviceID& id) : CDevice(id) {
+    m_input = std::make_unique<Button_Input>(this);
+    m_pin = std::make_unique<Button_PIN>(this);
+    m_layout = Layout{2, 2, "rgba"};
 }
 
-Button::~Button() {}
+Button::~Button() = default;
 
-const DeviceClass Button::getClass() const { return classname; }
-
-/* PIN Interface */
-
-Button::Button_PIN::Button_PIN(CDevice* device) : CDevice::PIN_Interface_C(device) {
-	layout = PinLayout();
-	layout.emplace(1, PinDesc{PinDesc::Dir::output, "output"});
-}
-
-gpio::Tristate Button::Button_PIN::getPin(PinNumber num) {
-	if(num == 1) {
-		Button* button_device = static_cast<Button*>(device);
-		return button_device->active ? gpio::Tristate::LOW : gpio::Tristate::UNSET;
-	}
-	return gpio::Tristate::UNSET;
-}
+const DeviceClass Button::getClass() const { return m_classname; }
 
 /* Graph Interface */
 
-Button::Button_Graph::Button_Graph(CDevice* device) : CDevice::Graphbuf_Interface_C(device) {
-	layout = Layout{2,2,"rgba"};
+void Button::initializeBuffer() {
+	draw();
 }
 
-void Button::Button_Graph::initializeBuffer() {
-	Button_Graph* button_graph = static_cast<Button_Graph*>(device->graph.get());
-	button_graph->draw();
-}
-
-void Button::Button_Graph::draw() {
-	Button* button_device = static_cast<Button*>(device);
-	auto *img = buffer.bits();
-	for(unsigned x=0; x<buffer.width(); x++) {
-		for(unsigned y=0; y<buffer.height(); y++) {
-			const auto offs = (y * buffer.width() + x) * 4; // heavily depends on rgba8888
-			img[offs+0] = button_device->active?(uint8_t)255:(uint8_t)0;
+void Button::draw() {
+	auto *img = m_buffer.bits();
+	for(unsigned x=0; x < m_buffer.width(); x++) {
+		for(unsigned y=0; y < m_buffer.height(); y++) {
+			const auto offs = (y * m_buffer.width() + x) * 4; // heavily depends on rgba8888
+			img[offs+0] = m_active ? (uint8_t)255 : (uint8_t)0;
 			img[offs+1] = 0;
 			img[offs+2] = 0;
 			img[offs+3] = 128;
@@ -51,17 +30,31 @@ void Button::Button_Graph::draw() {
 	}
 }
 
+/* PIN Interface */
+
+Button::Button_PIN::Button_PIN(CDevice* device) : CDevice::PIN_Interface_C(device) {
+    m_pinLayout = PinLayout();
+	m_pinLayout.emplace(1, PinDesc{PinDesc::Dir::output, "output"});
+}
+
+gpio::Tristate Button::Button_PIN::getPin(PinNumber num) {
+	if(num == 1) {
+		auto button_device = static_cast<Button*>(m_device);
+		return button_device->m_active ? gpio::Tristate::LOW : gpio::Tristate::UNSET;
+	}
+	return gpio::Tristate::UNSET;
+}
+
 /* Input Interface */
 
 Button::Button_Input::Button_Input(CDevice* device) : CDevice::Input_Interface_C(device) {}
 
 void Button::Button_Input::onClick(bool active) {
-	Button* button_device = static_cast<Button*>(device);
-	button_device->active = active;
-	Button_Graph* button_graph = static_cast<Button_Graph*>(device->graph.get());
-	button_graph->draw();
+	auto button_device = static_cast<Button*>(m_device);
+	button_device->m_active = active;
+	button_device->draw();
 }
 
-void Button::Button_Input::onKeypress(int key, bool active) {
+void Button::Button_Input::onKeypress(int, bool active) {
 	onClick(active);
 }

@@ -9,103 +9,76 @@ constexpr bool debug_logging = false;
 
 /* JSON */
 
-void Breadboard::defaultBackground() {
-	bkgnd_path = DEFAULT_PATH;
-	QSize bkgnd_size = DEFAULT_SIZE;
-	QPixmap bkgnd(bkgnd_path);
-	bkgnd = bkgnd.scaled(bkgnd_size, Qt::IgnoreAspectRatio);
-	QPalette palette;
-	palette.setBrush(QPalette::Window, bkgnd);
-	this->setPalette(palette);
-	this->setAutoFillBackground(true);
-
-	setFixedSize(bkgnd_size);
+void Breadboard::setBackground(QString path) {
+    m_bkgnd_path = path;
+    m_bkgnd = QPixmap(m_bkgnd_path);
+	updateBackground();
+	setAutoFillBackground(true);
 }
 
-void Breadboard::clear() {
-	vector<gpio::PinNumber> iofs;
-	for(auto const& [id,spi] : spi_channels) {
-		iofs.push_back(spi.gpio_offs);
-	}
-	for(auto const& [id,pin] : pin_channels) {
-		iofs.push_back(pin.gpio_offs);
-	}
-	emit(closeAllIOFs(iofs));
-
-	defaultBackground();
+void Breadboard::updateBackground() {
+   QPixmap new_bkgnd = m_bkgnd.scaled(size(), Qt::IgnoreAspectRatio);
+   QPalette palette;
+   palette.setBrush(QPalette::Window, new_bkgnd);
+   setPalette(palette);
 }
 
-void Breadboard::clearConnections() {
-	spi_channels.clear();
-	pin_channels.clear();
-	writing_connections.clear();
-	reading_connections.clear();
-	devices.clear();
-}
-
-void Breadboard::additionalLuaDir(string additional_device_dir, bool overwrite_integrated_devices) {
-	if(additional_device_dir.size() != 0) {
-		factory.scanAdditionalDir(additional_device_dir, overwrite_integrated_devices);
+void Breadboard::additionalLuaDir(const string& additional_device_dir, bool overwrite_integrated_devices) {
+	if(!additional_device_dir.empty()) {
+		m_factory.scanAdditionalDir(additional_device_dir, overwrite_integrated_devices);
 	}
 }
 
-bool Breadboard::loadConfigFile(QString file) {
-	QFile confFile(file);
-	if (!confFile.open(QIODevice::ReadOnly)) {
-		cerr << "[Breadboard] Could not open config file " << endl;
-		return false;
-	}
+bool Breadboard::loadConfigFile(const QString& file) {
+    QFile confFile(file);
+    if (!confFile.open(QIODevice::ReadOnly)) {
+        std::cerr << "[Breadboard] Could not open config file " << std::endl;
+        return false;
+    }
 
-	QByteArray  raw_file = confFile.readAll();
-	QJsonParseError error;
-	QJsonDocument json_doc = QJsonDocument::fromJson(raw_file, &error);
-	if(json_doc.isNull())
-	{
-		cerr << "[Breadboard] Config seems to be invalid: ";
-		cerr << error.errorString().toStdString() << endl;
-		return false;
-	}
-	QJsonObject config_root = json_doc.object();
+    QByteArray raw_file = confFile.readAll();
+    QJsonParseError error;
+    QJsonDocument json_doc = QJsonDocument::fromJson(raw_file, &error);
+    if(json_doc.isNull())
+    {
+        std::cerr << "[Breadboard] Config seems to be invalid: ";
+        std::cerr << error.errorString().toStdString() << std::endl;
+        return false;
+    }
+    QJsonObject json = json_doc.object();
 
-	clear();
+    clear();
 
-	if(config_root.contains("window") && config_root["window"].isObject()) {
-		QJsonObject window = config_root["window"].toObject();
-		bkgnd_path = window["background"].toString();
-		unsigned windowsize_x = window["windowsize"].toArray().at(0).toInt();
-		unsigned windowsize_y = window["windowsize"].toArray().at(1).toInt();
-		QSize bkgnd_size = QSize(windowsize_x, windowsize_y);
+    if(json.contains("window") && json["window"].isObject()) {
+        QJsonObject window = json["window"].toObject();
+        unsigned windowsize_x = window["windowsize"].toArray().at(0).toInt();
+        unsigned windowsize_y = window["windowsize"].toArray().at(1).toInt();
 
-		QPixmap bkgnd(bkgnd_path);
-		bkgnd = bkgnd.scaled(bkgnd_size, Qt::IgnoreAspectRatio);
-		QPalette palette;
-		palette.setBrush(QPalette::Window, bkgnd);
-		this->setPalette(palette);
-		this->setAutoFillBackground(true);
-		setFixedSize(bkgnd_size);
-	}
+        setMinimumSize(windowsize_x, windowsize_y);
+        setBackground(window["background"].toString());
+    }
 
-	if(config_root.contains("devices") && config_root["devices"].isArray()) {
-		QJsonArray device_descriptions = config_root["devices"].toArray();
-		devices.reserve(device_descriptions.count());
+	if(json.contains("devices") && json["devices"].isArray()) {
+		QJsonArray device_descriptions = json["devices"].toArray();
+		m_devices.reserve(device_descriptions.count());
 		if(debug_logging)
 			cout << "[Breadboard] reserving space for " << device_descriptions.count() << " devices." << endl;
-		for(const QJsonValue& device_description : device_descriptions) {
+		for(const auto& device_description : device_descriptions) {
 			QJsonObject device_desc = device_description.toObject();
 			const string& classname = device_desc["class"].toString("undefined").toStdString();
 			const string& id = device_desc["id"].toString("undefined").toStdString();
+			QJsonObject graphics = device_desc["graphics"].toObject();
+			const QJsonArray offs_desc = graphics["offs"].toArray();
+			QPoint offs(offs_desc[0].toInt(), offs_desc[1].toInt());
 
-			unique_ptr<Device> device = createDevice(classname, id);
-			if(!device) {
+			if(!addDevice(classname, getDistortedPosition(offs), id)) {
 				cerr << "[Breadboard] could not create device '" << classname << "'." << endl;
 				continue;
 			}
-			device->fromJSON(device_desc);
-			if(device->graph && !checkDevicePosition(device->getID(), device->graph->getBuffer(),
-					device->graph->getScale(), device->graph->getBuffer().offset())) {
-				cerr << "[Breadboard] Device overlaps existing device" << endl;
-				continue;
-			}
+			auto device = m_devices.find(id);
+			if(device == m_devices.end()) continue;
+
+			device->second->fromJSON(device_desc);
 
 			if(device_desc.contains("spi") && device_desc["spi"].isObject()) {
 				const QJsonObject spi = device_desc["spi"].toObject();
@@ -116,12 +89,12 @@ bool Breadboard::loadConfigFile(QString file) {
 				}
 				const gpio::PinNumber cs = spi["cs_pin"].toInt();
 				const bool noresponse = spi["noresponse"].toBool(true);
-				registerSPI(cs, noresponse, device.get());
+				registerSPI(cs, noresponse, device->second.get());
 			}
 
 			if(device_desc.contains("pins") && device_desc["pins"].isArray()) {
 				QJsonArray pin_descriptions = device_desc["pins"].toArray();
-				for (const QJsonValue& pin_desc : pin_descriptions) {
+				for (const auto& pin_desc : pin_descriptions) {
 					const QJsonObject pin = pin_desc.toObject();
 					if(!pin.contains("device_pin") ||
 							!pin.contains("global_pin")) {
@@ -134,41 +107,37 @@ bool Breadboard::loadConfigFile(QString file) {
 					const bool synchronous = pin["synchronous"].toBool(false);
 					const string pin_name = pin["name"].toString("undef").toStdString();
 
-					registerPin(synchronous, device_pin, global_pin, pin_name, device.get());
+					registerPin(synchronous, device_pin, global_pin, pin_name, device->second.get());
 				}
 			}
-
-			devices.insert(make_pair(id, std::move(device)));
 		}
 
 		if(debug_logging) {
 			cout << "Instatiated devices:" << endl;
-			for (auto& [id, device] : devices) {
+			for (auto& [id, device] : m_devices) {
 				cout << "\t" << id << " of class " << device->getClass() << endl;
+				cout << "\t minimum buffer size " << device->getBuffer().width() << "x" << device->getBuffer().height() << " pixel." << endl;
 
-				if(device->pin)
+				if(device->m_pin)
 					cout << "\t\timplements PIN" << endl;
-				if(device->spi)
+				if(device->m_spi)
 					cout << "\t\timplements SPI" << endl;
-				if(device->conf)
+				if(device->m_conf)
 					cout << "\t\timplements conf" << endl;
-				if(device->graph)
-					cout << "\t\timplements graphbuf (" << device->graph->getLayout().width << "x" <<
-					device->graph->getLayout().height << " pixel)"<< endl;
 			}
 
 			cout << "Active pin connections:" << endl;
-			cout << "\tReading (async): " << reading_connections.size() << endl;
-			for(auto& conn : reading_connections){
+			cout << "\tReading (async): " << m_reading_connections.size() << endl;
+			for(auto& conn : m_reading_connections){
 				cout << "\t\t" << conn.dev->getID() << " (" << conn.name << "): global pin " << (int)conn.global_pin <<
 						" to device pin " << (int)conn.device_pin << endl;
 			}
-			cout << "\tReading (synchronous): " << pin_channels.size() << endl;
-			for(auto& conn : pin_channels){
+			cout << "\tReading (synchronous): " << m_pin_channels.size() << endl;
+			for(auto& conn : m_pin_channels){
 				cout << "\t\t" << conn.first << ": global pin " << (int)conn.second.global_pin << endl;
 			}
-			cout << "\tWriting: " << writing_connections.size() << endl;
-			for(auto& conn : writing_connections){
+			cout << "\tWriting: " << m_writing_connections.size() << endl;
+			for(auto& conn : m_writing_connections){
 				cout << "\t\t" << conn.dev->getID() << " (" << conn.name << "): device pin " << (int)conn.device_pin <<
 						" to global pin " << (int)conn.global_pin << endl;
 			}
@@ -178,7 +147,7 @@ bool Breadboard::loadConfigFile(QString file) {
 	return true;
 }
 
-bool Breadboard::saveConfigFile(QString file) {
+bool Breadboard::saveConfigFile(const QString& file) {
 	QFile confFile(file);
 	if(!confFile.open(QIODevice::WriteOnly)) {
 		cerr << "[Breadboard] Could not open config file" << endl;
@@ -188,25 +157,25 @@ bool Breadboard::saveConfigFile(QString file) {
 	QJsonObject current_state;
 	if(!isBreadboard()) {
 		QJsonObject window;
-		window["background"] = bkgnd_path;
+		window["background"] = m_bkgnd_path;
 		QJsonArray windowsize;
-		windowsize.append(size().width());
-		windowsize.append(size().height());
+		windowsize.append(minimumSize().width());
+		windowsize.append(minimumSize().height());
 		window["windowsize"] = windowsize;
 		current_state["window"] = window;
 	}
 	QJsonArray devices_json;
-	for(auto const& [id, device] : devices) {
+	for(auto const& [id, device] : m_devices) {
 		QJsonObject dev_json = device->toJSON();
-		auto spi = spi_channels.find(id);
-		if(spi != spi_channels.end()) {
+		auto spi = m_spi_channels.find(id);
+		if(spi != m_spi_channels.end()) {
 			QJsonObject spi_json;
 			spi_json["cs_pin"] = (int) spi->second.global_pin;
 			spi_json["noresponse"] = spi->second.noresponse;
 			dev_json["spi"] = spi_json;
 		}
 		QJsonArray pins_json;
-		for(PinMapping w : writing_connections) {
+		for(PinMapping w : m_writing_connections) {
 			if(w.dev->getID() == id) {
 				QJsonObject pin_json;
 				pin_json["device_pin"] = (int) w.device_pin;
@@ -215,7 +184,7 @@ bool Breadboard::saveConfigFile(QString file) {
 				pins_json.append(pin_json);
 			}
 		}
-		for(PinMapping w : reading_connections) {
+		for(PinMapping w : m_reading_connections) {
 			if(w.dev->getID() == id) {
 				QJsonObject pin_json;
 				pin_json["device_pin"] = (int) w.device_pin;
@@ -224,15 +193,15 @@ bool Breadboard::saveConfigFile(QString file) {
 				pins_json.append(pin_json);
 			}
 		}
-		auto pin = pin_channels.find(id);
-		if(pin != pin_channels.end()) {
+		auto pin = m_pin_channels.find(id);
+		if(pin != m_pin_channels.end()) {
 			QJsonObject pin_json;
 			pin_json["synchronous"] = true;
 			pin_json["device_pin"] = pin->second.device_pin;
 			pin_json["global_pin"] = pin->second.global_pin;
 			pins_json.append(pin_json);
 		}
-		if(pins_json.size()) {
+		if(!pins_json.empty()) {
 			dev_json["pins"] = pins_json;
 		}
 		devices_json.append(dev_json);

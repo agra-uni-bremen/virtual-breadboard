@@ -5,96 +5,94 @@
 
 /* Constructor */
 
-Central::Central(const std::string host, const std::string port, QWidget *parent) : QWidget(parent) {
-	breadboard = new Breadboard();
-	embedded = new Embedded(host, port);
+Central::Central(const std::string& host, const std::string& port, QWidget *parent) : QWidget(parent) {
+    m_breadboard = new Breadboard();
+    m_embedded = new Embedded(host, port);
 
-	QVBoxLayout *layout = new QVBoxLayout(this);
-	layout->addWidget(embedded);
-	layout->addWidget(breadboard);
-	layout->setSizeConstraint(QLayout::SetFixedSize);
+	auto *layout = new QVBoxLayout(this);
+	layout->addWidget(m_embedded);
+	layout->addWidget(m_breadboard);
 
-	QTimer *timer = new QTimer(this);
+	auto *timer = new QTimer(this);
 	connect(timer, &QTimer::timeout, this, &Central::timerUpdate);
 	timer->start(250);
 
-	connect(breadboard, &Breadboard::registerIOF_PIN, embedded, &Embedded::registerIOF_PIN);
-	connect(breadboard, &Breadboard::registerIOF_SPI, embedded, &Embedded::registerIOF_SPI);
-	connect(breadboard, &Breadboard::closeAllIOFs, this, &Central::closeAllIOFs);
-	connect(breadboard, &Breadboard::closeDeviceIOFs, this, &Central::closeDeviceIOFs);
-	connect(breadboard, &Breadboard::setBit, embedded, &Embedded::setBit);
-	connect(embedded, &Embedded::connectionLost, [this](){
+	connect(m_breadboard, &Breadboard::registerIOF_PIN, m_embedded, &Embedded::registerIOF_PIN);
+	connect(m_breadboard, &Breadboard::registerIOF_SPI, m_embedded, &Embedded::registerIOF_SPI);
+	connect(m_breadboard, &Breadboard::closeAllIOFs, this, &Central::closeAllIOFs);
+	connect(m_breadboard, &Breadboard::closeDeviceIOFs, this, &Central::closeDeviceIOFs);
+	connect(m_breadboard, &Breadboard::setBit, m_embedded, &Embedded::setBit);
+	connect(m_embedded, &Embedded::connectionLost, [this](){
 		emit(connectionUpdate(false));
 	});
-	connect(this, &Central::connectionUpdate, breadboard, &Breadboard::connectionUpdate);
+	connect(this, &Central::connectionUpdate, m_breadboard, &Breadboard::connectionUpdate);
 }
 
-Central::~Central() {
-}
+Central::~Central() = default;
 
 void Central::destroyConnection() {
-	embedded->destroyConnection();
+	m_embedded->destroyConnection();
 }
 
 bool Central::toggleDebug() {
-	return breadboard->toggleDebug();
+	return m_breadboard->toggleDebug();
 }
 
-void Central::closeAllIOFs(std::vector<gpio::PinNumber> gpio_offs) {
+void Central::closeAllIOFs(const std::vector<gpio::PinNumber>& gpio_offs) {
 	for(gpio::PinNumber gpio : gpio_offs) {
-		embedded->closeIOF(gpio);
+		m_embedded->closeIOF(gpio);
 	}
-	breadboard->clearConnections();
+	m_breadboard->clearConnections();
 }
 
-void Central::closeDeviceIOFs(std::vector<gpio::PinNumber> gpio_offs, DeviceID device) {
+void Central::closeDeviceIOFs(const std::vector<gpio::PinNumber>& gpio_offs, const DeviceID& device) {
 	for(gpio::PinNumber gpio : gpio_offs) {
-		embedded->closeIOF(gpio);
+		m_embedded->closeIOF(gpio);
 	}
-	breadboard->removeDeviceObjects(device);
+	m_breadboard->removeDeviceObjects(device);
 }
 
 /* LOAD */
 
-void Central::loadJSON(QString file) {
+void Central::loadJSON(const QString& file) {
 	emit(sendStatus("Loading config file " + file, 10000));
-	if(!breadboard->loadConfigFile(file)) {
-		emit(sendStatus("Config file " + file + " invalid.", 10000));
-		return;
-	}
-	if(breadboard->isBreadboard()) {
-		embedded->show();
+    if(!m_breadboard->loadConfigFile(file)) {
+        std::cerr << "[Central] Could not open config file " << std::endl;
+        return;
+    }
+	if(m_breadboard->isBreadboard()) {
+		m_embedded->show();
 	}
 	else {
-		embedded->hide();
+		m_embedded->hide();
 	}
-	if(embedded->gpioConnected()) {
-		breadboard->connectionUpdate(true);
+	if(m_embedded->gpioConnected()) {
+		m_breadboard->connectionUpdate(true);
 	}
 }
 
-void Central::saveJSON(QString file) {
-	breadboard->saveConfigFile(file);
+void Central::saveJSON(const QString& file) {
+	m_breadboard->saveConfigFile(file);
 }
 
 void Central::clearBreadboard() {
 	emit(sendStatus("Clearing breadboard", 10000));
-	breadboard->clear();
-	embedded->show();
+	m_breadboard->clear();
+	m_embedded->show();
 }
 
-void Central::loadLUA(std::string dir, bool overwrite_integrated_devices) {
-	breadboard->additionalLuaDir(dir, overwrite_integrated_devices);
+void Central::loadLUA(const std::string& dir, bool overwrite_integrated_devices) {
+	m_breadboard->additionalLuaDir(dir, overwrite_integrated_devices);
 }
 
 /* Timer */
 
 void Central::timerUpdate() {
- 	bool reconnect = embedded->timerUpdate();
+ 	bool reconnect = m_embedded->timerUpdate();
 	if(reconnect) {
 		emit(connectionUpdate(true));
 	}
-	if(embedded->gpioConnected()) {
-		breadboard->timerUpdate(embedded->getState());
+	if(m_embedded->gpioConnected()) {
+		m_breadboard->timerUpdate(m_embedded->getState());
 	}
 }

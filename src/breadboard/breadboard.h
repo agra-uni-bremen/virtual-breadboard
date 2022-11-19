@@ -1,5 +1,13 @@
 #pragma once
 
+#include "constants.h"
+#include "types.h"
+#include "dialog/keybinding.h"
+#include "dialog/config.h"
+
+#include <gpio-helpers.h>
+#include <factory/factory.h>
+
 #include <QWidget>
 #include <QMouseEvent>
 #include <QKeyEvent>
@@ -11,49 +19,68 @@
 #include <list>
 #include <mutex> // TODO: FIXME: Create one Lua state per device that uses asyncs like SPI and synchronous pins
 
-#include "constants.h"
-#include "types.h"
-#include <gpio-helpers.h>
-#include <factory/factory.h>
-#include "dialog/keybinding.h"
-#include "dialog/config.h"
-
 class Breadboard : public QWidget {
 	Q_OBJECT
 
-	std::mutex lua_access;		//TODO: Use multiple Lua states per 'async called' device
-	Factory factory;
-	std::unordered_map<DeviceID,std::unique_ptr<Device>> devices;
-	std::unordered_map<DeviceID,SPI_IOF_Request> spi_channels;
-	std::unordered_map<DeviceID,PIN_IOF_Request> pin_channels;
+	struct SPI_IOF_Request {
+		gpio::PinNumber gpio_offs;	// calculated from "global pin"
+		gpio::PinNumber global_pin;
+		bool noresponse;
+		GpioClient::OnChange_SPI fun;
+	};
 
-	std::list<PinMapping> reading_connections;		// Semantic subject to change
-	std::list<PinMapping> writing_connections;
+	struct PIN_IOF_Request {
+		gpio::PinNumber gpio_offs;	// calculated from "global pin"
+		gpio::PinNumber global_pin;
+		gpio::PinNumber device_pin;
+		GpioClient::OnChange_PIN fun;
+	};
 
-	bool debugmode = false;
-	QString bkgnd_path;
+	struct PinMapping{
+		gpio::PinNumber gpio_offs;	// calculated from "global pin"
+		gpio::PinNumber global_pin;
+		gpio::PinNumber device_pin;
+		std::string name;
+		Device* dev;
+	};
 
-	DeviceID menu_device_id;
-	QMenu *device_menu;
-	KeybindingDialog *device_keys;
-	ConfigDialog *device_config;
-	QErrorMessage *error_dialog;
-	QMenu *add_device;
+	std::mutex m_lua_access;		//TODO: Use multiple Lua states per 'async called' device
+	Factory m_factory;
+	std::unordered_map<DeviceID,std::unique_ptr<Device>> m_devices;
+	std::unordered_map<DeviceID,SPI_IOF_Request> m_spi_channels;
+	std::unordered_map<DeviceID,PIN_IOF_Request> m_pin_channels;
 
-	void defaultBackground();
+	std::list<PinMapping> m_reading_connections;		// Semantic subject to change
+	std::list<PinMapping> m_writing_connections;
+
+	bool m_debugmode = false;
+	QString m_bkgnd_path;
+	QPixmap m_bkgnd;
+
+	DeviceID m_menu_device_id;
+	QMenu *m_device_menu;
+    QAction *m_device_menu_key;
+    QAction *m_device_menu_conf;
+	KeybindingDialog *m_device_keys;
+	ConfigDialog *m_device_config;
+	QErrorMessage *m_error_dialog;
+	QMenu *m_add_device;
+
+	void setBackground(QString path);
+	void updateBackground();
 
 	// Device
-	std::unique_ptr<Device> createDevice(DeviceClass classname, DeviceID device_id);
-	void removeDevice(DeviceID id);
+	bool addDevice(const DeviceClass& classname, QPoint pos, DeviceID id="");
+	void removeDevice(const DeviceID& id);
 
 	// Connections
 	void registerPin(bool synchronous, gpio::PinNumber device_pin, gpio::PinNumber global, std::string name, Device *device);
 	void registerSPI(gpio::PinNumber global, bool noresponse, Device *device);
 
-	void writeDevice(DeviceID id);
+	void writeDevice(const DeviceID& id);
 
 	// Drag and Drop
-	bool checkDevicePosition(DeviceID id, QImage buffer, int scale, QPoint position, QPoint hotspot=QPoint(0,0));
+	QPoint checkDevicePosition(const DeviceID& id, const QImage& buffer, int scale, QPoint position, QPoint hotspot=QPoint(0,0));
 	bool moveDevice(Device *device, QPoint position, QPoint hotspot=QPoint(0,0));
 	void dropEvent(QDropEvent *e) override;
 	void dragEnterEvent(QDragEnterEvent *e) override;
@@ -66,6 +93,27 @@ class Breadboard : public QWidget {
 	void mousePressEvent(QMouseEvent *e) override;
 	void mouseReleaseEvent(QMouseEvent *e) override;
 	void mouseMoveEvent(QMouseEvent *e) override;
+	void resizeEvent(QResizeEvent *e) override;
+
+	// Raster
+	DeviceRow getDeviceRow(QPoint pos);
+	DeviceIndex getDeviceIndex(QPoint pos);
+	std::pair<DeviceRow,DeviceIndex> getDeviceRasterPosition(QPoint pos);
+	QPoint getDeviceAbsolutePosition(DeviceRow row, DeviceIndex index);
+
+	QRect getRasterBounds();
+	bool isOnRaster(QPoint pos);
+	Row getRow(QPoint pos);
+	Index getIndex(QPoint pos);
+	std::pair<Row,Index> getRasterPosition(QPoint pos);
+	QPoint getAbsolutePosition(Row row, Index index);
+
+	unsigned iconSizeMinimum();
+	QRect getDistortedRect(unsigned x, unsigned y, unsigned width, unsigned height);
+	QRect getDistortedGraphicBounds(const QImage& buffer, unsigned scale);
+	QPoint getDistortedPosition(QPoint pos);
+	QSize getDistortedSize(QSize minimum);
+	QPoint getMinimumPosition(QPoint pos);
 
 public:
 	Breadboard();
@@ -74,9 +122,9 @@ public:
 	bool toggleDebug();
 
 	// JSON
-	bool loadConfigFile(QString file);
-	bool saveConfigFile(QString file);
-	void additionalLuaDir(std::string additional_device_dir, bool overwrite_integrated_devices);
+    bool loadConfigFile(const QString& file);
+	bool saveConfigFile(const QString& file);
+	void additionalLuaDir(const std::string& additional_device_dir, bool overwrite_integrated_devices);
 	void clear();
 	void clearConnections();
 
@@ -85,21 +133,19 @@ public:
 	bool isBreadboard();
 
 	// Devices
-	void removeDeviceObjects(DeviceID id);
-	std::list<DeviceClass> getAvailableDevices();
+	void removeDeviceObjects(const DeviceID& id);
 
 public slots:
 	void connectionUpdate(bool active);
-	bool addDevice(DeviceClass classname, QPoint pos);
 
 private slots:
 	void openContextMenu(QPoint pos);
 	void removeActiveDevice();
 	void scaleActiveDevice();
 	void keybindingActiveDevice();
-	void changeKeybindingActiveDevice(DeviceID device, Keys keys);
+	void changeKeybindingActiveDevice(const DeviceID& device, Keys keys);
 	void configActiveDevice();
-	void changeConfigActiveDevice(DeviceID device, Config config);
+	void changeConfigActiveDevice(const DeviceID& device, Config config);
 
 signals:
 	void registerIOF_PIN(gpio::PinNumber gpio_offs, GpioClient::OnChange_PIN fun);

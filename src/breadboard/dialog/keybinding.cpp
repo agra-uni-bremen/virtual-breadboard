@@ -1,70 +1,69 @@
 #include "keybinding.h"
+#include "keyedit.h"
 
 #include <QHBoxLayout>
 #include <QPushButton>
 
-#include "keyedit.h"
-
 KeybindingDialog::KeybindingDialog(QWidget *parent) : QDialog(parent) {
-	layout = new QFormLayout(this);
-	QPushButton *closeButton = new QPushButton("Close");
+    m_layout = new QFormLayout(this);
+	auto *closeButton = new QPushButton("Close");
 	connect(closeButton, &QAbstractButton::pressed, this, &QDialog::reject);
-	QPushButton *saveButton = new QPushButton("Save");
+	auto *saveButton = new QPushButton("Save");
 	connect(saveButton, &QAbstractButton::pressed, this, &QDialog::accept);
 	saveButton->setDefault(true);
-	QHBoxLayout *buttons = new QHBoxLayout;
+	auto *buttons = new QHBoxLayout;
 	buttons->addWidget(closeButton);
 	buttons->addWidget(saveButton);
-	QPushButton *addButton = new QPushButton("Add");
+	auto *addButton = new QPushButton("Add");
 	connect(addButton, &QPushButton::pressed, [this](){add(0);});
-	layout->addRow(addButton);
-	layout->addRow(buttons);
+	m_layout->addRow(addButton);
+	m_layout->addRow(buttons);
 
 	setWindowTitle("Edit keybindings");
 }
 
 void KeybindingDialog::add(int key) {
-	keys.emplace(key);
-	QHBoxLayout *value_layout = new QHBoxLayout;
-	KeyEdit *box = new KeyEdit(key);
+	m_keys.emplace(key);
+	auto *value_layout = new QHBoxLayout;
+	auto *box = new KeyEdit(key);
 	connect(box, &KeyEdit::removeKey, [this](int old_key) {
-		keys.erase(old_key);
+		m_keys.erase(old_key);
 	});
 	connect(box, &KeyEdit::newKey, [this](int new_key) {
-		keys.emplace(new_key);
+		m_keys.emplace(new_key);
 	});
 	value_layout->addWidget(box);
-	QPushButton *delete_value = new QPushButton("Delete");
+	auto *delete_value = new QPushButton("Delete");
 	connect(delete_value, &QPushButton::pressed, [this, value_layout, box](){
-		keys.erase(box->keySequence()[0]);
-		layout->removeRow(value_layout);
+		m_keys.erase(box->keySequence()[0]);
+		m_layout->removeRow(value_layout);
 	});
 	value_layout->addWidget(delete_value);
-	layout->insertRow(0, value_layout);
+	m_layout->insertRow(0, value_layout);
 }
 
 void KeybindingDialog::accept() {
-	emit(keysChanged(device, keys));
-	while(layout->rowCount() > 2) {
-		layout->removeRow(0);
+	emit(keysChanged(m_device, m_keys));
+	while(m_layout->rowCount() > 2) {
+		m_layout->removeRow(0);
 	}
-	keys.clear();
-	device = "";
+	m_keys.clear();
+    m_device = "";
 	QDialog::accept();
 }
 
 void KeybindingDialog::reject() {
-	while(layout->rowCount() > 2) {
-		layout->removeRow(0);
+	while(m_layout->rowCount() > 2) {
+		m_layout->removeRow(0);
 	}
-	keys.clear();
-	device = "";
+	m_keys.clear();
+    m_device = "";
 	QDialog::reject();
 }
 
-void KeybindingDialog::setKeys(DeviceID device, Keys keys) {
-	this->keys.clear();
-	this->device = device;
+void KeybindingDialog::setKeys(DeviceID device, const Keys& keys) {
+	this->m_keys.clear();
+	this->m_device = device;
 	for(const Key& key : keys) {
 		add(key);
 	}

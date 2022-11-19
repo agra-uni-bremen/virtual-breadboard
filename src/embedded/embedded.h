@@ -1,25 +1,29 @@
 #pragma once
 
-#include <QWidget>
-
 #include <gpio-client.hpp>
+
+#include <QWidget>
 
 class Embedded : public QWidget {
 	Q_OBJECT
 
-	GpioClient gpio;
+	GpioClient m_gpio;
 
-	const std::string host;
-	const std::string port;
-	bool connected = false;
+	const std::string m_host;
+	const std::string m_port;
+	bool m_connected = false;
+
+	QPixmap m_bkgnd;
+
+	void resizeEvent(QResizeEvent*) override;
 
 public:
-	Embedded(const std::string host, const std::string port);
+	Embedded(const std::string& host, const std::string& port);
 	~Embedded();
 
 	bool timerUpdate();
 	gpio::State getState();
-	bool gpioConnected();
+	bool gpioConnected() const;
 	void destroyConnection();
 
 public slots:

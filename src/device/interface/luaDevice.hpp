@@ -34,6 +34,13 @@ extern "C"
 class LuaDevice : public Device {
 	luabridge::LuaRef m_env;
 
+	luabridge::LuaRef m_getGraphBufferLayout = m_env["getGraphBufferLayout"];
+	luabridge::LuaRef m_initializeGraphBuffer = m_env["initializeGraphBuffer"];
+	lua_State* L;				// to register functions and Format
+
+	bool implementsGraphFunctions();
+	static void declarePixelFormat(lua_State* L);
+
 public:
 
 	const DeviceClass getClass() const;
@@ -46,9 +53,9 @@ public:
 	public:
 		PIN_Interface_Lua(luabridge::LuaRef& ref);
 		~PIN_Interface_Lua();
-		PinLayout getPinLayout();
-		gpio::Tristate getPin(PinNumber num);
-		void setPin(PinNumber num, gpio::Tristate val);
+		PinLayout getPinLayout() override;
+		gpio::Tristate getPin(PinNumber num) override;
+		void setPin(PinNumber num, gpio::Tristate val) override;
 		static bool implementsInterface(const luabridge::LuaRef& ref);
 	};
 
@@ -57,7 +64,7 @@ public:
 	public:
 		SPI_Interface_Lua(luabridge::LuaRef& ref);
 		~SPI_Interface_Lua();
-		gpio::SPI_Response send(gpio::SPI_Command byte);
+		gpio::SPI_Response send(gpio::SPI_Command byte) override;
 		static bool implementsInterface(const luabridge::LuaRef& ref);
 	};
 
@@ -68,29 +75,8 @@ public:
 	public:
 		Config_Interface_Lua(luabridge::LuaRef& ref);
 		~Config_Interface_Lua();
-		Config getConfig();
-		bool setConfig(Config conf);
-		static bool implementsInterface(const luabridge::LuaRef& ref);
-	};
-
-	class Graphbuf_Interface_Lua : public Device::Graphbuf_Interface {
-		luabridge::LuaRef m_getGraphBufferLayout;
-		luabridge::LuaRef m_initializeGraphBuffer;
-		luabridge::LuaRef m_env;
-		DeviceID m_deviceId;		// Redundant to Device's ID member
-		lua_State* L;				// to register functions and Format
-
-		static void declarePixelFormat(lua_State* L);
-	public:
-		Graphbuf_Interface_Lua(luabridge::LuaRef& ref, DeviceID device_id, lua_State* L);
-		~Graphbuf_Interface_Lua();
-		Layout getLayout();
-		void initializeBuffer();
-		void createBuffer(QPoint offset);
-
-		template<typename FunctionFootprint>
-		void registerGlobalFunctionAndInsertLocalAlias(const std::string name, FunctionFootprint fun);
-
+		Config getConfig() override;
+		bool setConfig(Config conf) override;
 		static bool implementsInterface(const luabridge::LuaRef& ref);
 	};
 
@@ -101,13 +87,20 @@ public:
 	public:
 		Input_Interface_Lua(luabridge::LuaRef& ref);
 		~Input_Interface_Lua();
-		void onClick(bool active);
-		void onKeypress(Key key, bool active);
+		void onClick(bool active) override;
+		void onKeypress(Key key, bool active) override;
 
 		static bool implementsInterface(const luabridge::LuaRef& ref);
 	};
 
-	LuaDevice(DeviceID id, luabridge::LuaRef env, lua_State* L);
+	LuaDevice(const DeviceID& id, luabridge::LuaRef env, lua_State* L);
 	~LuaDevice();
+
+	Layout getLayout() override;
+	void initializeBuffer() override;
+	void createBuffer(unsigned iconSizeMinimum, QPoint offset) override;
+
+	template<typename FunctionFootprint>
+	void registerGlobalFunctionAndInsertLocalAlias(const std::string name, FunctionFootprint fun);
 };
 

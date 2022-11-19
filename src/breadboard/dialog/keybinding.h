@@ -1,22 +1,22 @@
 #pragma once
 
+#include <device/device.hpp>
+
 #include <QDialog>
 #include <QFormLayout>
-
-#include <device/device.hpp>
 
 class KeybindingDialog : public QDialog {
 	Q_OBJECT
 
-	QFormLayout *layout;
-	Keys keys;
-	DeviceID device;
+	QFormLayout *m_layout;
+	Keys m_keys;
+	DeviceID m_device;
 
 	void add(int key);
 
 public:
 	KeybindingDialog(QWidget* parent);
-	void setKeys(DeviceID device, Keys keys);
+	void setKeys(DeviceID device, const Keys& keys);
 
 public slots:
 	void accept() override;

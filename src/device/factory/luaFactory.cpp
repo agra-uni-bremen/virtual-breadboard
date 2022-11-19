@@ -5,9 +5,7 @@
  *      Author: pp
  */
 #include "luaFactory.hpp"
-#include "../configuration.h"
-#include "configuration_errors.h"
-#include "device/device.hpp"
+#include "errors.h"
 extern "C"
 {
 #if __has_include(<lua5.3/lua.h>)
@@ -24,9 +22,10 @@ extern "C"
 }
 #include <LuaBridge/LuaBridge.h>
 
+#include <QDirIterator>
+
 #include <filesystem>
 #include <exception>
-#include <QDirIterator>
 #include <memory> // unique_ptr
 
 
@@ -119,9 +118,9 @@ LuaFactory::LuaFactory(){
 	L = luaL_newstate();
 	luaL_openlibs(L);
 
-	QFile loader(scriptloader.c_str());
+	QFile loader(m_scriptloader.c_str());
 	if (!loader.open(QIODevice::ReadOnly)) {
-		throw(runtime_error("Could not open scriptloader at " + scriptloader));
+		throw(runtime_error("Could not open scriptloader at " + m_scriptloader));
 	}
 	QByteArray loader_content = loader.readAll();
 
@@ -135,7 +134,7 @@ LuaFactory::LuaFactory(){
 
 	//cout << "Scanning built-in devices..." << endl;
 
-	scanDir(builtin_scripts);
+	scanDir(m_builtin_scripts);
 }
 
 void LuaFactory::scanDir(std::string dir, bool overwrite_existing) {
@@ -162,40 +161,40 @@ void LuaFactory::scanDir(std::string dir, bool overwrite_existing) {
 			continue;
 		}
 		const auto classname = maybe_classname.value();
-		if(available_devices.find(classname) != available_devices.end()) {
+		if(m_available_devices.find(classname) != m_available_devices.end()) {
 			if(!overwrite_existing) {
 				cerr << "[lua] Warn: '" << classname << "' from '" << filepath << "' was ignored as it "
-						"would overwrite device from '" << available_devices.at(classname) << "'" << endl;
+						"would overwrite device from '" << m_available_devices.at(classname) << "'" << endl;
 				continue;
 			} else {
 				cerr << "[lua] Warn: '" << classname << "' from '" << filepath << "' "
-						"overwrites device from '" << available_devices.at(classname) << "'" << endl;
+						"overwrites device from '" << m_available_devices.at(classname) << "'" << endl;
 			}
 			continue;
 		}
-		available_devices.emplace(classname, filepath);
+		m_available_devices.emplace(classname, filepath);
 	}
 }
 
 std::list<DeviceClass> LuaFactory::getAvailableDevices() {
 	std::list<DeviceClass> devices;
-	for(const auto& [name, file] : available_devices) {
+	for(const auto& [name, file] : m_available_devices) {
 		devices.push_back(name);
 	}
 	return devices;
 }
 
-bool LuaFactory::deviceExists(DeviceClass classname) {
-	return available_devices.find(classname) != available_devices.end();
+bool LuaFactory::deviceExists(const DeviceClass& classname) {
+	return m_available_devices.find(classname) != m_available_devices.end();
 }
 
-unique_ptr<LuaDevice> LuaFactory::instantiateDevice(DeviceID id, DeviceClass classname) {
+unique_ptr<LuaDevice> LuaFactory::instantiateDevice(const DeviceID& id, const DeviceClass& classname) {
 	if(!deviceExists(classname)) {
 		throw (device_not_found_error(classname));
 	}
-	QFile script_file(available_devices[classname].c_str());
+	QFile script_file(m_available_devices[classname].c_str());
 	if (!script_file.open(QIODevice::ReadOnly)) {
-		throw(runtime_error("Could not open file " + available_devices[classname]));
+		throw(runtime_error("Could not open file " + m_available_devices[classname]));
 	}
 	QByteArray script = script_file.readAll();
 

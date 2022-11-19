@@ -1,32 +1,32 @@
 #pragma once
 
-#include <QWidget>
-
 #include <embedded.h>
 #include <breadboard.h>
+
+#include <QWidget>
 
 class Central : public QWidget {
 	Q_OBJECT
 
-	Breadboard *breadboard;
-	Embedded *embedded;
+	Breadboard *m_breadboard;
+	Embedded *m_embedded;
 
 public:
-	Central(const std::string host, const std::string port, QWidget *parent);
+	Central(const std::string& host, const std::string& port, QWidget *parent);
 	~Central();
 	void destroyConnection();
 	bool toggleDebug();
-	void saveJSON(QString file);
-	void loadJSON(QString file);
-	void loadLUA(std::string dir, bool overwrite_integrated_devices);
+	void saveJSON(const QString& file);
+	void loadJSON(const QString& file);
+	void loadLUA(const std::string& dir, bool overwrite_integrated_devices);
 
 public slots:
 	void clearBreadboard();
 
 private slots:
 	void timerUpdate();
-	void closeAllIOFs(std::vector<gpio::PinNumber> gpio_offs);
-	void closeDeviceIOFs(std::vector<gpio::PinNumber> gpio_offs, DeviceID device);
+	void closeAllIOFs(const std::vector<gpio::PinNumber>& gpio_offs);
+	void closeDeviceIOFs(const std::vector<gpio::PinNumber>& gpio_offs, const DeviceID& device);
 
 signals:
 	void connectionUpdate(bool active);
