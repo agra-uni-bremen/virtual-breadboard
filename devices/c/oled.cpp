@@ -28,7 +28,7 @@ void OLED::initializeBuffer() {
 
 OLED::OLED_PIN::OLED_PIN(CDevice* device) : CDevice::PIN_Interface_C(device) {
     m_pinLayout = PinLayout();
-	m_pinLayout.emplace(1, PinDesc{Dir::input, "data_command"});
+	m_pinLayout.emplace(1, PinDesc{.dir = Dir::input, .name = "data_command", .row = 0, .index=0 });
 }
 
 void OLED::OLED_PIN::setPin(DevicePin num, gpio::Tristate val) {

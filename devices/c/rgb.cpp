@@ -48,9 +48,9 @@ void RGB::draw(PIN_Interface::DevicePin num, bool val) {
 
 RGB::RGB_Pin::RGB_Pin(CDevice* device) : CDevice::PIN_Interface_C(device) {
     m_pinLayout = PinLayout();
-	m_pinLayout.emplace(0, PinDesc{Dir::input, "r"});
-	m_pinLayout.emplace(1, PinDesc{Dir::input, "g"});
-	m_pinLayout.emplace(2, PinDesc{Dir::input, "b"});
+	m_pinLayout.emplace(0, PinDesc{.dir=Dir::input, .name="r", .row=0, .index=0});
+	m_pinLayout.emplace(1, PinDesc{.dir=Dir::input, .name="g", .row=0, .index=0});
+	m_pinLayout.emplace(2, PinDesc{.dir=Dir::input, .name="b", .row=0, .index=0});
 }
 
 void RGB::RGB_Pin::setPin(DevicePin num, gpio::Tristate val) {

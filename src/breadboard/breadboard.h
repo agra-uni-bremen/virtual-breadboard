@@ -38,13 +38,23 @@ class Breadboard : public QWidget {
 		GpioClient::OnChange_PIN fun;
 	};
 
-	struct PinMapping{
+	struct PinConnection {
 		gpio::PinNumber gpio_offs;	// calculated from "global pin"
 		gpio::PinNumber global_pin;
-		Device::PIN_Interface::DevicePin device_pin;
 		std::string name;
-		Device* dev;
+        Device::PIN_Interface::Dir dir;
+        Index index;
 	};
+
+    struct DeviceConnection {
+        DeviceID id;
+        Device::PIN_Interface::DevicePin pin;
+    };
+
+    struct Connection {
+        std::list<DeviceConnection> devices;
+        std::list<PinConnection> pins;
+    };
 
 	std::mutex m_lua_access;		//TODO: Use multiple Lua states per 'async called' device
 	Factory m_factory;
@@ -52,8 +62,7 @@ class Breadboard : public QWidget {
 	std::unordered_map<DeviceID,SPI_IOF_Request> m_spi_channels;
 	std::unordered_map<DeviceID,PIN_IOF_Request> m_pin_channels;
 
-	std::list<PinMapping> m_reading_connections;		// Semantic subject to change
-	std::list<PinMapping> m_writing_connections;
+    std::unordered_map<Row,Connection> m_connections;
 
 	bool m_debugmode = false;
 	QString m_bkgnd_path;

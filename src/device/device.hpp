@@ -71,6 +71,8 @@ public:
             Dir dir;
             // TODO: In future, add 'type' for analog values/pwm?
             std::string name;
+            DeviceRow row;
+            DeviceIndex index;
         };
         typedef std::unordered_map<DevicePin,PinDesc> PinLayout;
 

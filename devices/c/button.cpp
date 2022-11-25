@@ -38,7 +38,7 @@ void Button::draw() {
 
 Button::Button_PIN::Button_PIN(CDevice* device) : CDevice::PIN_Interface_C(device) {
     m_pinLayout = PinLayout();
-	m_pinLayout.emplace(1, PinDesc{Dir::output, "output"});
+	m_pinLayout.emplace(1, PinDesc{.dir = Dir::output, .name = "output", .row = 0, .index=0});
 }
 
 gpio::Tristate Button::Button_PIN::getPin(DevicePin num) {
