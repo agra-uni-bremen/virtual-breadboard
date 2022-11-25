@@ -35,7 +35,7 @@ bool Breadboard::isOnRaster(QPoint pos) {
                                BB_ONE_ROW*iconSizeMinimum(),BB_INDEXES*iconSizeMinimum()).contains(pos);
 }
 
-Row Breadboard::getRow(QPoint pos) {
+Breadboard::Row Breadboard::getRow(QPoint pos) {
     if(!isOnRaster(pos)) {
         std::cerr << "[Breadboard Raster] Could not calculate row number: position is not on raster." << std::endl;
         return BB_ROWS;
@@ -44,7 +44,7 @@ Row Breadboard::getRow(QPoint pos) {
     return (rel_pos_min.x() / iconSizeMinimum()) + (rel_pos_min.y() >= BB_INDEXES*iconSizeMinimum() ? BB_ONE_ROW : 0);
 }
 
-Index Breadboard::getIndex(QPoint pos) {
+Breadboard::Index Breadboard::getIndex(QPoint pos) {
     if(!isOnRaster(pos)) {
         std::cerr << "[Breadboard Raster] Could not calculate index number: position is not on raster." << std::endl;
         return BB_INDEXES;
@@ -53,7 +53,7 @@ Index Breadboard::getIndex(QPoint pos) {
     return index<BB_INDEXES?index:index-BB_INDEXES-1;
 }
 
-std::pair<Row, Index> Breadboard::getRasterPosition(QPoint pos) {
+std::pair<Breadboard::Row, Breadboard::Index> Breadboard::getRasterPosition(QPoint pos) {
     return {getRow(pos), getIndex(pos)};
 }
 

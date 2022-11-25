@@ -1,7 +1,6 @@
 #pragma once
 
 #include "constants.h"
-#include "types.h"
 #include "dialog/keybinding.h"
 #include "dialog/config.h"
 
@@ -22,6 +21,9 @@
 class Breadboard : public QWidget {
 	Q_OBJECT
 
+    typedef unsigned Row;
+    typedef unsigned Index;
+
 	struct SPI_IOF_Request {
 		gpio::PinNumber gpio_offs;	// calculated from "global pin"
 		gpio::PinNumber global_pin;
@@ -32,14 +34,14 @@ class Breadboard : public QWidget {
 	struct PIN_IOF_Request {
 		gpio::PinNumber gpio_offs;	// calculated from "global pin"
 		gpio::PinNumber global_pin;
-		gpio::PinNumber device_pin;
+		Device::PIN_Interface::DevicePin device_pin;
 		GpioClient::OnChange_PIN fun;
 	};
 
 	struct PinMapping{
 		gpio::PinNumber gpio_offs;	// calculated from "global pin"
 		gpio::PinNumber global_pin;
-		gpio::PinNumber device_pin;
+		Device::PIN_Interface::DevicePin device_pin;
 		std::string name;
 		Device* dev;
 	};
@@ -74,7 +76,7 @@ class Breadboard : public QWidget {
 	void removeDevice(const DeviceID& id);
 
 	// Connections
-	void registerPin(bool synchronous, gpio::PinNumber device_pin, gpio::PinNumber global, std::string name, Device *device);
+	void registerPin(bool synchronous, Device::PIN_Interface::DevicePin device_pin, gpio::PinNumber global, std::string name, Device *device);
 	void registerSPI(gpio::PinNumber global, bool noresponse, Device *device);
 
 	void writeDevice(const DeviceID& id);

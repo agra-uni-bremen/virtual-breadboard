@@ -174,7 +174,7 @@ bool LuaDevice::PIN_Interface_Lua::implementsInterface(const luabridge::LuaRef& 
 	        ref["setPin"].isFunction());
 }
 
-PinLayout LuaDevice::PIN_Interface_Lua::getPinLayout() {
+Device::PIN_Interface::PinLayout LuaDevice::PIN_Interface_Lua::getPinLayout() {
 	PinLayout ret;
 	LuaResult r = m_getPinLayout();
 	//cout << r.size() << " elements in pinlayout" << endl;
@@ -194,7 +194,7 @@ PinLayout LuaDevice::PIN_Interface_Lua::getPinLayout() {
 			continue;
 		}
 		PinDesc desc;
-		const auto maybe_number = r[i][1].cast<PinNumber>();
+		const auto maybe_number = r[i][1].cast<DevicePin>();
 		if(!maybe_number) {
 			cerr << "[LuaDevice] Pin layout element " << i << " (" << r[i] << ") has invalid pin number" << endl;
 			continue;
@@ -206,11 +206,11 @@ PinLayout LuaDevice::PIN_Interface_Lua::getPinLayout() {
 
 		const string direction_raw = r[i][2];
 		if(direction_raw == "input") {
-			desc.dir = PinDesc::Dir::input;
+			desc.dir = Dir::input;
 		} else if(direction_raw == "output") {
-			desc.dir = PinDesc::Dir::output;
+			desc.dir = Dir::output;
 		} else if(direction_raw == "inout") {
-			desc.dir = PinDesc::Dir::inout;
+			desc.dir = Dir::inout;
 		} else {
 			// TODO: Add PWM input here? Or better, lua script has to cope with ratios
 			cerr << "[LuaDevice] Pin layout element " << i << " (" << r[i] << "), direction " << direction_raw << " is malformed" << endl;
@@ -223,7 +223,7 @@ PinLayout LuaDevice::PIN_Interface_Lua::getPinLayout() {
 }
 
 
-gpio::Tristate LuaDevice::PIN_Interface_Lua::getPin(PinNumber num) {
+gpio::Tristate LuaDevice::PIN_Interface_Lua::getPin(DevicePin num) {
 	const LuaResult r = m_getPin(num);
 	if(!r || !r[0].isString()) {
 		cerr << "[LuaDevice] Device getPin returned malformed output: " << r.errorMessage() << endl;
@@ -237,7 +237,7 @@ gpio::Tristate LuaDevice::PIN_Interface_Lua::getPin(PinNumber num) {
 	return gpio::Tristate::UNSET;
 }
 
-void LuaDevice::PIN_Interface_Lua::setPin(PinNumber num, gpio::Tristate val) {
+void LuaDevice::PIN_Interface_Lua::setPin(DevicePin num, gpio::Tristate val) {
 	const LuaResult r = m_setPin(num, val == gpio::Tristate::HIGH ? true : false);
 	if(!r) {
 		cerr << "[LuaDevice] Device setPin error: " << r.errorMessage() << endl;

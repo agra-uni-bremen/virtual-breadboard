@@ -20,12 +20,12 @@ void Sevensegment::initializeBuffer() {
 			img[offs+3] = 128;
 		}
 	}
-	for(PinNumber num=0; num<=7; num++) {
+	for(PIN_Interface::DevicePin num=0; num<=7; num++) {
 		draw(num, false);
 	}
 }
 
-void Sevensegment::draw(PinNumber num, bool val) {
+void Sevensegment::draw(PIN_Interface::DevicePin num, bool val) {
 	if(num > 7) { return; }
 	// general display stuff
 	unsigned xcol1 = 0;
@@ -78,17 +78,17 @@ void Sevensegment::draw(PinNumber num, bool val) {
 
 Sevensegment::Segment_PIN::Segment_PIN(CDevice* device) : CDevice::PIN_Interface_C(device) {
     m_pinLayout = PinLayout();
-	m_pinLayout.emplace(0, PinDesc{PinDesc::Dir::input, "top"});
-	m_pinLayout.emplace(1, PinDesc{PinDesc::Dir::input, "top_right"});
-	m_pinLayout.emplace(2, PinDesc{PinDesc::Dir::input, "bottom_right"});
-	m_pinLayout.emplace(3, PinDesc{PinDesc::Dir::input, "bottom"});
-	m_pinLayout.emplace(4, PinDesc{PinDesc::Dir::input, "bottom_left"});
-	m_pinLayout.emplace(5, PinDesc{PinDesc::Dir::input, "top_left"});
-	m_pinLayout.emplace(6, PinDesc{PinDesc::Dir::input, "center"});
-	m_pinLayout.emplace(7, PinDesc{PinDesc::Dir::input, "dot"});
+	m_pinLayout.emplace(0, PinDesc{Dir::input, "top"});
+	m_pinLayout.emplace(1, PinDesc{Dir::input, "top_right"});
+	m_pinLayout.emplace(2, PinDesc{Dir::input, "bottom_right"});
+	m_pinLayout.emplace(3, PinDesc{Dir::input, "bottom"});
+	m_pinLayout.emplace(4, PinDesc{Dir::input, "bottom_left"});
+	m_pinLayout.emplace(5, PinDesc{Dir::input, "top_left"});
+	m_pinLayout.emplace(6, PinDesc{Dir::input, "center"});
+	m_pinLayout.emplace(7, PinDesc{Dir::input, "dot"});
 }
 
-void Sevensegment::Segment_PIN::setPin(PinNumber num, gpio::Tristate val) {
+void Sevensegment::Segment_PIN::setPin(DevicePin num, gpio::Tristate val) {
 	if(num <= 7) {
 		auto segment_device = static_cast<Sevensegment*>(m_device);
 		segment_device->draw(num, val == gpio::Tristate::HIGH);
