@@ -78,14 +78,14 @@ void Sevensegment::draw(PIN_Interface::DevicePin num, bool val) {
 
 Sevensegment::Segment_PIN::Segment_PIN(CDevice* device) : CDevice::PIN_Interface_C(device) {
     m_pinLayout = PinLayout();
-	m_pinLayout.emplace(0, PinDesc{Dir::input, "top"});
-	m_pinLayout.emplace(1, PinDesc{Dir::input, "top_right"});
-	m_pinLayout.emplace(2, PinDesc{Dir::input, "bottom_right"});
-	m_pinLayout.emplace(3, PinDesc{Dir::input, "bottom"});
-	m_pinLayout.emplace(4, PinDesc{Dir::input, "bottom_left"});
-	m_pinLayout.emplace(5, PinDesc{Dir::input, "top_left"});
-	m_pinLayout.emplace(6, PinDesc{Dir::input, "center"});
-	m_pinLayout.emplace(7, PinDesc{Dir::input, "dot"});
+	m_pinLayout.emplace(0, PinDesc{.dir=Dir::input, .name="top", .row=1, .index=0});
+	m_pinLayout.emplace(1, PinDesc{.dir=Dir::input, .name="top_right", .row=3, .index=1});
+	m_pinLayout.emplace(2, PinDesc{.dir=Dir::input, .name="bottom_right", .row=3, .index=3});
+	m_pinLayout.emplace(3, PinDesc{.dir=Dir::input, .name="bottom", .row=1, .index=4});
+	m_pinLayout.emplace(4, PinDesc{.dir=Dir::input, .name="bottom_left", .row=0, .index=3});
+	m_pinLayout.emplace(5, PinDesc{.dir=Dir::input, .name="top_left", .row=0, .index=1});
+	m_pinLayout.emplace(6, PinDesc{.dir=Dir::input, .name="center", .row=2, .index=0});
+	m_pinLayout.emplace(7, PinDesc{.dir=Dir::input, .name="dot", .row=2, .index=4});
 }
 
 void Sevensegment::Segment_PIN::setPin(DevicePin num, gpio::Tristate val) {

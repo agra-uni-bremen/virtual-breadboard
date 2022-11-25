@@ -1,4 +1,125 @@
 {
+    "connections": [
+        {
+            "row": 1,
+            "devices": [
+                {
+                    "id": "button_b",
+                    "pin": 1
+                }
+            ],
+            "pins": [
+                {
+                    "global_pin": 19,
+                    "name": "output",
+                    "dir": 1,
+                    "index": 0
+                }
+            ]
+        },
+        {
+            "row": 2,
+            "devices": [
+                {
+                    "id": "button_a",
+                    "pin": 1
+                }
+            ],
+            "pins": [
+                {
+                    "global_pin": 18,
+                    "name": "output",
+                    "dir": 1,
+                    "index": 0
+                }
+            ]
+        },
+        {
+            "row": 3,
+            "devices": [
+                {
+                    "id": "button_down",
+                    "pin": 1
+                }
+            ],
+            "pins": [
+                {
+                    "global_pin": 3,
+                    "name": "output",
+                    "dir": 1,
+                    "index": 0
+                }
+            ]
+        },
+        {
+            "row": 4,
+            "devices": [
+                {
+                    "id": "button_right",
+                    "pin": 1
+                }
+            ],
+            "pins": [
+                {
+                    "global_pin": 5,
+                    "name": "output",
+                    "dir": 1,
+                    "index": 0
+                }
+            ]
+        },
+        {
+            "row": 5,
+            "devices": [
+                {
+                    "id": "button_left",
+                    "pin": 1
+                }
+            ],
+            "pins": [
+                {
+                    "global_pin": 6,
+                    "name": "output",
+                    "dir": 1,
+                    "index": 0
+                }
+            ]
+        },
+        {
+            "row": 6,
+            "devices": [
+                {
+                    "id": "button_up",
+                    "pin": 1
+                }
+            ],
+            "pins": [
+                {
+                    "global_pin": 7,
+                    "name": "output",
+                    "dir": 1,
+                    "index": 0
+                }
+            ]
+        },
+        {
+            "row": 7,
+            "devices": [
+                {
+                    "id": "button_center",
+                    "pin": 1
+                }
+            ],
+            "pins": [
+                {
+                    "global_pin": 4,
+                    "name": "output",
+                    "dir": 1,
+                    "index": 0
+                }
+            ]
+        }
+    ],
     "devices": [
         {
             "class": "button",
@@ -15,13 +136,6 @@
                 "X",
                 "Y",
                 "Z"
-            ],
-            "pins": [
-                {
-                    "device_pin": 1,
-                    "global_pin": 19,
-                    "name": "output"
-                }
             ]
         },
         {
@@ -36,13 +150,6 @@
             "id": "button_a",
             "keybindings": [
                 "A"
-            ],
-            "pins": [
-                {
-                    "device_pin": 1,
-                    "global_pin": 18,
-                    "name": "output"
-                }
             ]
         },
         {
@@ -57,13 +164,6 @@
             "id": "button_down",
             "keybindings": [
                 "Down"
-            ],
-            "pins": [
-                {
-                    "device_pin": 1,
-                    "global_pin": 3,
-                    "name": "output"
-                }
             ]
         },
         {
@@ -78,13 +178,6 @@
             "id": "button_right",
             "keybindings": [
                 "Right"
-            ],
-            "pins": [
-                {
-                    "device_pin": 1,
-                    "global_pin": 5,
-                    "name": "output"
-                }
             ]
         },
         {
@@ -99,13 +192,6 @@
             "id": "button_left",
             "keybindings": [
                 "Left"
-            ],
-            "pins": [
-                {
-                    "device_pin": 1,
-                    "global_pin": 6,
-                    "name": "output"
-                }
             ]
         },
         {
@@ -118,13 +204,10 @@
                 "scale": 2
             },
             "id": "display",
-            "pins": [
-                {
+            "pin": {
                     "device_pin": 1,
-                    "global_pin": 16,
-                    "synchronous": true
-                }
-            ],
+                    "global_pin": 16
+            },
             "spi": {
                 "cs_pin": 15,
                 "noresponse": true
@@ -142,13 +225,6 @@
             "id": "button_up",
             "keybindings": [
                 "Up"
-            ],
-            "pins": [
-                {
-                    "device_pin": 1,
-                    "global_pin": 7,
-                    "name": "output"
-                }
             ]
         },
         {
@@ -163,13 +239,6 @@
             "id": "button_center",
             "keybindings": [
                 "C"
-            ],
-            "pins": [
-                {
-                    "device_pin": 1,
-                    "global_pin": 4,
-                    "name": "output"
-                }
             ]
         }
     ],
