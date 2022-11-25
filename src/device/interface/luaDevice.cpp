@@ -160,8 +160,9 @@ void LuaDevice::createBuffer(unsigned iconSizeMinimum, QPoint offset) {
 LuaDevice::PIN_Interface_Lua::PIN_Interface_Lua(LuaRef& ref) :
 		m_getPinLayout(ref["getPinLayout"]),
 		m_getPin(ref["getPin"]), m_setPin(ref["setPin"]) {
-	if(!implementsInterface(ref))
+	if(!implementsInterface(ref)) {
 		cerr << "[LuaDevice] WARN: Device " << ref << " not implementing interface" << endl;
+	}
 }
 
 LuaDevice::PIN_Interface_Lua::~PIN_Interface_Lua() = default;
@@ -224,11 +225,16 @@ PinLayout LuaDevice::PIN_Interface_Lua::getPinLayout() {
 
 gpio::Tristate LuaDevice::PIN_Interface_Lua::getPin(PinNumber num) {
 	const LuaResult r = m_getPin(num);
-	if(!r || !r[0].isBool()) {
+	if(!r || !r[0].isString()) {
 		cerr << "[LuaDevice] Device getPin returned malformed output: " << r.errorMessage() << endl;
-		return gpio::Tristate::LOW;
+		return gpio::Tristate::UNSET;
 	}
-	return r[0].unsafe_cast<bool>() ? gpio::Tristate::HIGH : gpio::Tristate::LOW;
+	string pin_enum = r[0].tostring();
+	if(pin_enum == "LOW") return gpio::Tristate::LOW;
+	if(pin_enum == "HIGH") return gpio::Tristate::HIGH;
+	if(pin_enum == "UNSET") return gpio::Tristate::UNSET;
+	cerr << "[LuaDevice] Warn: getPin returned invalid string '" << pin_enum << "'" << endl;
+	return gpio::Tristate::UNSET;
 }
 
 void LuaDevice::PIN_Interface_Lua::setPin(PinNumber num, gpio::Tristate val) {
