@@ -38,10 +38,10 @@ void Button::draw() {
 
 Button::Button_PIN::Button_PIN(CDevice* device) : CDevice::PIN_Interface_C(device) {
     m_pinLayout = PinLayout();
-	m_pinLayout.emplace(1, PinDesc{PinDesc::Dir::output, "output"});
+	m_pinLayout.emplace(1, PinDesc{Dir::output, "output"});
 }
 
-gpio::Tristate Button::Button_PIN::getPin(PinNumber num) {
+gpio::Tristate Button::Button_PIN::getPin(DevicePin num) {
 	if(num == 1) {
         bool active_low = true;
         if(m_device->m_conf) {

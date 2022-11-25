@@ -28,10 +28,10 @@ void OLED::initializeBuffer() {
 
 OLED::OLED_PIN::OLED_PIN(CDevice* device) : CDevice::PIN_Interface_C(device) {
     m_pinLayout = PinLayout();
-	m_pinLayout.emplace(1, PinDesc{PinDesc::Dir::input, "data_command"});
+	m_pinLayout.emplace(1, PinDesc{Dir::input, "data_command"});
 }
 
-void OLED::OLED_PIN::setPin(PinNumber num, gpio::Tristate val) {
+void OLED::OLED_PIN::setPin(DevicePin num, gpio::Tristate val) {
 	if(num == 1) {
 		auto oled_device = static_cast<OLED*>(m_device);
 		oled_device->m_is_data = val == gpio::Tristate::HIGH;

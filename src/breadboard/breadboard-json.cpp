@@ -102,7 +102,7 @@ bool Breadboard::loadConfigFile(const QString& file) {
 								" missing device_pin or global_pin mappings" << endl;
 						continue;
 					}
-					const gpio::PinNumber device_pin = pin["device_pin"].toInt();
+					const Device::PIN_Interface::DevicePin device_pin = pin["device_pin"].toInt();
 					const gpio::PinNumber global_pin = pin["global_pin"].toInt();
 					const bool synchronous = pin["synchronous"].toBool(false);
 					const string pin_name = pin["name"].toString("undef").toStdString();
@@ -197,8 +197,8 @@ bool Breadboard::saveConfigFile(const QString& file) {
 		if(pin != m_pin_channels.end()) {
 			QJsonObject pin_json;
 			pin_json["synchronous"] = true;
-			pin_json["device_pin"] = pin->second.device_pin;
-			pin_json["global_pin"] = pin->second.global_pin;
+			pin_json["device_pin"] = (int) pin->second.device_pin;
+			pin_json["global_pin"] = (int) pin->second.global_pin;
 			pins_json.append(pin_json);
 		}
 		if(!pins_json.empty()) {

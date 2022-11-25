@@ -61,10 +61,23 @@ public:
 
 	class PIN_Interface {
 	public:
+        typedef unsigned DevicePin;
+        enum class Dir {
+            input,
+            output,
+            inout
+        };
+        struct PinDesc {
+            Dir dir;
+            // TODO: In future, add 'type' for analog values/pwm?
+            std::string name;
+        };
+        typedef std::unordered_map<DevicePin,PinDesc> PinLayout;
+
 		virtual ~PIN_Interface();
 		virtual PinLayout getPinLayout() = 0;
-		virtual gpio::Tristate getPin(PinNumber num) = 0;
-		virtual void setPin(PinNumber num, gpio::Tristate val) = 0;
+		virtual gpio::Tristate getPin(DevicePin num) = 0;
+		virtual void setPin(DevicePin num, gpio::Tristate val) = 0;
 	};
 
 	class SPI_Interface {

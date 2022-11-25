@@ -4,22 +4,22 @@ using namespace std;
 
 /* Register */
 
-void Breadboard::registerPin(bool synchronous, gpio::PinNumber device_pin, gpio::PinNumber global,
+void Breadboard::registerPin(bool synchronous, Device::PIN_Interface::DevicePin device_pin, gpio::PinNumber global,
 		std::string name, Device *device) {
 	if(!device->m_pin) {
 		cerr << "[Breadboard] Attempting to add pin connection for device '" << device->getClass() <<
 				"', but device does not implement PIN interface." << endl;
 		return;
 	}
-	const PinLayout layout = device->m_pin->getPinLayout();
+	const Device::PIN_Interface::PinLayout layout = device->m_pin->getPinLayout();
 	if(layout.find(device_pin) == layout.end()) {
 		cerr << "[Breadboard] Attempting to add pin '" << (int)device_pin << "' for device " <<
 				device->getClass() << " that is not offered by device" << endl;
 		return;
 	}
-	const PinDesc& desc = layout.at(device_pin);
+	const Device::PIN_Interface::PinDesc& desc = layout.at(device_pin);
 	if(synchronous) {
-		if(desc.dir != PinDesc::Dir::input) {
+		if(desc.dir != Device::PIN_Interface::Dir::input) {
 			cerr << "[Breadboard] Attempting to add pin '" << (int)device_pin << "' as synchronous for device " <<
 					device->getClass() << ", but device labels pin not as input."
 					" This is not supported for inout-pins and unnecessary for output pins." << endl;
@@ -37,12 +37,12 @@ void Breadboard::registerPin(bool synchronous, gpio::PinNumber device_pin, gpio:
 	}
 	else {
 		PinMapping mapping = PinMapping{translatePinToGpioOffs(global), global, device_pin, name, device};
-		if(desc.dir == PinDesc::Dir::input
-				|| desc.dir == PinDesc::Dir::inout) {
+		if(desc.dir == Device::PIN_Interface::Dir::input
+				|| desc.dir == Device::PIN_Interface::Dir::inout) {
 			m_reading_connections.push_back(mapping);
 		}
-		if(desc.dir == PinDesc::Dir::output
-				|| desc.dir == PinDesc::Dir::inout) {
+		if(desc.dir == Device::PIN_Interface::Dir::output
+				|| desc.dir == Device::PIN_Interface::Dir::inout) {
 			m_writing_connections.push_back(mapping);
 		}
 	}

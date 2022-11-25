@@ -13,16 +13,16 @@ Device::Layout CDevice::getLayout() { return m_layout; }
 CDevice::PIN_Interface_C::PIN_Interface_C(CDevice* device) : m_device(device) {}
 CDevice::PIN_Interface_C::~PIN_Interface_C() = default;
 
-PinLayout CDevice::PIN_Interface_C::getPinLayout() {
+Device::PIN_Interface::PinLayout CDevice::PIN_Interface_C::getPinLayout() {
 	return m_pinLayout;
 }
 
-void CDevice::PIN_Interface_C::setPin(PinNumber, gpio::Tristate) {
+void CDevice::PIN_Interface_C::setPin(DevicePin, gpio::Tristate) {
 	std::cerr << "[CDevice] Warning: setPin was not implemented "
 			"for device " << m_device->getClass() << "." << std::endl;
 }
 
-gpio::Tristate CDevice::PIN_Interface_C::getPin(PinNumber) {
+gpio::Tristate CDevice::PIN_Interface_C::getPin(DevicePin) {
 	std::cerr << "[CDevice] Warning: getPin was not implemented "
 			"for device " << m_device->getClass() << "." << std::endl;
 	return gpio::Tristate::LOW;
