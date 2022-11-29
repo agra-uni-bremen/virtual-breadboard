@@ -105,6 +105,46 @@ bool Breadboard::moveDevice(Device *device, QPoint position, QPoint hotspot) {
 
 	device->getBuffer().setOffset(upper_left);
 	device->setScale(scale);
+
+    if(!device->m_pin) return true;
+
+    Device::PIN_Interface::PinLayout device_layout = device->m_pin->getPinLayout();
+    for(auto const& [device_pin, desc] : device_layout) {
+        DeviceConnection new_connection = DeviceConnection{
+                .id = device->getID(),
+                .pin = device_pin
+        };
+        Row bb_row;
+        if(isBreadboard()) {
+            QPoint pos_on_device = getDeviceAbsolutePosition(desc.row, desc.index);
+            QPoint pos_on_raster = getDistortedPosition(upper_left) + pos_on_device;
+            bb_row = getRow(pos_on_raster);
+        }
+        else if (m_raster.size() < std::numeric_limits<unsigned>::max()) {
+                bb_row = m_devices.size();
+        }
+        else {
+            std::set<unsigned> used_rows;
+            for(auto const& [row, content] : m_raster) {
+                used_rows.insert(row);
+            }
+            for(unsigned used_row : used_rows) {
+                if(used_row > bb_row) {
+                    break;
+                }
+                bb_row++;
+            }
+        }
+        auto row_obj = m_raster.find(bb_row);
+        if(row_obj != m_raster.end()) {
+            row_obj->second.devices.push_back(new_connection);
+        } else {
+            RowContent new_content;
+            new_content.devices.push_back(new_connection);
+            m_raster.emplace(bb_row, new_content);
+        }
+        createRowConnections(bb_row);
+    }
 	return true;
 }
 

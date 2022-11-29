@@ -15,6 +15,7 @@
 #include <QErrorMessage>
 
 #include <unordered_map>
+#include <unordered_set>
 #include <list>
 #include <mutex> // TODO: FIXME: Create one Lua state per device that uses asyncs like SPI and synchronous pins
 
@@ -38,11 +39,16 @@ class Breadboard : public QWidget {
 		GpioClient::OnChange_PIN fun;
 	};
 
+    struct PinMapping {
+        gpio::PinNumber gpio_offs;
+        gpio::PinNumber global_pin;
+        Device::PIN_Interface::DevicePin device_pin;
+        DeviceID device;
+    };
+
 	struct PinConnection {
-		gpio::PinNumber gpio_offs;	// calculated from "global pin"
-		gpio::PinNumber global_pin;
-		std::string name;
-        Device::PIN_Interface::Dir dir;
+        gpio::PinNumber global_pin;
+        std::string name;
         Index index;
 	};
 
@@ -51,7 +57,7 @@ class Breadboard : public QWidget {
         Device::PIN_Interface::DevicePin pin;
     };
 
-    struct Connection {
+    struct RowContent {
         std::list<DeviceConnection> devices;
         std::list<PinConnection> pins;
     };
@@ -59,10 +65,13 @@ class Breadboard : public QWidget {
 	std::mutex m_lua_access;		//TODO: Use multiple Lua states per 'async called' device
 	Factory m_factory;
 	std::unordered_map<DeviceID,std::unique_ptr<Device>> m_devices;
+
 	std::unordered_map<DeviceID,SPI_IOF_Request> m_spi_channels;
 	std::unordered_map<DeviceID,PIN_IOF_Request> m_pin_channels;
+    std::list<PinMapping> m_reading_connections;
+    std::list<PinMapping> m_writing_connections;
 
-    std::unordered_map<Row,Connection> m_connections;
+    std::unordered_map<Row,RowContent> m_raster;
 
 	bool m_debugmode = false;
 	QString m_bkgnd_path;
@@ -85,8 +94,19 @@ class Breadboard : public QWidget {
 	void removeDevice(const DeviceID& id);
 
 	// Connections
-	void registerPin(bool synchronous, Device::PIN_Interface::DevicePin device_pin, gpio::PinNumber global, std::string name, Device *device);
-	void registerSPI(gpio::PinNumber global, bool noresponse, Device *device);
+    void printConnections();
+    void addSPIToRow(Row row, Index index, gpio::PinNumber global, std::string name, bool noresponse=true);
+    void addPinToRow(Row row, Index index, gpio::PinNumber global, std::string name);
+    void addPinToRowContent(Row row, Index index, gpio::PinNumber global, std::string name);
+    void createRowConnections(Row row);
+    void createRowConnectionsSPI(Row row, bool noresponse=true);
+    std::unordered_set<gpio::PinNumber> getPinsToDevice(DeviceID device_id);
+    void registerPin(gpio::PinNumber global, Device::PIN_Interface::DevicePin device_pin, const DeviceID& device_id, bool synchronous=false);
+    void setPinSync(gpio::PinNumber global, Device::PIN_Interface::DevicePin device_pin, const DeviceID& device_id, bool synchronous);
+	void registerSPI(gpio::PinNumber global, const DeviceID& device_id, bool noresponse);
+    void setSPI(gpio::PinNumber global, bool active);
+    void setSPInoresponse(gpio::PinNumber global, bool noresponse);
+    void removePin(Row row, gpio::PinNumber global);
 
 	void writeDevice(const DeviceID& id);
 
@@ -107,9 +127,9 @@ class Breadboard : public QWidget {
 	void resizeEvent(QResizeEvent *e) override;
 
 	// Raster
-	DeviceRow getDeviceRow(QPoint pos);
-	DeviceIndex getDeviceIndex(QPoint pos);
-	std::pair<DeviceRow,DeviceIndex> getDeviceRasterPosition(QPoint pos);
+	DeviceRow getDeviceRow(QPoint pos_on_device);
+	DeviceIndex getDeviceIndex(QPoint pos_on_device);
+	std::pair<DeviceRow,DeviceIndex> getDeviceRasterPosition(QPoint pos_on_device);
 	QPoint getDeviceAbsolutePosition(DeviceRow row, DeviceIndex index);
 
 	QRect getRasterBounds();
@@ -143,8 +163,9 @@ public:
 	void timerUpdate(gpio::State state);
 	bool isBreadboard();
 
-	// Devices
+	// Remove Connection Objects
 	void removeDeviceObjects(const DeviceID& id);
+    void removePinObjects(const gpio::PinNumber global);
 
 public slots:
 	void connectionUpdate(bool active);
@@ -163,5 +184,6 @@ signals:
 	void registerIOF_SPI(gpio::PinNumber gpio_offs, GpioClient::OnChange_SPI fun, bool noresponse);
 	void closeAllIOFs(std::vector<gpio::PinNumber> gpio_offs);
 	void closeDeviceIOFs(std::vector<gpio::PinNumber> gpio_offs, DeviceID device_id);
+    void closePinIOFs(std::list<gpio::PinNumber> gpio_offs, gpio::PinNumber global);
 	void setBit(gpio::PinNumber gpio_offs, gpio::Tristate state);
 };

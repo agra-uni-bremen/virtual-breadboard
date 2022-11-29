@@ -1,13 +1,31 @@
 {
-    "connections": [
+    "raster": [
         {
-            "row": 1,
-            "devices": [
+            "row": 5,
+            "pins": [
                 {
-                    "id": "button_b",
-                    "pin": 1
+                    "global_pin": 16,
+                    "name": "display_sync",
+                    "index": 0,
+                    "sync": [
+                        {
+                            "device_id": "display",
+                            "device_pin": 1
+                        }
+                    ]
+                },
+                {
+                    "global_pin": 15,
+                    "name": "display_spi",
+                    "index": 0,
+                    "spi": {
+                        "noresponse": true
+                    }
                 }
-            ],
+            ]
+        },
+        {
+            "row": 0,
             "pins": [
                 {
                     "global_pin": 19,
@@ -18,13 +36,7 @@
             ]
         },
         {
-            "row": 2,
-            "devices": [
-                {
-                    "id": "button_a",
-                    "pin": 1
-                }
-            ],
+            "row": 1,
             "pins": [
                 {
                     "global_pin": 18,
@@ -35,13 +47,7 @@
             ]
         },
         {
-            "row": 3,
-            "devices": [
-                {
-                    "id": "button_down",
-                    "pin": 1
-                }
-            ],
+            "row": 2,
             "pins": [
                 {
                     "global_pin": 3,
@@ -52,13 +58,7 @@
             ]
         },
         {
-            "row": 4,
-            "devices": [
-                {
-                    "id": "button_right",
-                    "pin": 1
-                }
-            ],
+            "row": 3,
             "pins": [
                 {
                     "global_pin": 5,
@@ -69,13 +69,7 @@
             ]
         },
         {
-            "row": 5,
-            "devices": [
-                {
-                    "id": "button_left",
-                    "pin": 1
-                }
-            ],
+            "row": 4,
             "pins": [
                 {
                     "global_pin": 6,
@@ -87,12 +81,6 @@
         },
         {
             "row": 6,
-            "devices": [
-                {
-                    "id": "button_up",
-                    "pin": 1
-                }
-            ],
             "pins": [
                 {
                     "global_pin": 7,
@@ -104,12 +92,6 @@
         },
         {
             "row": 7,
-            "devices": [
-                {
-                    "id": "button_center",
-                    "pin": 1
-                }
-            ],
             "pins": [
                 {
                     "global_pin": 4,
@@ -203,15 +185,7 @@
                 ],
                 "scale": 2
             },
-            "id": "display",
-            "pin": {
-                    "device_pin": 1,
-                    "global_pin": 16
-            },
-            "spi": {
-                "cs_pin": 15,
-                "noresponse": true
-            }
+            "id": "display"
         },
         {
             "class": "button",
