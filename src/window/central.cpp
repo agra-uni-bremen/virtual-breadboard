@@ -21,6 +21,7 @@ Central::Central(const std::string& host, const std::string& port, QWidget *pare
 	connect(m_breadboard, &Breadboard::registerIOF_SPI, m_embedded, &Embedded::registerIOF_SPI);
 	connect(m_breadboard, &Breadboard::closeAllIOFs, this, &Central::closeAllIOFs);
 	connect(m_breadboard, &Breadboard::closeDeviceIOFs, this, &Central::closeDeviceIOFs);
+    connect(m_breadboard, &Breadboard::closePinIOFs, this, &Central::closePinIOFs);
 	connect(m_breadboard, &Breadboard::setBit, m_embedded, &Embedded::setBit);
 	connect(m_embedded, &Embedded::connectionLost, [this](){
 		emit(connectionUpdate(false));
@@ -50,6 +51,13 @@ void Central::closeDeviceIOFs(const std::vector<gpio::PinNumber>& gpio_offs, con
 		m_embedded->closeIOF(gpio);
 	}
 	m_breadboard->removeDeviceObjects(device);
+}
+
+void Central::closePinIOFs(const std::list<gpio::PinNumber>& gpio_offs, gpio::PinNumber global) {
+    for(gpio::PinNumber gpio : gpio_offs) {
+        m_embedded->closeIOF(gpio);
+    }
+    m_breadboard->removePinObjects(global);
 }
 
 /* LOAD */

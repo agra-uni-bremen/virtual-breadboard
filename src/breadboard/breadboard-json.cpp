@@ -79,75 +79,55 @@ bool Breadboard::loadConfigFile(const QString& file) {
 			if(device == m_devices.end()) continue;
 
 			device->second->fromJSON(device_desc);
-
-			if(device_desc.contains("spi") && device_desc["spi"].isObject()) {
-				const QJsonObject spi = device_desc["spi"].toObject();
-				if(!spi.contains("cs_pin")) {
-					cerr << "[Breadboard] config for device '" << classname << "' sets"
-							" an SPI interface, but does not set a cs_pin." << endl;
-					continue;
-				}
-				const gpio::PinNumber cs = spi["cs_pin"].toInt();
-				const bool noresponse = spi["noresponse"].toBool(true);
-				registerSPI(cs, noresponse, device->second.get());
-			}
-
-			if(device_desc.contains("pin") && device_desc["pin"].isObject()) {
-                const QJsonObject pin = device_desc["pin"].toObject();
-                if(!pin.contains("device_pin") || !pin.contains("global_pin")) {
-                    cerr << "[Breadboard] config for device '" << classname << "' is missing device_pin or "
-                                                                               "global_pin mappings" << endl;
-                    continue;
-                }
-                const gpio::PinNumber global_pin = pin["global_pin"].toInt();
-                const Device::PIN_Interface::DevicePin device_pin = pin["device_pin"].toInt();
-                registerPin(true, device_pin, global_pin, "undef", device->second.get());
-			}
 		}
 
-        if(json.contains("connections") && json["connections"].isArray()) {
-            QJsonArray connections = json["connections"].toArray();
-            for(auto const& connection : connections) {
-                QJsonObject row_obj = connection.toObject();
+        if(json.contains("raster") && json["raster"].isArray()) {
+            QJsonArray raster = json["raster"].toArray();
+            for(auto const& row_it : raster) {
+                QJsonObject row_obj = row_it.toObject();
                 if(!row_obj.contains("row") || !row_obj["row"].isDouble()) {
                     cerr << "[Breadboard] Connection entry is missing row number" << endl;
                     continue;
                 }
                 Row row = row_obj["row"].toInt();
-                Connection row_connections;
-                if(row_obj.contains("devices") && row_obj["devices"].isArray()) {
-                    QJsonArray devices = row_obj["devices"].toArray();
-                    for(auto const& device : devices) {
-                        QJsonObject device_obj = device.toObject();
-                        if(!device_obj.contains("id") || !device_obj["id"].isString() || !device_obj.contains("pin") || !device_obj["pin"].isDouble()) {
-                            cerr << "[Breadboard] Connection entry for row " << row << " is missing pin or id for a device." << endl;
-                            continue;
+                if(!row_obj.contains("pins") || !row_obj["pins"].isArray()) {
+                    cerr << "[Breadboard] Config entry for row " << row << " was emtpy" << endl;
+                    continue;
+                }
+                QJsonArray pin_array = row_obj["pins"].toArray();
+                for(auto const& pin_it : pin_array) {
+                    QJsonObject pin_obj = pin_it.toObject();
+                    if(!pin_obj.contains("global_pin") || !pin_obj.contains("name") || !pin_obj.contains("index")) {
+                        cerr << "[Breadboard] Pin entry in list for row " << row << " is missing information (name, index, global)" << endl;
+                        continue;
+                    }
+                    gpio::PinNumber global = pin_obj["global_pin"].toInt();
+                    std::string name = pin_obj["name"].toString().toStdString();
+                    Index index = pin_obj["index"].toInt();
+                    if(pin_obj.contains("spi") && pin_obj["spi"].isObject()) {
+                        QJsonObject spi_obj = pin_obj["spi"].toObject();
+                        if(spi_obj.contains("noresponse")) {
+                            bool noresponse = spi_obj["noresponse"].toBool();
+                            addSPIToRow(row, index, global, name, noresponse);
                         }
-                        DeviceID id = device_obj["id"].toString().toStdString();
-                        Device::PIN_Interface::DevicePin pin = device_obj["pin"].toInt();
-                        row_connections.devices.push_back(DeviceConnection{.id=id,.pin=pin});
+                        continue;
+                    }
+                    addPinToRow(row, index, global, name);
+                    if(pin_obj.contains("sync") && pin_obj["sync"].isArray()) {
+                        QJsonArray sync_devices = pin_obj["sync"].toArray();
+                        for(auto const& sync_it : sync_devices) {
+                            QJsonObject sync = sync_it.toObject();
+                            if(!sync.contains("device_id") || !sync.contains("device_pin")) {
+                                cerr << "[Breadboard] Synchronous devices list entry for pin " << (int) global << " is missing device ID or device pin" << endl;
+                                continue;
+                            }
+                            DeviceID device_id = sync["device_id"].toString().toStdString();
+                            Device::PIN_Interface::DevicePin device_pin = sync["device_pin"].toInt();
+                            setPinSync(global, device_pin, device_id, true);
+                        }
                     }
                 }
-                if(row_obj.contains("pins") && row_obj["pins"].isArray()) { // TODO create and use better addConnection method (instead of registerPIN)
-                    QJsonArray pins = row_obj["pins"].toArray();
-                    for(auto const& pin : pins) {
-                        QJsonObject pin_obj = pin.toObject();
-                        if(!pin_obj.contains("global_pin") || !pin_obj["global_pin"].isDouble() || !pin_obj.contains("name") || !pin_obj["name"].isString()) {
-                            cerr << "[Breadboard] Connection entry for row " << row << " is missing global pin or name for a pin." << endl;
-                            continue;
-                        }
-                        gpio::PinNumber global_pin = pin_obj["global_pin"].toInt();
-                        std::string name = pin_obj["name"].toString().toStdString();
-                        Device::PIN_Interface::Dir dir = static_cast<Device::PIN_Interface::Dir>(pin_obj["dir"].toInt());
-                        Index index = pin_obj["index"].toInt();
-                        row_connections.pins.push_back(PinConnection{.gpio_offs = translatePinToGpioOffs(global_pin),
-                                                                     .global_pin = global_pin,
-                                                                     .name = name,
-                                                                     .dir = dir,
-                                                                     .index = index});
-                    }
-                }
-                m_connections.emplace(row, row_connections);
+
             }
         }
 
@@ -165,29 +145,7 @@ bool Breadboard::loadConfigFile(const QString& file) {
 					cout << "\t\timplements conf" << endl;
 			}
 
-			cout << "Active pin connections:" << endl;
-            for(auto const& [row, connection] : m_connections) {
-                cout << "\tRow " << row << endl;
-                cout << "\t\tDevices: " << connection.devices.size() << endl;
-                for(const DeviceConnection& device_obj : connection.devices) {
-                    cout << "\t\t\tID: " << device_obj.id << ", device pin " << (int)device_obj.pin << endl;
-                }
-                cout << "\t\tPins: " << connection.pins.size() << endl;
-                for(const PinConnection& pin_obj : connection.pins) {
-                    cout << "\t\t\t" << pin_obj.name << "(index: " << pin_obj.index << "): global pin "
-                    << (int)pin_obj.global_pin << " is "
-                    << (pin_obj.dir == Device::PIN_Interface::Dir::output ? "output" : "input") << endl;
-                }
-            }
-			cout << "\tReading (synchronous): " << m_pin_channels.size() << endl;
-			for(auto& conn : m_pin_channels){
-				cout << "\t\t" << conn.first << ": global pin " << (int)conn.second.global_pin << endl;
-			}
-
-            cout << "\tSPI: " << m_spi_channels.size() << endl;
-            for(auto& conn : m_spi_channels) {
-                cout << "\t\t" << conn.first << ": global pin " << (int)conn.second.global_pin << endl;
-            }
+			printConnections();
 		}
 	}
 
@@ -211,47 +169,46 @@ bool Breadboard::saveConfigFile(const QString& file) {
 		window["windowsize"] = windowsize;
 		current_state["window"] = window;
 	}
-    QJsonArray connections;
-    for(auto const& [row, connection] : m_connections) {
+    QJsonArray raster;
+    for(auto const& [row, content] : m_raster) {
         QJsonObject row_obj;
         row_obj["row"] = (int)row;
-        QJsonArray row_devices;
-        for(const DeviceConnection& device : connection.devices) {
-            QJsonObject device_obj;
-            device_obj["id"] = QString::fromStdString(device.id);
-            device_obj["pin"] = (int)device.pin;
-            row_devices.append(device_obj);
-        }
-        row_obj["devices"] = row_devices;
         QJsonArray row_pins;
-        for(const PinConnection& pin : connection.pins) {
+        for(const PinConnection& pin : content.pins) {
             QJsonObject pin_obj;
             pin_obj["global_pin"] = (int) pin.global_pin;
             pin_obj["name"] = QString::fromStdString(pin.name);
-            pin_obj["dir"] = (int) pin.dir;
             pin_obj["index"] = (int) pin.index;
+            QJsonObject pin_spi;
+            for (auto const& [device, req] : m_spi_channels) {
+                if(req.global_pin == pin.global_pin) {
+                    pin_spi["noresponse"] = req.noresponse;
+                    break;
+                }
+            }
+            if(!pin_spi.empty()) {
+                pin_obj["spi"] = pin_spi;
+            }
+            QJsonArray pin_sync_devices;
+            for(auto const& [device, req] : m_pin_channels) {
+                if(req.global_pin == pin.global_pin) {
+                    QJsonObject sync_device;
+                    sync_device["device_id"] = QString::fromStdString(device);
+                    sync_device["device_pin"] = (int) req.device_pin;
+                    pin_sync_devices.append(sync_device);
+                }
+            }
+            if(!pin_sync_devices.empty()) {
+                pin_obj["sync"] = pin_sync_devices;
+            }
             row_pins.append(pin_obj);
         }
         row_obj["pins"] = row_pins;
     }
-    current_state["connections"] = connections;
+    current_state["raster"] = raster;
 	QJsonArray devices_json;
 	for(auto const& [id, device] : m_devices) {
 		QJsonObject dev_json = device->toJSON();
-		auto spi = m_spi_channels.find(id);
-		if(spi != m_spi_channels.end()) {
-			QJsonObject spi_json;
-			spi_json["cs_pin"] = (int) spi->second.global_pin;
-			spi_json["noresponse"] = spi->second.noresponse;
-			dev_json["spi"] = spi_json;
-		}
-		auto pin = m_pin_channels.find(id);
-		if(pin != m_pin_channels.end()) {
-			QJsonObject pin_json;
-			pin_json["device_pin"] = (int) pin->second.device_pin;
-			pin_json["global_pin"] = (int) pin->second.global_pin;
-            dev_json["pin"] = pin_json;
-		}
 		devices_json.append(dev_json);
 	}
 	current_state["devices"] = devices_json;

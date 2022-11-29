@@ -5,16 +5,16 @@
 
 /* Device */
 
-DeviceRow Breadboard::getDeviceRow(QPoint pos) {
-    return getMinimumPosition(pos).x() / iconSizeMinimum();
+DeviceRow Breadboard::getDeviceRow(QPoint pos_on_device) {
+    return getMinimumPosition(pos_on_device).x() / iconSizeMinimum();
 }
 
-DeviceIndex Breadboard::getDeviceIndex(QPoint pos) {
-    return getMinimumPosition(pos).y() / iconSizeMinimum();
+DeviceIndex Breadboard::getDeviceIndex(QPoint pos_on_device) {
+    return getMinimumPosition(pos_on_device).y() / iconSizeMinimum();
 }
 
-std::pair<DeviceRow,DeviceIndex> Breadboard::getDeviceRasterPosition(QPoint pos) {
-    return {getDeviceRow(pos),getDeviceIndex(pos)};
+std::pair<DeviceRow,DeviceIndex> Breadboard::getDeviceRasterPosition(QPoint pos_on_device) {
+    return {getDeviceRow(pos_on_device), getDeviceIndex(pos_on_device)};
 }
 
 QPoint Breadboard::getDeviceAbsolutePosition(DeviceRow row, DeviceIndex index) {
