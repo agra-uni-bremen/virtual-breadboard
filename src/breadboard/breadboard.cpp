@@ -16,24 +16,20 @@ Breadboard::Breadboard() : QWidget() {
 
 	setContextMenuPolicy(Qt::CustomContextMenu);
 	connect(this, &QWidget::customContextMenuRequested, this, &Breadboard::openContextMenu);
-    m_device_menu = new QMenu(this);
+    m_devices_menu = new QMenu(this);
 	auto *delete_device = new QAction("Delete");
 	connect(delete_device, &QAction::triggered, this, &Breadboard::removeActiveDevice);
-	m_device_menu->addAction(delete_device);
-	auto *scale_device = new QAction("Scale");
-	connect(scale_device, &QAction::triggered, this, &Breadboard::scaleActiveDevice);
-	m_device_menu->addAction(scale_device);
-    m_device_menu_key = new QAction("Edit Keybindings");
-	connect(m_device_menu_key, &QAction::triggered, this, &Breadboard::keybindingActiveDevice);
-	m_device_menu->addAction(m_device_menu_key);
-    m_device_menu_conf = new QAction("Edit configurations");
-	connect(m_device_menu_conf, &QAction::triggered, this, &Breadboard::configActiveDevice);
-	m_device_menu->addAction(m_device_menu_conf);
+	m_devices_menu->addAction(delete_device);
+    auto *scale_device = new QAction("Scale");
+    connect(scale_device, &QAction::triggered, this, &Breadboard::scaleActiveDevice);
+    m_devices_menu->addAction(scale_device);
+    auto *open_configurations = new QAction("Device Configurations");
+    connect(open_configurations, &QAction::triggered, this, &Breadboard::openDeviceConfigurations);
+    m_devices_menu->addAction(open_configurations);
 
-    m_device_keys = new KeybindingDialog(this);
-	connect(m_device_keys, &KeybindingDialog::keysChanged, this, &Breadboard::changeKeybindingActiveDevice);
-    m_device_config = new ConfigDialog(this);
-	connect(m_device_config, &ConfigDialog::configChanged, this, &Breadboard::changeConfigActiveDevice);
+    m_device_configurations = new DeviceConfigurations(this);
+    connect(m_device_configurations, &DeviceConfigurations::keysChanged, this, &Breadboard::updateKeybinding);
+    connect(m_device_configurations, &DeviceConfigurations::configChanged, this, &Breadboard::updateConfig);
     m_error_dialog = new QErrorMessage(this);
 
     m_add_device = new QMenu(this);
@@ -197,11 +193,7 @@ void Breadboard::openContextMenu(QPoint pos) {
 	for(auto const& [id, device] : m_devices) {
 		if(getDistortedGraphicBounds(device->getBuffer(), device->getScale()).contains(pos)) {
             m_menu_device_id = id;
-            if(device->m_conf) m_device_menu_conf->setVisible(true);
-            else m_device_menu_conf->setVisible(false);
-            if(device->m_input) m_device_menu_key->setVisible(true);
-            else m_device_menu_key->setVisible(false);
-			m_device_menu->popup(mapToGlobal(pos));
+			m_devices_menu->popup(mapToGlobal(pos));
 			return;
 		}
 	}
@@ -216,33 +208,38 @@ void Breadboard::removeActiveDevice() {
 }
 
 void Breadboard::scaleActiveDevice() {
-	auto device = m_devices.find(m_menu_device_id);
-	if(device == m_devices.end()) {
-		m_error_dialog->showMessage("Could not find device");
-		return;
-	}
-	bool ok;
-	int scale = QInputDialog::getInt(this, "Input new scale value", "Scale",
-			device->second->getScale(), 1, 10, 1, &ok);
-	if(ok && checkDevicePosition(device->second->getID(), device->second->getBuffer(),
-			scale, getDistortedPosition(device->second->getBuffer().offset())).x()>=0) {
-		device->second->setScale(scale);
-	}
+    auto device = m_devices.find(m_menu_device_id);
+    if(device == m_devices.end()) {
+        m_error_dialog->showMessage("Could not find device");
+        return;
+    }
+    bool ok;
+    int scale = QInputDialog::getInt(this, "Input new scale value", "Scale",
+                                     device->second->getScale(), 1, 10, 1, &ok);
+    if(ok && checkDevicePosition(device->second->getID(), device->second->getBuffer(),
+                                 scale, getDistortedPosition(device->second->getBuffer().offset())).x()>=0) {
+        device->second->setScale(scale);
+    }
     m_menu_device_id = "";
 }
 
-void Breadboard::keybindingActiveDevice() {
-	auto device = m_devices.find(m_menu_device_id);
-	if(device == m_devices.end() || !device->second->m_input) {
-		m_error_dialog->showMessage("Device does not implement input interface.");
-		return;
-	}
-	m_device_keys->setKeys(m_menu_device_id, device->second->m_input->getKeys());
+void Breadboard::openDeviceConfigurations() {
+    auto device = m_devices.find(m_menu_device_id);
+    if(device == m_devices.end()) {
+        m_error_dialog->showMessage("Could not find device");
+        m_menu_device_id = "";
+        return;
+    }
+    if(device->second->m_conf) m_device_configurations->setConfig(m_menu_device_id, device->second->m_conf->getConfig());
+    else m_device_configurations->hideConfig();
+    if(device->second->m_input) m_device_configurations->setKeys(m_menu_device_id, device->second->m_input->getKeys());
+    else m_device_configurations->hideKeys();
+
     m_menu_device_id = "";
-	m_device_keys->exec();
+    m_device_configurations->exec();
 }
 
-void Breadboard::changeKeybindingActiveDevice(const DeviceID& device_id, Keys keys) {
+void Breadboard::updateKeybinding(const DeviceID& device_id, Keys keys) {
 	auto device = m_devices.find(device_id);
 	if(device == m_devices.end() || !device->second->m_input) {
 		m_error_dialog->showMessage("Device does not implement input interface.");
@@ -251,18 +248,7 @@ void Breadboard::changeKeybindingActiveDevice(const DeviceID& device_id, Keys ke
 	device->second->m_input->setKeys(keys);
 }
 
-void Breadboard::configActiveDevice() {
-	auto device = m_devices.find(m_menu_device_id);
-	if(device == m_devices.end() || !device->second->m_conf) {
-		m_error_dialog->showMessage("Device does not implement config interface.");
-		return;
-	}
-	m_device_config->setConfig(m_menu_device_id, device->second->m_conf->getConfig());
-    m_menu_device_id = "";
-	m_device_config->exec();
-}
-
-void Breadboard::changeConfigActiveDevice(const DeviceID& device_id, Config config) {
+void Breadboard::updateConfig(const DeviceID& device_id, Config config) {
 	auto device = m_devices.find(device_id);
 	if(device == m_devices.end() || !device->second->m_conf) {
 		m_error_dialog->showMessage("Device does not implement config interface.");

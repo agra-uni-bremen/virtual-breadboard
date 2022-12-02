@@ -1,8 +1,7 @@
 #pragma once
 
 #include "constants.h"
-#include "dialog/keybinding.h"
-#include "dialog/config.h"
+#include "dialog/device_configurations.h"
 
 #include <gpio-helpers.h>
 #include <factory/factory.h>
@@ -78,11 +77,8 @@ class Breadboard : public QWidget {
 	QPixmap m_bkgnd;
 
 	DeviceID m_menu_device_id;
-	QMenu *m_device_menu;
-    QAction *m_device_menu_key;
-    QAction *m_device_menu_conf;
-	KeybindingDialog *m_device_keys;
-	ConfigDialog *m_device_config;
+	QMenu *m_devices_menu;
+    DeviceConfigurations *m_device_configurations;
 	QErrorMessage *m_error_dialog;
 	QMenu *m_add_device;
 
@@ -180,11 +176,10 @@ public slots:
 private slots:
 	void openContextMenu(QPoint pos);
 	void removeActiveDevice();
-	void scaleActiveDevice();
-	void keybindingActiveDevice();
-	void changeKeybindingActiveDevice(const DeviceID& device, Keys keys);
-	void configActiveDevice();
-	void changeConfigActiveDevice(const DeviceID& device, Config config);
+    void scaleActiveDevice();
+    void openDeviceConfigurations();
+	void updateKeybinding(const DeviceID& device, Keys keys);
+	void updateConfig(const DeviceID& device, Config config);
 
 signals:
 	void registerIOF_PIN(gpio::PinNumber gpio_offs, GpioClient::OnChange_PIN fun);

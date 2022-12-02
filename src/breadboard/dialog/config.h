@@ -2,10 +2,10 @@
 
 #include <device/device.hpp>
 
-#include <QDialog>
+#include <QWidget>
 #include <QFormLayout>
 
-class ConfigDialog : public QDialog {
+class ConfigDialog : public QWidget {
 	Q_OBJECT
 
 	QFormLayout *m_layout;
@@ -18,12 +18,12 @@ class ConfigDialog : public QDialog {
 	void addString(const ConfigDescription& name, const QString& value);
 
 public:
-	ConfigDialog(QWidget* parent);
+	ConfigDialog();
 	void setConfig(DeviceID device, const Config& config);
+    void removeConfig();
 
 public slots:
-	void accept() override;
-	void reject() override;
+	void accept();
 
 signals:
 	void configChanged(DeviceID device, Config config);
