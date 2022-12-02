@@ -14,6 +14,9 @@ DeviceConfigurations::DeviceConfigurations(QWidget *parent) : QDialog(parent) {
     m_keys = new KeybindingDialog;
     connect(m_keys, &KeybindingDialog::keysChanged, this, &DeviceConfigurations::keysChanged);
     m_tabs->addTab(m_keys, "Keybinding");
+    m_pins = new PinDialog;
+    connect(m_pins, &PinDialog::pinsChanged, this, &DeviceConfigurations::pinsChanged);
+    m_tabs->addTab(m_pins, "Pin Connections");
 
     auto *layout = new QVBoxLayout;
     layout->addWidget(m_tabs);
@@ -38,7 +41,18 @@ void DeviceConfigurations::hideKeys() {
     m_tabs->setTabVisible(1, false);
 }
 
+void DeviceConfigurations::setPins(DeviceID device, std::unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber> globals) {
+    m_tabs->setTabVisible(2, true);
+    m_pins->setPins(device, globals);
+}
+
+void DeviceConfigurations::hidePins() {
+    m_tabs->setTabVisible(2, false);
+}
+
 void DeviceConfigurations::hide(int) {
     m_conf->removeConfig();
+    m_keys->removeKeys();
+    m_pins->removePins();
     QWidget::hide();
 }

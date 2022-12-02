@@ -49,6 +49,9 @@ void Breadboard::addPinToRow(Row row, Index index, gpio::PinNumber global, std::
 }
 
 void Breadboard::addPinToRowContent(Row row, Index index, gpio::PinNumber global, std::string name) {
+    if(isBreadboard() && (row >= BB_ROWS || index >= BB_INDEXES)) return;
+    if(!isHifivePin(global)) return;
+    // TODO: check if global already exists somewhere
     PinConnection new_connection = PinConnection{
             .global_pin = global,
             .name = name,
@@ -56,6 +59,7 @@ void Breadboard::addPinToRowContent(Row row, Index index, gpio::PinNumber global
     };
     auto row_obj = m_raster.find(row);
     if(row_obj != m_raster.end()) {
+        // TODO: check if there already is an object at position index
         row_obj->second.pins.push_back(new_connection);
     }
     else {
@@ -113,6 +117,32 @@ unordered_set<gpio::PinNumber> Breadboard::getPinsToDevice(const DeviceID& devic
     for(auto const& mapping : m_writing_connections) {
         if(mapping.device == device_id) {
             connected_global.insert(mapping.global_pin);
+        }
+    }
+    return connected_global;
+}
+
+unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber> Breadboard::getPinsToDevicePins(const DeviceID& device_id) {
+    unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber> connected_global;
+    auto device = m_devices.find(device_id);
+    if(device == m_devices.end() || !device->second->m_pin) return connected_global;
+    auto sync_pin = m_pin_channels.find(device_id);
+    if(sync_pin != m_pin_channels.end()) {
+        connected_global.emplace(sync_pin->second.device_pin, sync_pin->second.global_pin);
+    }
+    for(auto const& mapping : m_reading_connections) {
+        if(mapping.device == device_id) {
+            connected_global.emplace(mapping.device_pin, mapping.global_pin);
+        }
+    }
+    for(auto const& mapping : m_writing_connections) {
+        if(mapping.device == device_id) {
+            connected_global.emplace(mapping.device_pin, mapping.global_pin);
+        }
+    }
+    for(auto const& [device_pin, desc] : device->second->m_pin->getPinLayout()) {
+        if(!connected_global.contains(device_pin)) {
+            connected_global.emplace(device_pin,  std::numeric_limits<gpio::PinNumber>::max());
         }
     }
     return connected_global;

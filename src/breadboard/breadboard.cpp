@@ -30,6 +30,7 @@ Breadboard::Breadboard() : QWidget() {
     m_device_configurations = new DeviceConfigurations(this);
     connect(m_device_configurations, &DeviceConfigurations::keysChanged, this, &Breadboard::updateKeybinding);
     connect(m_device_configurations, &DeviceConfigurations::configChanged, this, &Breadboard::updateConfig);
+    connect(m_device_configurations, &DeviceConfigurations::pinsChanged, this, &Breadboard::updatePins);
     m_error_dialog = new QErrorMessage(this);
 
     m_add_device = new QMenu(this);
@@ -234,6 +235,8 @@ void Breadboard::openDeviceConfigurations() {
     else m_device_configurations->hideConfig();
     if(device->second->m_input) m_device_configurations->setKeys(m_menu_device_id, device->second->m_input->getKeys());
     else m_device_configurations->hideKeys();
+    if(device->second->m_pin) m_device_configurations->setPins(m_menu_device_id, getPinsToDevicePins(m_menu_device_id));
+    else m_device_configurations->hidePins();
 
     m_menu_device_id = "";
     m_device_configurations->exec();
@@ -255,4 +258,48 @@ void Breadboard::updateConfig(const DeviceID& device_id, Config config) {
 		return;
 	}
 	device->second->m_conf->setConfig(config);
+}
+
+void Breadboard::updatePins(const DeviceID &device_id, unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber> globals) {
+    auto device = m_devices.find(device_id);
+    if(device == m_devices.end() || !device->second->m_pin) {
+        m_error_dialog->showMessage("Device does not implement pin interface.");
+        return;
+    }
+    // TODO remove old one
+    for(auto const& [device_pin, global] : globals) {
+        Row row = BB_ROWS;
+        Device::PIN_Interface::DevicePin d_pin_save = device_pin;
+        for(auto const& [device_pin_row, content] : m_raster) {
+            auto exists = find_if(content.devices.begin(), content.devices.end(),
+                                  [device_id, d_pin_save](const DeviceConnection& content_obj){
+               return content_obj.id == device_id && content_obj.pin == d_pin_save;
+            });
+            if(exists != content.devices.end()) {
+                row = device_pin_row;
+                break;
+            }
+        }
+        if(row == BB_ROWS) {
+            if(isBreadboard()) return; // did not find device in raster, therefore can't add connection
+            row = 0;
+            if(m_raster.size() < std::numeric_limits<Row>::max()) {
+                row = m_raster.size();
+            }
+            else {
+                std::set<unsigned> used_row_numbers;
+                for(auto const& [known_row, content] : m_raster) {
+                    used_row_numbers.insert(known_row);
+                }
+                for(unsigned known_row : used_row_numbers) {
+                    if(known_row > row)
+                        break;
+                    row++;
+                }
+            }
+        }
+        auto row_content = m_raster.find(row);
+        Index index = row_content != m_raster.end() ? row_content->second.devices.size() + row_content->second.pins.size() : 0;
+        addPinToRow(row, index, global, "dialog");
+    }
 }

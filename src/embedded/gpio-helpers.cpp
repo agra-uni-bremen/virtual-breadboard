@@ -51,3 +51,7 @@ void printBin(char* buf, uint8_t len) {
 	}
 	printf("\n");
 }
+
+bool isHifivePin(gpio::PinNumber pin) {
+    return pin <=19 && pin != 14;
+}
