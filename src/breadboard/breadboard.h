@@ -100,13 +100,18 @@ class Breadboard : public QWidget {
     void addPinToRowContent(Row row, Index index, gpio::PinNumber global, std::string name);
     void createRowConnections(Row row);
     void createRowConnectionsSPI(Row row, bool noresponse=true);
-    std::unordered_set<gpio::PinNumber> getPinsToDevice(DeviceID device_id);
+    std::unordered_set<gpio::PinNumber> getPinsToDevice(const DeviceID& device_id);
     void registerPin(gpio::PinNumber global, Device::PIN_Interface::DevicePin device_pin, const DeviceID& device_id, bool synchronous=false);
     void setPinSync(gpio::PinNumber global, Device::PIN_Interface::DevicePin device_pin, const DeviceID& device_id, bool synchronous);
 	void registerSPI(gpio::PinNumber global, const DeviceID& device_id, bool noresponse);
     void setSPI(gpio::PinNumber global, bool active);
     void setSPInoresponse(gpio::PinNumber global, bool noresponse);
-    void removePin(Row row, gpio::PinNumber global);
+    void removeConnections(gpio::PinNumber global, bool keep_on_raster);
+    void removeSPI(gpio::PinNumber global, bool keep_on_raster);
+    void removeSPIForDevice(gpio::PinNumber global, const DeviceID& device_id);
+    void removePin(gpio::PinNumber global, bool keep_on_raster);
+    void removePinForDevice(gpio::PinNumber global, const DeviceID& device_id);
+    void removePinFromRaster(gpio::PinNumber global);
 
 	void writeDevice(const DeviceID& id);
 
@@ -157,15 +162,17 @@ public:
 	bool saveConfigFile(const QString& file);
 	void additionalLuaDir(const std::string& additional_device_dir, bool overwrite_integrated_devices);
 	void clear();
-	void clearConnections();
+	void clearObjects();
 
 	// GPIO
 	void timerUpdate(gpio::State state);
 	bool isBreadboard();
 
 	// Remove Connection Objects
-	void removeDeviceObjects(const DeviceID& id);
-    void removePinObjects(const gpio::PinNumber global);
+    void removePinObjects(gpio::PinNumber gpio_offs);
+    void removePinObjectsForDevice(const DeviceID& device_id);
+    void removeSPIObjects(gpio::PinNumber gpio_offs);
+    void removeSPIObjectForDevice(const DeviceID& device_id);
 
 public slots:
 	void connectionUpdate(bool active);
@@ -182,8 +189,10 @@ private slots:
 signals:
 	void registerIOF_PIN(gpio::PinNumber gpio_offs, GpioClient::OnChange_PIN fun);
 	void registerIOF_SPI(gpio::PinNumber gpio_offs, GpioClient::OnChange_SPI fun, bool noresponse);
-	void closeAllIOFs(std::vector<gpio::PinNumber> gpio_offs);
-	void closeDeviceIOFs(std::vector<gpio::PinNumber> gpio_offs, DeviceID device_id);
-    void closePinIOFs(std::list<gpio::PinNumber> gpio_offs, gpio::PinNumber global);
+	void clearIOFs(std::vector<gpio::PinNumber> gpio_offs);
+    void closeSPI(gpio::PinNumber gpio_offs);
+    void closeSPIForDevice(gpio::PinNumber gpio_offs, DeviceID device_id);
+    void closePin(gpio::PinNumber gpio_offs);
+    void closePinForDevice(gpio::PinNumber gpio_offs, DeviceID device_id);
 	void setBit(gpio::PinNumber gpio_offs, gpio::Tristate state);
 };

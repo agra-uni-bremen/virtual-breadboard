@@ -35,6 +35,13 @@ uint8_t translatePinToGpioOffs(uint8_t pin) {
 	return 0;
 }
 
+uint8_t translateGpioOffsToPin(uint8_t pin) {
+    if(pin>=16) return pin-16;
+    if(pin<=5) return pin+8;
+    if(pin>=9 && pin <= 13) return pin+6;
+    return 0;
+}
+
 void printBin(char* buf, uint8_t len) {
 	for (uint16_t byte = 0; byte < len; byte++) {
 		for (int8_t bit = 7; bit >= 0; bit--) {

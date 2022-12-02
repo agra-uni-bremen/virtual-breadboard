@@ -95,7 +95,7 @@ void Breadboard::createRowConnections(Row row) {
     }
 }
 
-unordered_set<gpio::PinNumber> Breadboard::getPinsToDevice(DeviceID device_id) {
+unordered_set<gpio::PinNumber> Breadboard::getPinsToDevice(const DeviceID& device_id) {
     unordered_set<gpio::PinNumber> connected_global;
     auto sync_pin = m_pin_channels.find(device_id);
     if(sync_pin != m_pin_channels.end()) {
@@ -119,11 +119,11 @@ unordered_set<gpio::PinNumber> Breadboard::getPinsToDevice(DeviceID device_id) {
 }
 
 void Breadboard::registerPin(gpio::PinNumber global, Device::PIN_Interface::DevicePin device_pin, const DeviceID& device_id, bool synchronous) {
-    // TODO check if device in same row?
     auto device = m_devices.find(device_id);
     if(device == m_devices.end()) {
         cerr << "[Breadboard] Could not find device '" << device_id << "' when attempting to register pin" << endl;
-        return; // TODO remove from raster?
+        removeDevice(device_id);
+        return;
     }
     if(!device->second->m_pin) {
         cerr << "[Breadboard] Attempting to add pin connection for device '" << device->second->getClass() <<
@@ -173,23 +173,17 @@ void Breadboard::registerPin(gpio::PinNumber global, Device::PIN_Interface::Devi
 }
 
 void Breadboard::setPinSync(gpio::PinNumber global, Device::PIN_Interface::DevicePin device_pin, const DeviceID& device_id, bool synchronous) {
-    // TODO SPI?
-    if(synchronous) {
-        m_reading_connections.remove_if([global](const PinMapping& mapping){return mapping.global_pin==global;});
-        m_writing_connections.remove_if([global](const PinMapping& mapping){return mapping.global_pin==global;});
-    }
-    else {
-        // TODO have to use emit() again, maybe attempt to split up
-    }
+    removeSPI(global, true);
+    removePinForDevice(global, device_id);
     registerPin(global, device_pin, device_id, synchronous);
 }
 
 void Breadboard::registerSPI(gpio::PinNumber global, const DeviceID& device_id, bool noresponse) {
-    // TODO check if device in same row?
     auto device = m_devices.find(device_id);
     if(device == m_devices.end()) {
         cerr << "[Breadboard] Could not find device '" << device_id << "' when attempting to register SPI" << endl;
-        return; // TODO remove from raster?
+        removeDevice(device_id);
+        return;
     }
     if(!device->second->m_spi) {
         cerr << "[Breadboard] Attempting to add SPI connection for device '" << device->second->getClass() <<
@@ -212,69 +206,120 @@ void Breadboard::registerSPI(gpio::PinNumber global, const DeviceID& device_id, 
 }
 
 void Breadboard::setSPI(gpio::PinNumber global, bool active) {
-    // TODO turn SPI on/off for pin global
     // add/remove SPI entry in m_spi_channels AND remove PIN connections (sync, writing, reading) for global!
+    if(!active) {
+        removeSPI(global, true);
+        for(auto const& [row, content] : m_raster) {
+            createRowConnections(row);
+        }
+    }
+    else {
+        // remove all normal pin entries for this pin
+        removePin(global, true);
+        for(auto const& [row, content] : m_raster) {
+            createRowConnectionsSPI(row);
+        }
+    }
 }
 
 void Breadboard::setSPInoresponse(gpio::PinNumber global, bool noresponse) {
-    // TODO set noresponse in ALL spi_channel entries for global!
+    for(auto& [device, spi] : m_spi_channels) {
+        if(spi.global_pin == global) {
+            spi.noresponse = noresponse;
+        }
+    }
 }
 
 /* Remove */
 
-void Breadboard::removePin(Row row, gpio::PinNumber global) { // TODO only remove from row?
-    list<gpio::PinNumber> iofs;
-    for(auto const& [device, pin] : m_pin_channels) {
-        if(pin.global_pin == global) {
-            iofs.push_back(pin.gpio_offs);
-        }
+void Breadboard::removeSPI(gpio::PinNumber global, bool keep_on_raster) {
+    bool exists = find_if(m_spi_channels.begin(), m_spi_channels.end(),
+                          [global](const auto& spi_pair){
+                              return spi_pair.second.global_pin == global;
+                          }) != m_spi_channels.end();
+    if(exists) {
+        emit(closeSPI(translatePinToGpioOffs(global)));
     }
-    for(auto const& [device, spi] : m_spi_channels) {
-        if(spi.global_pin == global) {
-            iofs.push_back(spi.gpio_offs);
-        }
+    if(!keep_on_raster) {
+        removePinFromRaster(global);
     }
-    emit(closePinIOFs(iofs, global));
 }
 
-void Breadboard::removePinObjects(const gpio::PinNumber global) {
-    erase_if(m_pin_channels, [global](const auto& pin_pair){
-        auto const& [device_id, req] = pin_pair;
-        return req.global_pin == global;
+void Breadboard::removeSPIObjects(gpio::PinNumber gpio_offs) {
+    erase_if(m_spi_channels, [gpio_offs](const auto& spi_pair){
+        return spi_pair.second.gpio_offs == gpio_offs;
     });
-    erase_if(m_spi_channels, [global](const auto& spi_pair){
-        auto const& [device_id, req] = spi_pair;
-        return req.global_pin == global;
-    });
+}
+
+void Breadboard::removeSPIForDevice(gpio::PinNumber global, const DeviceID& device_id) {
+    auto req = m_spi_channels.find(device_id);
+    if(req == m_spi_channels.end() || req->second.global_pin != global) return;
+    emit(closeSPIForDevice(translatePinToGpioOffs(global), device_id));
+}
+
+void Breadboard::removeSPIObjectForDevice(const DeviceID& device_id) {
+    m_spi_channels.erase(device_id);
+}
+
+void Breadboard::removePin(gpio::PinNumber global, bool keep_on_raster) {
+    bool exists = find_if(m_pin_channels.begin(), m_pin_channels.end(),
+                          [global](const auto& pin_pair){
+                              return pin_pair.second.global_pin == global;
+                          }) != m_pin_channels.end();
+    if(exists) {
+        emit(closePin(translatePinToGpioOffs(global)));
+    }
     m_writing_connections.remove_if([global](const PinMapping& mapping){return mapping.global_pin == global;});
     m_reading_connections.remove_if([global](const PinMapping& mapping){return mapping.global_pin == global;});
+    if(!keep_on_raster) {
+        removePinFromRaster(global);
+    }
+}
+
+void Breadboard::removePinObjects(gpio::PinNumber gpio_offs) {
+    erase_if(m_pin_channels, [gpio_offs](const auto& pin_pair){
+        return pin_pair.second.gpio_offs == gpio_offs;
+    });
+}
+
+void Breadboard::removePinForDevice(gpio::PinNumber global, const DeviceID& device_id) {
+    auto req = m_pin_channels.find(device_id);
+    if(req == m_pin_channels.end() || req->second.global_pin != global) return;
+    if(req != m_pin_channels.end() && req->second.global_pin == global) {
+        emit(closePinForDevice(translatePinToGpioOffs(global), device_id));
+    }
+    m_writing_connections.remove_if([global,device_id](const PinMapping& mapping){
+        return mapping.device == device_id && mapping.global_pin == global;
+    });
+    m_reading_connections.remove_if([global, device_id](const PinMapping& mapping){
+        return mapping.device == device_id && mapping.global_pin == global;
+    });
+}
+
+void Breadboard::removePinObjectsForDevice(const DeviceID& device_id) {
+    m_pin_channels.erase(device_id);
+}
+
+void Breadboard::removePinFromRaster(gpio::PinNumber global) {
     for(auto& [row, content] : m_raster) {
         content.pins.remove_if([global](const PinConnection& c_obj){return c_obj.global_pin == global;});
     }
 }
 
-void Breadboard::removeDevice(const DeviceID& id) {
-    vector<gpio::PinNumber> iofs;
-    auto pin = m_pin_channels.find(id);
-    if(pin != m_pin_channels.end()) {
-        iofs.push_back(pin->second.gpio_offs);
-    }
-    auto spi = m_spi_channels.find(id);
-    if(spi != m_spi_channels.end()) {
-        iofs.push_back(spi->second.gpio_offs);
-    }
-    emit(closeDeviceIOFs(iofs, id));
+void Breadboard::removeConnections(gpio::PinNumber global, bool keep_on_raster) {
+    removeSPI(global, keep_on_raster);
+    removePin(global, keep_on_raster);
 }
 
-void Breadboard::removeDeviceObjects(const DeviceID& id) {
-    m_pin_channels.erase(id);
-    m_spi_channels.erase(id);
-    m_devices.erase(id);
+void Breadboard::removeDevice(const DeviceID& id) {
+    if(m_pin_channels.contains(id)) removePinForDevice(m_pin_channels.find(id)->second.global_pin, id);
+    if(m_spi_channels.contains(id)) removeSPIForDevice(m_spi_channels.find(id)->second.global_pin, id);
     m_writing_connections.remove_if([id](const PinMapping& mapping){return mapping.device == id;});
     m_reading_connections.remove_if([id](const PinMapping& mapping){return mapping.device == id;});
     for(auto& [row, content] : m_raster) {
         content.devices.remove_if([id](const DeviceConnection& c_obj){return c_obj.id == id;});
     }
+    m_devices.erase(id);
 }
 
 void Breadboard::clear() {
@@ -285,13 +330,13 @@ void Breadboard::clear() {
     for(auto const& [id,pin] : m_pin_channels) {
         iofs.push_back(pin.gpio_offs);
     }
-    emit(closeAllIOFs(iofs));
+    emit(clearIOFs(iofs));
 
     setMinimumSize(DEFAULT_SIZE);
     setBackground(DEFAULT_PATH);
 }
 
-void Breadboard::clearConnections() {
+void Breadboard::clearObjects() {
     m_spi_channels.clear();
     m_pin_channels.clear();
     m_raster.clear();
@@ -304,13 +349,21 @@ void Breadboard::timerUpdate(gpio::State state) {
     m_lua_access.lock();
     for(auto const& mapping : m_reading_connections) {
         auto device = m_devices.find(mapping.device);
-        if(device == m_devices.end() || !device->second->m_pin) continue; // TODO remove from raster?
+        if(device == m_devices.end()) {
+            removeDevice(mapping.device);
+            continue;
+        }
+        if(!device->second->m_pin) continue;
         device->second->m_pin->setPin(mapping.device_pin, state.pins[mapping.gpio_offs] ==
         gpio::Pinstate::HIGH ? gpio::Tristate::HIGH : gpio::Tristate::LOW); // TODO only if pin changed?
     }
     for(auto const& mapping : m_writing_connections) {
         auto device = m_devices.find(mapping.device);
-        if(device == m_devices.end() || !device->second->m_pin) continue; // TODO remove from raster?
+        if(device == m_devices.end()) {
+            removeDevice(mapping.device);
+            continue;
+        }
+        if(!device->second->m_pin) continue;
         emit(setBit(mapping.gpio_offs, device->second->m_pin->getPin(mapping.device_pin)));
     }
     m_lua_access.unlock();
@@ -330,7 +383,11 @@ void Breadboard::connectionUpdate(bool active) {
 
 void Breadboard::writeDevice(const DeviceID& id) {
     auto device = m_devices.find(id);
-    if(device == m_devices.end() || !device->second->m_pin) return; // TODO remove from raster?
+    if(device == m_devices.end()) {
+        removeDevice(id);
+        return;
+    }
+    if(!device->second->m_pin) return;
     m_lua_access.lock();
     for(auto const& mapping : m_writing_connections) {
         if(mapping.device != id) continue;
