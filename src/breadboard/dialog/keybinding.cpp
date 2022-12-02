@@ -1,7 +1,6 @@
 #include "keybinding.h"
 #include "keyedit.h"
 
-#include <QHBoxLayout>
 #include <QPushButton>
 
 KeybindingDialog::KeybindingDialog() : QWidget() {

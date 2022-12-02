@@ -1,6 +1,5 @@
 #include "config.h"
 
-#include <QHBoxLayout>
 #include <QPushButton>
 #include <QSpinBox>
 #include <QCheckBox>

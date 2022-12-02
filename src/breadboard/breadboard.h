@@ -97,6 +97,7 @@ class Breadboard : public QWidget {
     void createRowConnections(Row row);
     void createRowConnectionsSPI(Row row, bool noresponse=true);
     std::unordered_set<gpio::PinNumber> getPinsToDevice(const DeviceID& device_id);
+    std::unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber> getPinsToDevicePins(const DeviceID& device_id);
     void registerPin(gpio::PinNumber global, Device::PIN_Interface::DevicePin device_pin, const DeviceID& device_id, bool synchronous=false);
     void setPinSync(gpio::PinNumber global, Device::PIN_Interface::DevicePin device_pin, const DeviceID& device_id, bool synchronous);
 	void registerSPI(gpio::PinNumber global, const DeviceID& device_id, bool noresponse);
@@ -180,6 +181,7 @@ private slots:
     void openDeviceConfigurations();
 	void updateKeybinding(const DeviceID& device, Keys keys);
 	void updateConfig(const DeviceID& device, Config config);
+    void updatePins(const DeviceID& device, std::unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber> globals);
 
 signals:
 	void registerIOF_PIN(gpio::PinNumber gpio_offs, GpioClient::OnChange_PIN fun);
