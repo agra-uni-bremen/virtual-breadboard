@@ -6,20 +6,13 @@
 #include <QCheckBox>
 #include <QLineEdit>
 
-ConfigDialog::ConfigDialog(QWidget *parent) : QDialog(parent) {
-	auto *closeButton = new QPushButton("Close");
-	connect(closeButton, &QAbstractButton::pressed, this, &QDialog::reject);
+ConfigDialog::ConfigDialog() : QWidget() {
 	auto *saveButton = new QPushButton("Save");
-	connect(saveButton, &QAbstractButton::pressed, this, &QDialog::accept);
+	connect(saveButton, &QAbstractButton::pressed, this, &ConfigDialog::accept);
 	saveButton->setDefault(true);
-	auto *buttons_close = new QHBoxLayout;
-	buttons_close->addWidget(closeButton);
-	buttons_close->addWidget(saveButton);
 
     m_layout = new QFormLayout(this);
-	m_layout->addRow(buttons_close);
-
-	setWindowTitle("Edit config values");
+    m_layout->addRow(saveButton);
 }
 
 void ConfigDialog::addValue(const ConfigDescription& name, QWidget* value) {
@@ -88,21 +81,14 @@ void ConfigDialog::setConfig(DeviceID device, const Config& config) {
 	}
 }
 
-void ConfigDialog::reject() {
-	while(m_layout->rowCount() > 1) {
-		m_layout->removeRow(0);
-	}
-	m_config.clear();
+void ConfigDialog::removeConfig() {
+    while(m_layout->rowCount() > 1) {
+        m_layout->removeRow(0);
+    }
+    m_config.clear();
     m_device = "";
-	QDialog::reject();
 }
 
 void ConfigDialog::accept() {
 	emit(configChanged(m_device, m_config));
-	while(m_layout->rowCount() > 1) {
-		m_layout->removeRow(0);
-	}
-	m_config.clear();
-    m_device = "";
-	QDialog::accept();
 }

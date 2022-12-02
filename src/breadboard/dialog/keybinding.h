@@ -2,10 +2,10 @@
 
 #include <device/device.hpp>
 
-#include <QDialog>
+#include <QWidget>
 #include <QFormLayout>
 
-class KeybindingDialog : public QDialog {
+class KeybindingDialog : public QWidget {
 	Q_OBJECT
 
 	QFormLayout *m_layout;
@@ -15,12 +15,12 @@ class KeybindingDialog : public QDialog {
 	void add(int key);
 
 public:
-	KeybindingDialog(QWidget* parent);
+	KeybindingDialog();
 	void setKeys(DeviceID device, const Keys& keys);
+    void removeKeys();
 
 public slots:
-	void accept() override;
-	void reject() override;
+	void accept();
 
 signals:
 	void keysChanged(DeviceID device, Keys keys);
