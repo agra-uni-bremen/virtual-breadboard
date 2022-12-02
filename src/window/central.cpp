@@ -17,11 +17,13 @@ Central::Central(const std::string& host, const std::string& port, QWidget *pare
 	connect(timer, &QTimer::timeout, this, &Central::timerUpdate);
 	timer->start(250);
 
+    connect(m_breadboard, &Breadboard::clearIOFs, this, &Central::clearIOFs);
+    connect(m_breadboard, &Breadboard::closeSPI, this, &Central::closeSPI);
+    connect(m_breadboard, &Breadboard::closeSPIForDevice, this, &Central::closeSPIForDevice);
+    connect(m_breadboard, &Breadboard::closePin, this, &Central::closePin);
+    connect(m_breadboard, &Breadboard::closePinForDevice, this, &Central::closePinForDevice);
 	connect(m_breadboard, &Breadboard::registerIOF_PIN, m_embedded, &Embedded::registerIOF_PIN);
 	connect(m_breadboard, &Breadboard::registerIOF_SPI, m_embedded, &Embedded::registerIOF_SPI);
-	connect(m_breadboard, &Breadboard::closeAllIOFs, this, &Central::closeAllIOFs);
-	connect(m_breadboard, &Breadboard::closeDeviceIOFs, this, &Central::closeDeviceIOFs);
-    connect(m_breadboard, &Breadboard::closePinIOFs, this, &Central::closePinIOFs);
 	connect(m_breadboard, &Breadboard::setBit, m_embedded, &Embedded::setBit);
 	connect(m_embedded, &Embedded::connectionLost, [this](){
 		emit(connectionUpdate(false));
@@ -39,25 +41,31 @@ bool Central::toggleDebug() {
 	return m_breadboard->toggleDebug();
 }
 
-void Central::closeAllIOFs(const std::vector<gpio::PinNumber>& gpio_offs) {
+void Central::clearIOFs(const std::vector<gpio::PinNumber>& gpio_offs) {
 	for(gpio::PinNumber gpio : gpio_offs) {
 		m_embedded->closeIOF(gpio);
 	}
-	m_breadboard->clearConnections();
+    m_breadboard->clearObjects();
 }
 
-void Central::closeDeviceIOFs(const std::vector<gpio::PinNumber>& gpio_offs, const DeviceID& device) {
-	for(gpio::PinNumber gpio : gpio_offs) {
-		m_embedded->closeIOF(gpio);
-	}
-	m_breadboard->removeDeviceObjects(device);
+void Central::closeSPI(gpio::PinNumber gpio_offs) {
+    m_embedded->closeIOF(gpio_offs);
+    m_breadboard->removeSPIObjects(gpio_offs);
 }
 
-void Central::closePinIOFs(const std::list<gpio::PinNumber>& gpio_offs, gpio::PinNumber global) {
-    for(gpio::PinNumber gpio : gpio_offs) {
-        m_embedded->closeIOF(gpio);
-    }
-    m_breadboard->removePinObjects(global);
+void Central::closeSPIForDevice(gpio::PinNumber gpio_offs, const DeviceID& device_id) {
+    m_embedded->closeIOF(gpio_offs);
+    m_breadboard->removeSPIObjectForDevice(device_id);
+}
+
+void Central::closePin(gpio::PinNumber gpio_offs) {
+    m_embedded->closeIOF(gpio_offs);
+    m_breadboard->removePinObjects(gpio_offs);
+}
+
+void Central::closePinForDevice(gpio::PinNumber gpio_offs, const DeviceID& device_id) {
+    m_embedded->closeIOF(gpio_offs);
+    m_breadboard->removePinObjectsForDevice(device_id);
 }
 
 /* LOAD */
