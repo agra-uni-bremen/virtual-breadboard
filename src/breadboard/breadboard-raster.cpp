@@ -5,6 +5,43 @@
 
 /* Device */
 
+Breadboard::Row Breadboard::getRowForDevicePin(const DeviceID& device_id, Device::PIN_Interface::DevicePin device_pin) {
+    Row row = BB_ROWS;
+    for(auto const& [device_pin_row, content] : m_raster) {
+        auto exists = find_if(content.devices.begin(), content.devices.end(),
+                              [device_id, device_pin](const DeviceConnection& content_obj){
+                                  return content_obj.id == device_id && content_obj.pin == device_pin;
+                              });
+        if(exists != content.devices.end()) {
+            row = device_pin_row;
+            break;
+        }
+    }
+    // if raster is not shown, new row number may have to be generated
+    if(row == BB_ROWS) {
+        if(isBreadboard()) {
+            std::cerr << "[Breadboard Raster] Could not find raster position for device pin " << device_pin << " of device '" << device_id << "'" << std::endl;
+            return BB_ROWS;
+        }
+        row = 0;
+        if(m_raster.size() < std::numeric_limits<Row>::max()) {
+            row = m_raster.size();
+        }
+        else {
+            std::set<unsigned> used_row_numbers;
+            for(auto const& [known_row, content] : m_raster) {
+                used_row_numbers.insert(known_row);
+            }
+            for(unsigned known_row : used_row_numbers) {
+                if(known_row > row)
+                    break;
+                row++;
+            }
+        }
+    }
+    return row;
+}
+
 DeviceRow Breadboard::getDeviceRow(QPoint pos_on_device) {
     return getMinimumPosition(pos_on_device).x() / iconSizeMinimum();
 }
@@ -22,6 +59,14 @@ QPoint Breadboard::getDeviceAbsolutePosition(DeviceRow row, DeviceIndex index) {
 }
 
 /* Breadboard */
+
+bool Breadboard::isValidRasterRow(Row row) { return row < BB_ROWS; }
+bool Breadboard::isValidRasterIndex(Index index) { return index < BB_INDEXES; }
+
+Breadboard::Index Breadboard::getNextIndex(Row row) {
+    auto row_content = m_raster.find(row);
+    return row_content != m_raster.end() ? row_content->second.devices.size() + row_content->second.pins.size() : 0;
+}
 
 QRect Breadboard::getRasterBounds() {
     return getDistortedRect(BB_ROW_X,BB_ROW_Y,BB_ONE_ROW*iconSizeMinimum(),

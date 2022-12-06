@@ -163,7 +163,7 @@ void Breadboard::dropEvent(QDropEvent *e) {
 		QPoint hotspot;
 		dataStream >> q_id >> hotspot;
 
-		if(moveDevice(m_devices.at(q_id.toStdString()).get(), e->pos(), hotspot)) {
+		if(moveDevice(q_id.toStdString(), e->pos(), hotspot)) {
 			e->acceptProposedAction();
 		} else {
 			e->ignore();

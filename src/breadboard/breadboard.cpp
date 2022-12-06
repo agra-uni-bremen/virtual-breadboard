@@ -88,27 +88,28 @@ QPoint Breadboard::checkDevicePosition(const DeviceID& id, const QImage& buffer,
 	return getMinimumPosition(upper_left);
 }
 
-bool Breadboard::moveDevice(Device *device, QPoint position, QPoint hotspot) {
-	if(!device) return false;
-	unsigned scale = device->getScale();
+bool Breadboard::moveDevice(const DeviceID& device_id, QPoint position, QPoint hotspot) {
+    auto device = m_devices.find(device_id);
+	if(device == m_devices.end()) return false;
+	unsigned scale = device->second->getScale();
 	if(!scale) scale = 1;
 
-	QPoint upper_left = checkDevicePosition(device->getID(), device->getBuffer(), scale, position, hotspot);
+	QPoint upper_left = checkDevicePosition(device->second->getID(), device->second->getBuffer(), scale, position, hotspot);
 
 	if(upper_left.x()<0) {
 		cerr << "[Breadboard] New device position is invalid." << endl;
 		return false;
 	}
 
-	device->getBuffer().setOffset(upper_left);
-	device->setScale(scale);
+	device->second->getBuffer().setOffset(upper_left);
+	device->second->setScale(scale);
 
-    if(!device->m_pin) return true;
+    if(!device->second->m_pin) return true;
 
-    Device::PIN_Interface::PinLayout device_layout = device->m_pin->getPinLayout();
+    Device::PIN_Interface::PinLayout device_layout = device->second->m_pin->getPinLayout();
     for(auto const& [device_pin, desc] : device_layout) {
         DeviceConnection new_connection = DeviceConnection{
-                .id = device->getID(),
+                .id = device->second->getID(),
                 .pin = device_pin
         };
         Row bb_row;
@@ -117,21 +118,10 @@ bool Breadboard::moveDevice(Device *device, QPoint position, QPoint hotspot) {
             QPoint pos_on_raster = getDistortedPosition(upper_left) + pos_on_device;
             bb_row = getRow(pos_on_raster);
         }
-        else if (m_raster.size() < std::numeric_limits<unsigned>::max()) {
-                bb_row = m_devices.size();
-        }
         else {
-            std::set<unsigned> used_rows;
-            for(auto const& [row, content] : m_raster) {
-                used_rows.insert(row);
-            }
-            for(unsigned used_row : used_rows) {
-                if(used_row > bb_row) {
-                    break;
-                }
-                bb_row++;
-            }
+            bb_row = getRowForDevicePin(device_id, device_pin);
         }
+
         auto row_obj = m_raster.find(bb_row);
         if(row_obj != m_raster.end()) {
             row_obj->second.devices.push_back(new_connection);
@@ -147,22 +137,19 @@ bool Breadboard::moveDevice(Device *device, QPoint position, QPoint hotspot) {
 
 bool Breadboard::addDevice(const DeviceClass& classname, QPoint pos, DeviceID id) {
 	if(id.empty()) {
-		if(m_devices.size() < std::numeric_limits<unsigned>::max()) {
-			id = std::to_string(m_devices.size());
-		}
-		else {
-			std::set<unsigned> used_ids;
-			for(auto const& [id_it, device_it] : m_devices) {
-				used_ids.insert(std::stoi(id_it));
-			}
-			unsigned id_int = 0;
-			for(unsigned used_id : used_ids) {
-				if(used_id > id_int)
-					break;
-				id_int++;
-			}
-			id = std::to_string(id_int);
-		}
+        std::set<unsigned> used_ids;
+        for(auto const& [id_it, device_it] : m_devices) {
+            if(find_if(id_it.begin(), id_it.end(), [](unsigned char c){return !isdigit(c);}) == id_it.end()) {
+                used_ids.insert(stoi(id_it));
+            }
+        }
+        unsigned id_int = 0;
+        for(unsigned used_id : used_ids) {
+            if(used_id > id_int)
+                break;
+            id_int++;
+        }
+        id = std::to_string(id_int);
 	}
 
 	if(id.empty()) {
@@ -180,12 +167,15 @@ bool Breadboard::addDevice(const DeviceClass& classname, QPoint pos, DeviceID id
 
 	unique_ptr<Device> device = m_factory.instantiateDevice(id, classname);
 	device->createBuffer(iconSizeMinimum(), pos);
-	if(moveDevice(device.get(), pos)) {
-		m_devices.insert(make_pair(id, std::move(device)));
-		return true;
+
+    m_devices.insert(make_pair(id, std::move(device)));
+
+	if(!moveDevice(id, pos)) {
+        cerr << "[Breadboard] Could not place new " << classname << " device" << endl;
+		removeDevice(id);
+		return false;
 	}
-	cerr << "[Breadboard] Could not place new " << classname << " device" << endl;
-	return false;
+	return true;
 }
 
 /* Context Menu */
@@ -260,56 +250,9 @@ void Breadboard::updateConfig(const DeviceID& device_id, Config config) {
 	device->second->m_conf->setConfig(config);
 }
 
-void Breadboard::updatePins(const DeviceID &device_id, unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber> globals) {
-    auto device = m_devices.find(device_id);
-    if(device == m_devices.end() || !device->second->m_pin) {
-        m_error_dialog->showMessage("Device does not implement pin interface.");
-        return;
-    }
-    unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber> current_globals = getPinsToDevicePins(device_id);
+void Breadboard::updatePins(const DeviceID &device_id, const unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber>& globals) {
     for(auto const& [device_pin, global] : globals) {
-        Row row = BB_ROWS;
-        Device::PIN_Interface::DevicePin d_pin_save = device_pin;
-        // get row for device_pin
-        for(auto const& [device_pin_row, content] : m_raster) {
-            auto exists = find_if(content.devices.begin(), content.devices.end(),
-                                  [device_id, d_pin_save](const DeviceConnection& content_obj){
-               return content_obj.id == device_id && content_obj.pin == d_pin_save;
-            });
-            if(exists != content.devices.end()) {
-                row = device_pin_row;
-                break;
-            }
-        }
-        // if raster is not shown, new row number may have to be generated
-        if(row == BB_ROWS) {
-            if(isBreadboard()) return; // did not find device in raster, therefore can't add connection
-            row = 0;
-            if(m_raster.size() < std::numeric_limits<Row>::max()) {
-                row = m_raster.size();
-            }
-            else {
-                std::set<unsigned> used_row_numbers;
-                for(auto const& [known_row, content] : m_raster) {
-                    used_row_numbers.insert(known_row);
-                }
-                for(unsigned known_row : used_row_numbers) {
-                    if(known_row > row)
-                        break;
-                    row++;
-                }
-            }
-        }
-        // get index
-        auto row_content = m_raster.find(row);
-        Index index = row_content != m_raster.end() ? row_content->second.devices.size() + row_content->second.pins.size() : 0;
-        // remove old pin connection, if exists
-        auto old_pin = current_globals.find(device_pin);
-        if(old_pin != current_globals.end() && isHifivePin(old_pin->second)) {
-            removePin(old_pin->second, false);
-        }
-        addPinToRow(row, index, global, "dialog");
+        addPinToDevicePin(device_id, device_pin, global, "dialog");
     }
-
     printConnections();
 }
