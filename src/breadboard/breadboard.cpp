@@ -266,10 +266,11 @@ void Breadboard::updatePins(const DeviceID &device_id, unordered_map<Device::PIN
         m_error_dialog->showMessage("Device does not implement pin interface.");
         return;
     }
-    // TODO remove old one
+    unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber> current_globals = getPinsToDevicePins(device_id);
     for(auto const& [device_pin, global] : globals) {
         Row row = BB_ROWS;
         Device::PIN_Interface::DevicePin d_pin_save = device_pin;
+        // get row for device_pin
         for(auto const& [device_pin_row, content] : m_raster) {
             auto exists = find_if(content.devices.begin(), content.devices.end(),
                                   [device_id, d_pin_save](const DeviceConnection& content_obj){
@@ -280,6 +281,7 @@ void Breadboard::updatePins(const DeviceID &device_id, unordered_map<Device::PIN
                 break;
             }
         }
+        // if raster is not shown, new row number may have to be generated
         if(row == BB_ROWS) {
             if(isBreadboard()) return; // did not find device in raster, therefore can't add connection
             row = 0;
@@ -298,8 +300,16 @@ void Breadboard::updatePins(const DeviceID &device_id, unordered_map<Device::PIN
                 }
             }
         }
+        // get index
         auto row_content = m_raster.find(row);
         Index index = row_content != m_raster.end() ? row_content->second.devices.size() + row_content->second.pins.size() : 0;
+        // remove old pin connection, if exists
+        auto old_pin = current_globals.find(device_pin);
+        if(old_pin != current_globals.end() && isHifivePin(old_pin->second)) {
+            removePin(old_pin->second, false);
+        }
         addPinToRow(row, index, global, "dialog");
     }
+
+    printConnections();
 }

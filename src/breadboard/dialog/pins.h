@@ -10,7 +10,8 @@ class PinDialog : public QWidget {
 
     QFormLayout *m_layout;
     DeviceID m_device;
-    std::unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber> m_globals;
+    std::unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber> m_globals_input;
+    std::unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber> m_globals_output;
 
     void addPin(Device::PIN_Interface::DevicePin device_pin, gpio::PinNumber global);
 
