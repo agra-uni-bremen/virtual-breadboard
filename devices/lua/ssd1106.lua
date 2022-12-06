@@ -4,7 +4,7 @@ classname = "SSD1106"
 
 function getPinLayout ()
 	-- number, [input | output | inout], name
-	return  {1, "input", "data_command"}
+	return  {1, "input", "data_command"}, {2, "input", "cs"}
 end
 
 function getGraphBufferLayout()

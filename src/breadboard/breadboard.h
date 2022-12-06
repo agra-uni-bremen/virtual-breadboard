@@ -27,6 +27,7 @@ class Breadboard : public QWidget {
 	struct SPI_IOF_Request {
 		gpio::PinNumber gpio_offs;	// calculated from "global pin"
 		gpio::PinNumber global_pin;
+        Device::PIN_Interface::DevicePin cs_pin;
 		bool noresponse;
 		GpioClient::OnChange_SPI fun;
 	};
@@ -91,7 +92,10 @@ class Breadboard : public QWidget {
 
 	// Connections
     void printConnections();
+    std::string getPinName(gpio::PinNumber global);
     void addSPIToRow(Row row, Index index, gpio::PinNumber global, std::string name, bool noresponse=true);
+    void addPinToDevicePin(const DeviceID& device_id, Device::PIN_Interface::DevicePin device_pin, gpio::PinNumber global, std::string name);
+    void addSPIToDevicePin(const DeviceID& device_id, Device::PIN_Interface::DevicePin cs_pin, gpio::PinNumber global, std::string name);
     void addPinToRow(Row row, Index index, gpio::PinNumber global, std::string name);
     void addPinToRowContent(Row row, Index index, gpio::PinNumber global, std::string name);
     void createRowConnections(Row row);
@@ -100,9 +104,10 @@ class Breadboard : public QWidget {
     std::unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber> getPinsToDevicePins(const DeviceID& device_id);
     void registerPin(gpio::PinNumber global, Device::PIN_Interface::DevicePin device_pin, const DeviceID& device_id, bool synchronous=false);
     void setPinSync(gpio::PinNumber global, Device::PIN_Interface::DevicePin device_pin, const DeviceID& device_id, bool synchronous);
-	void registerSPI(gpio::PinNumber global, const DeviceID& device_id, bool noresponse);
+	void registerSPI(gpio::PinNumber global, Device::PIN_Interface::DevicePin cs_pin, const DeviceID& device_id, bool noresponse);
     void setSPI(gpio::PinNumber global, bool active);
     void setSPInoresponse(gpio::PinNumber global, bool noresponse);
+    std::pair<Row,Index> removeConnection(const DeviceID& device_id, Device::PIN_Interface::DevicePin device_pin);
     void removeConnections(gpio::PinNumber global, bool keep_on_raster);
     void removeSPI(gpio::PinNumber global, bool keep_on_raster);
     void removeSPIForDevice(gpio::PinNumber global, const DeviceID& device_id);
@@ -114,7 +119,7 @@ class Breadboard : public QWidget {
 
 	// Drag and Drop
 	QPoint checkDevicePosition(const DeviceID& id, const QImage& buffer, int scale, QPoint position, QPoint hotspot=QPoint(0,0));
-	bool moveDevice(Device *device, QPoint position, QPoint hotspot=QPoint(0,0));
+	bool moveDevice(const DeviceID& device_id, QPoint position, QPoint hotspot=QPoint(0,0));
 	void dropEvent(QDropEvent *e) override;
 	void dragEnterEvent(QDragEnterEvent *e) override;
 	void dragMoveEvent(QDragMoveEvent *e) override;
@@ -129,11 +134,15 @@ class Breadboard : public QWidget {
 	void resizeEvent(QResizeEvent *e) override;
 
 	// Raster
+    Row getRowForDevicePin(const DeviceID& device_id, Device::PIN_Interface::DevicePin device_pin);
 	DeviceRow getDeviceRow(QPoint pos_on_device);
 	DeviceIndex getDeviceIndex(QPoint pos_on_device);
 	std::pair<DeviceRow,DeviceIndex> getDeviceRasterPosition(QPoint pos_on_device);
 	QPoint getDeviceAbsolutePosition(DeviceRow row, DeviceIndex index);
 
+    Index getNextIndex(Row row);
+    static bool isValidRasterRow(Row row);
+    static bool isValidRasterIndex(Index index);
 	QRect getRasterBounds();
 	bool isOnRaster(QPoint pos);
 	Row getRow(QPoint pos);
@@ -181,7 +190,7 @@ private slots:
     void openDeviceConfigurations();
 	void updateKeybinding(const DeviceID& device, Keys keys);
 	void updateConfig(const DeviceID& device, Config config);
-    void updatePins(const DeviceID& device, std::unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber> globals);
+    void updatePins(const DeviceID& device, const std::unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber>& globals);
 
 signals:
 	void registerIOF_PIN(gpio::PinNumber gpio_offs, GpioClient::OnChange_PIN fun);
