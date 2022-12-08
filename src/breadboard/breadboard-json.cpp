@@ -29,24 +29,7 @@ void Breadboard::additionalLuaDir(const string& additional_device_dir, bool over
 	}
 }
 
-bool Breadboard::loadConfigFile(const QString& file) {
-    QFile confFile(file);
-    if (!confFile.open(QIODevice::ReadOnly)) {
-        std::cerr << "[Breadboard] Could not open config file " << std::endl;
-        return false;
-    }
-
-    QByteArray raw_file = confFile.readAll();
-    QJsonParseError error;
-    QJsonDocument json_doc = QJsonDocument::fromJson(raw_file, &error);
-    if(json_doc.isNull())
-    {
-        std::cerr << "[Breadboard] Config seems to be invalid: ";
-        std::cerr << error.errorString().toStdString() << std::endl;
-        return false;
-    }
-    QJsonObject json = json_doc.object();
-
+void Breadboard::fromJSON(QJsonObject json) {
     clear();
 
     if(json.contains("window") && json["window"].isObject()) {
@@ -91,14 +74,8 @@ bool Breadboard::loadConfigFile(const QString& file) {
                     gpio::PinNumber global = connection_obj["global_pin"].toInt();
                     Device::PIN_Interface::DevicePin device_pin = connection_obj["device_pin"].toInt();
                     string name = connection_obj["name"].toString("undefined").toStdString();
-                    bool spi = connection_obj["spi"].toBool(false);
                     bool sync = connection_obj["synchronous"].toBool(false);
-                    if(spi) {
-                        addSPIToDevicePin(id, device_pin, global, name);
-                    }
-                    else {
-                        addPinToDevicePin(id, device_pin, global, name);
-                    }
+                    addPinToDevicePin(id, device_pin, global, name);
                     if(sync) setPinSync(global, device_pin, id, true);
                 }
             }
@@ -121,17 +98,9 @@ bool Breadboard::loadConfigFile(const QString& file) {
 			printConnections();
 		}
 	}
-
-	return true;
 }
 
-bool Breadboard::saveConfigFile(const QString& file) {
-	QFile confFile(file);
-	if(!confFile.open(QIODevice::WriteOnly)) {
-		cerr << "[Breadboard] Could not open config file" << endl;
-		cerr << confFile.errorString().toStdString() << endl;
-		return false;
-	}
+QJsonObject Breadboard::toJSON() {
 	QJsonObject current_state;
 	if(!isBreadboard()) {
 		QJsonObject window;
@@ -148,9 +117,8 @@ bool Breadboard::saveConfigFile(const QString& file) {
         unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber> pins = getPinsToDevicePins(id);
         QJsonArray pins_json;
         auto sync_pin = m_pin_channels.find(id);
-        auto spi = m_spi_channels.find(id);
         for(auto const& [device_pin, global] : pins) {
-            if(!isHifivePin(global)) continue;
+            if(!m_embedded->isPin(global)) continue;
             QJsonObject pin_json;
             pin_json["global_pin"] = global;
             pin_json["device_pin"] = (int) device_pin;
@@ -158,16 +126,11 @@ bool Breadboard::saveConfigFile(const QString& file) {
             if(sync_pin!=m_pin_channels.end() && sync_pin->second.global_pin==global) {
                 pin_json["synchronous"] = true;
             }
-            if(spi!=m_spi_channels.end() && spi->second.global_pin==global) {
-                pin_json["spi"] = true;
-            }
             pins_json.append(pin_json);
         }
         dev_json["pins"] = pins_json;
 		devices_json.append(dev_json);
 	}
 	current_state["devices"] = devices_json;
-	QJsonDocument doc(current_state);
-	confFile.write(doc.toJson());
-	return true;
+	return current_state;
 }

@@ -33,13 +33,14 @@ Breadboard::Breadboard() : QWidget() {
     connect(m_device_configurations, &DeviceConfigurations::pinsChanged, this, &Breadboard::updatePins);
     m_error_dialog = new QErrorMessage(this);
 
-    m_add_device = new QMenu(this);
+    m_bb_menu = new QMenu(this);
+    QMenu *add_device = m_bb_menu->addMenu("Add Device");
 	for(const DeviceClass& device : m_factory.getAvailableDevices()) {
 		auto *device_action = new QAction(QString::fromStdString(device));
 		connect(device_action, &QAction::triggered, [this, device](){
-			addDevice(device, mapFromGlobal(m_add_device->pos()));
+			addDevice(device, mapFromGlobal(m_bb_menu->pos()));
 		});
-		m_add_device->addAction(device_action);
+		add_device->addAction(device_action);
 	}
 
 	setMinimumSize(DEFAULT_SIZE);
@@ -52,6 +53,10 @@ bool Breadboard::isBreadboard() { return m_bkgnd_path == DEFAULT_PATH; }
 bool Breadboard::toggleDebug() {
     m_debugmode = !m_debugmode;
 	return m_debugmode;
+}
+
+void Breadboard::setEmbedded(Embedded *embedded) {
+    this->m_embedded = embedded;
 }
 
 /* DEVICE */
@@ -189,7 +194,7 @@ void Breadboard::openContextMenu(QPoint pos) {
 		}
 	}
 	if(isBreadboard() && !isOnRaster(pos)) return;
-	m_add_device->popup(mapToGlobal(pos));
+    m_bb_menu->popup(mapToGlobal(pos));
 }
 
 void Breadboard::removeActiveDevice() {
@@ -225,7 +230,14 @@ void Breadboard::openDeviceConfigurations() {
     else m_device_configurations->hideConfig();
     if(device->second->m_input) m_device_configurations->setKeys(m_menu_device_id, device->second->m_input->getKeys());
     else m_device_configurations->hideKeys();
-    if(device->second->m_pin) m_device_configurations->setPins(m_menu_device_id, getPinsToDevicePins(m_menu_device_id));
+    if(device->second->m_pin) {
+        Device::PIN_Interface::DevicePin sync = numeric_limits<Device::PIN_Interface::DevicePin>::max();
+        auto sync_pin = m_pin_channels.find(m_menu_device_id);
+        if(sync_pin != m_pin_channels.end()) {
+            sync = sync_pin->second.device_pin;
+        }
+        m_device_configurations->setPins(m_menu_device_id, getPinsToDevicePins(m_menu_device_id), sync);
+    }
     else m_device_configurations->hidePins();
 
     m_menu_device_id = "";
@@ -250,9 +262,16 @@ void Breadboard::updateConfig(const DeviceID& device_id, Config config) {
 	device->second->m_conf->setConfig(config);
 }
 
-void Breadboard::updatePins(const DeviceID &device_id, const unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber>& globals) {
+void Breadboard::updatePins(const DeviceID &device_id, const unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber>& globals, pair<Device::PIN_Interface::DevicePin, bool> sync) {
     for(auto const& [device_pin, global] : globals) {
         addPinToDevicePin(device_id, device_pin, global, "dialog");
     }
+    unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber> device_pins = getPinsToDevicePins(device_id);
+    auto sync_pin = device_pins.find(sync.first);
+    if(sync_pin != device_pins.end()) {
+        setPinSync(sync_pin->second, sync.first, device_id, sync.second);
+    }
     printConnections();
+    // TODO update dialog content?
+    // save does not close window like it did before
 }

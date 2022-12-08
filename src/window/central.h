@@ -22,14 +22,11 @@ public:
 
 public slots:
 	void clearBreadboard();
+    void openEmbeddedOptions();
 
 private slots:
 	void timerUpdate();
-	void clearIOFs(const std::vector<gpio::PinNumber>& gpio_offs);
-    void closeSPI(gpio::PinNumber gpio_offs);
-    void closeSPIForDevice(gpio::PinNumber gpio_offs, const DeviceID& device_id);
-    void closePin(gpio::PinNumber gpio_offs);
-    void closePinForDevice(gpio::PinNumber gpio_offs, const DeviceID& device_id);
+    void pinSettingsChanged(const std::list<std::pair<gpio::PinNumber, IOF>>& iofs);
 
 signals:
 	void connectionUpdate(bool active);
