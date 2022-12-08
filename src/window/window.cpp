@@ -151,6 +151,9 @@ void MainWindow::createDropdown() {
 		m_debug_label->setText(m_central->toggleDebug() ? "Debug" : "");
 	});
 	window->addAction(debug);
+    auto embedded_options = new QAction("GPIO Pins");
+    connect(embedded_options, &QAction::triggered, m_central, &Central::openEmbeddedOptions);
+    window->addAction(embedded_options);
 	window->addSeparator();
 	auto quit = new QAction("Quit");
 	quit->setShortcut(QKeySequence(QKeySequence::Quit));

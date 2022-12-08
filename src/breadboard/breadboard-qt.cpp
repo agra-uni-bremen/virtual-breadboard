@@ -15,13 +15,13 @@ void Breadboard::keyPressEvent(QKeyEvent *e) {
 		case Qt::Key_0: {
 			uint8_t until = 6;
 			for (uint8_t i = 0; i < 8; i++) {
-				emit(setBit(i, i < until ? gpio::Tristate::HIGH : gpio::Tristate::LOW));
+                m_embedded->setBit(i, i < until ? gpio::Tristate::HIGH : gpio::Tristate::LOW);
 			}
 			break;
 		}
 		case Qt::Key_1: {
 			for (uint8_t i = 0; i < 8; i++) {
-				emit(setBit(i, gpio::Tristate::LOW));
+                m_embedded->setBit(i, gpio::Tristate::LOW);
 			}
 			break;
 		}

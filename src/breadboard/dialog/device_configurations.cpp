@@ -41,9 +41,9 @@ void DeviceConfigurations::hideKeys() {
     m_tabs->setTabVisible(1, false);
 }
 
-void DeviceConfigurations::setPins(DeviceID device, std::unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber> globals) {
+void DeviceConfigurations::setPins(DeviceID device, const std::unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber>& globals, Device::PIN_Interface::DevicePin sync) {
     m_tabs->setTabVisible(2, true);
-    m_pins->setPins(device, globals);
+    m_pins->setPins(device, globals, sync);
 }
 
 void DeviceConfigurations::hidePins() {

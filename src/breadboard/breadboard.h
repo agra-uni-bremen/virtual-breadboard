@@ -3,8 +3,8 @@
 #include "constants.h"
 #include "dialog/device_configurations.h"
 
-#include <gpio-helpers.h>
 #include <factory/factory.h>
+#include <embedded.h>
 
 #include <QWidget>
 #include <QMouseEvent>
@@ -21,11 +21,12 @@
 class Breadboard : public QWidget {
 	Q_OBJECT
 
+    Embedded *m_embedded;
+
     typedef unsigned Row;
     typedef unsigned Index;
 
 	struct SPI_IOF_Request {
-		gpio::PinNumber gpio_offs;	// calculated from "global pin"
 		gpio::PinNumber global_pin;
         Device::PIN_Interface::DevicePin cs_pin;
 		bool noresponse;
@@ -33,14 +34,12 @@ class Breadboard : public QWidget {
 	};
 
 	struct PIN_IOF_Request {
-		gpio::PinNumber gpio_offs;	// calculated from "global pin"
 		gpio::PinNumber global_pin;
 		Device::PIN_Interface::DevicePin device_pin;
 		GpioClient::OnChange_PIN fun;
 	};
 
     struct PinMapping {
-        gpio::PinNumber gpio_offs;
         gpio::PinNumber global_pin;
         Device::PIN_Interface::DevicePin device_pin;
         DeviceID device;
@@ -81,7 +80,7 @@ class Breadboard : public QWidget {
 	QMenu *m_devices_menu;
     DeviceConfigurations *m_device_configurations;
 	QErrorMessage *m_error_dialog;
-	QMenu *m_add_device;
+    QMenu *m_bb_menu;
 
 	void setBackground(QString path);
 	void updateBackground();
@@ -91,21 +90,16 @@ class Breadboard : public QWidget {
 	void removeDevice(const DeviceID& id);
 
 	// Connections
-    void printConnections();
     std::string getPinName(gpio::PinNumber global);
-    void addSPIToRow(Row row, Index index, gpio::PinNumber global, std::string name, bool noresponse=true);
     void addPinToDevicePin(const DeviceID& device_id, Device::PIN_Interface::DevicePin device_pin, gpio::PinNumber global, std::string name);
-    void addSPIToDevicePin(const DeviceID& device_id, Device::PIN_Interface::DevicePin cs_pin, gpio::PinNumber global, std::string name);
     void addPinToRow(Row row, Index index, gpio::PinNumber global, std::string name);
     void addPinToRowContent(Row row, Index index, gpio::PinNumber global, std::string name);
     void createRowConnections(Row row);
-    void createRowConnectionsSPI(Row row, bool noresponse=true);
     std::unordered_set<gpio::PinNumber> getPinsToDevice(const DeviceID& device_id);
     std::unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber> getPinsToDevicePins(const DeviceID& device_id);
     void registerPin(gpio::PinNumber global, Device::PIN_Interface::DevicePin device_pin, const DeviceID& device_id, bool synchronous=false);
     void setPinSync(gpio::PinNumber global, Device::PIN_Interface::DevicePin device_pin, const DeviceID& device_id, bool synchronous);
 	void registerSPI(gpio::PinNumber global, Device::PIN_Interface::DevicePin cs_pin, const DeviceID& device_id, bool noresponse);
-    void setSPI(gpio::PinNumber global, bool active);
     void setSPInoresponse(gpio::PinNumber global, bool noresponse);
     std::pair<Row,Index> removeConnection(const DeviceID& device_id, Device::PIN_Interface::DevicePin device_pin);
     void removeConnections(gpio::PinNumber global, bool keep_on_raster);
@@ -163,22 +157,20 @@ public:
 
 	bool toggleDebug();
 
+    void setEmbedded(Embedded *embedded);
+
 	// JSON
-    bool loadConfigFile(const QString& file);
-	bool saveConfigFile(const QString& file);
+    void fromJSON(QJsonObject json);
+	QJsonObject toJSON();
 	void additionalLuaDir(const std::string& additional_device_dir, bool overwrite_integrated_devices);
 	void clear();
-	void clearObjects();
 
 	// GPIO
-	void timerUpdate(gpio::State state);
+	void timerUpdate(uint64_t state);
 	bool isBreadboard();
 
-	// Remove Connection Objects
-    void removePinObjects(gpio::PinNumber gpio_offs);
-    void removePinObjectsForDevice(const DeviceID& device_id);
-    void removeSPIObjects(gpio::PinNumber gpio_offs);
-    void removeSPIObjectForDevice(const DeviceID& device_id);
+    void printConnections();
+    void setSPI(gpio::PinNumber global, bool active);
 
 public slots:
 	void connectionUpdate(bool active);
@@ -190,15 +182,5 @@ private slots:
     void openDeviceConfigurations();
 	void updateKeybinding(const DeviceID& device, Keys keys);
 	void updateConfig(const DeviceID& device, Config config);
-    void updatePins(const DeviceID& device, const std::unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber>& globals);
-
-signals:
-	void registerIOF_PIN(gpio::PinNumber gpio_offs, GpioClient::OnChange_PIN fun);
-	void registerIOF_SPI(gpio::PinNumber gpio_offs, GpioClient::OnChange_SPI fun, bool noresponse);
-	void clearIOFs(std::vector<gpio::PinNumber> gpio_offs);
-    void closeSPI(gpio::PinNumber gpio_offs);
-    void closeSPIForDevice(gpio::PinNumber gpio_offs, DeviceID device_id);
-    void closePin(gpio::PinNumber gpio_offs);
-    void closePinForDevice(gpio::PinNumber gpio_offs, DeviceID device_id);
-	void setBit(gpio::PinNumber gpio_offs, gpio::Tristate state);
+    void updatePins(const DeviceID& device, const std::unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber>& globals, std::pair<Device::PIN_Interface::DevicePin, bool> sync);
 };

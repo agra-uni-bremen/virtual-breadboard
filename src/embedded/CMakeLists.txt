@@ -3,6 +3,7 @@ file(GLOB_RECURSE INC *.h*)
 
 
 add_library(embedded ${SRC} ${INC})
+target_compile_features(embedded PUBLIC cxx_std_20)
 target_include_directories(embedded INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(embedded PUBLIC
 	virtual-breadboard-client
