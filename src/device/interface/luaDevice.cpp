@@ -189,7 +189,7 @@ Device::PIN_Interface::PinLayout LuaDevice::PIN_Interface_Lua::getPinLayout() {
 			continue;
 		}
 		//cout << "\tElement " << i << ": " << r[i] << " with length " << r[i].length() << endl;
-		if(r[i].length() < 2 || r[i].length() > 3) {
+		if(r[i].length() < 4 || r[i].length() > 5) {
 			cerr << "[LuaDevice] Pin layout element " << i << " (" << r[i] << ") is malformed" << endl;
 			continue;
 		}
@@ -201,8 +201,8 @@ Device::PIN_Interface::PinLayout LuaDevice::PIN_Interface_Lua::getPinLayout() {
 		}
 		const auto number = maybe_number.value();
 		desc.name = "undef";
-		if(r[i].length() == 3)
-			desc.name = r[i][3].tostring();
+		if(r[i].length() == 5)
+			desc.name = r[i][5].tostring();
 
 		const string direction_raw = r[i][2];
 		if(direction_raw == "input") {
@@ -216,6 +216,21 @@ Device::PIN_Interface::PinLayout LuaDevice::PIN_Interface_Lua::getPinLayout() {
 			cerr << "[LuaDevice] Pin layout element " << i << " (" << r[i] << "), direction " << direction_raw << " is malformed" << endl;
 			continue;
 		}
+
+        const auto maybe_row = r[i][3].cast<DeviceRow>();
+        if(!maybe_row) {
+            cerr << "[LuaDevice] Pin Layout element " << i << " (" << r[i] << ") has invalid row number" << endl;
+            cerr << maybe_row << endl;
+            continue;
+        }
+        desc.row = maybe_row.value();
+
+        const auto maybe_index = r[i][4].cast<DeviceIndex>();
+        if(!maybe_index) {
+            cerr << "[LuaDevice] Pin Layout element " << i << " (" << r[i] << ") has invalid index number" << endl;
+            continue;
+        }
+        desc.index =  maybe_index.value();
 		//cout << "Mapping Device's pin " << number << " (" << desc.name << ")" << endl;
 		ret.emplace(number, desc);
 	}

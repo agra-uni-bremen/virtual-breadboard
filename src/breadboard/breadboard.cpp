@@ -113,30 +113,46 @@ bool Breadboard::moveDevice(const DeviceID& device_id, QPoint position, QPoint h
 
     Device::PIN_Interface::PinLayout device_layout = device->second->m_pin->getPinLayout();
     for(auto const& [device_pin, desc] : device_layout) {
-        DeviceConnection new_connection = DeviceConnection{
-                .id = device->second->getID(),
-                .pin = device_pin
-        };
-        Row bb_row;
+        Row old_row = getRowForDevicePin(device_id, device_pin);
+        Row new_row;
         if(isBreadboard()) {
+            if(isValidRasterRow(old_row)) {
+                auto old_row_obj = m_raster.find(old_row);
+                if(old_row_obj!=m_raster.end()) {
+                    old_row_obj->second.devices.remove_if([device_id](const DeviceConnection& c){return c.id == device_id;});
+                    for(const auto& pin : old_row_obj->second.pins) {
+                        removePinForDevice(pin.global_pin, device_id);
+                        removeSPIForDevice(pin.global_pin, device_id);
+                    }
+                }
+            }
             QPoint pos_on_device = getDeviceAbsolutePosition(desc.row, desc.index);
             QPoint pos_on_raster = getDistortedPosition(upper_left) + pos_on_device;
-            bb_row = getRow(pos_on_raster);
+            new_row = getRow(pos_on_raster);
         }
         else {
-            bb_row = getRowForDevicePin(device_id, device_pin);
+            if(isValidRasterRow(old_row)) {
+                continue;
+            }
+            else {
+                new_row = getNewRowNumber();
+            }
         }
-
-        auto row_obj = m_raster.find(bb_row);
+        DeviceConnection new_connection = DeviceConnection{
+            .id = device_id,
+            .pin = device_pin
+        };
+        auto row_obj = m_raster.find(new_row);
         if(row_obj != m_raster.end()) {
             row_obj->second.devices.push_back(new_connection);
         } else {
             RowContent new_content;
             new_content.devices.push_back(new_connection);
-            m_raster.emplace(bb_row, new_content);
+            m_raster.emplace(new_row, new_content);
         }
-        createRowConnections(bb_row);
+        createRowConnections(new_row);
     }
+    printConnections();
 	return true;
 }
 

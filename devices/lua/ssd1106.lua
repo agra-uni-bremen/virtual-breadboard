@@ -3,8 +3,8 @@ classname = "SSD1106"
 -- no config functions
 
 function getPinLayout ()
-	-- number, [input | output | inout], name
-	return  {1, "input", "data_command"}, {2, "input", "cs"}
+	-- number, [input | output | inout], row on device, index on device, name
+	return  {1, "input", 0, 0, "data_command"}, {2, "input", 1, 0, "cs"}
 end
 
 function getGraphBufferLayout()

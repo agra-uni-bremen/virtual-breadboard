@@ -20,8 +20,8 @@ function setConfig(conf)
 end
 
 function getPinLayout ()
-    -- number, [input | output | inout], name
-    return  {1, "input", "led_on"}
+    -- number, [input | output | inout], row on device, index on device, name
+    return  {1, "input", 0, 0, "led_on"}
 end
 
 -- local extent = 11

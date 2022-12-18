@@ -128,6 +128,7 @@ class Breadboard : public QWidget {
 	void resizeEvent(QResizeEvent *e) override;
 
 	// Raster
+    Row getNewRowNumber();
     Row getRowForDevicePin(const DeviceID& device_id, Device::PIN_Interface::DevicePin device_pin);
 	DeviceRow getDeviceRow(QPoint pos_on_device);
 	DeviceIndex getDeviceIndex(QPoint pos_on_device);
