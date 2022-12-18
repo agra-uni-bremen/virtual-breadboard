@@ -5,6 +5,29 @@
 
 /* Device */
 
+Breadboard::Row Breadboard::getNewRowNumber() {
+    Row row = 0;
+    if(isBreadboard()) {
+        std::cerr << "[Breadboard Raster] New row numbers can only be generated in custom view mode" << std::endl;
+        return BB_ROWS;
+    }
+    if(m_raster.size() < std::numeric_limits<Row>::max()) {
+        row = m_raster.size();
+    }
+    else {
+        std::set<unsigned> used_row_numbers;
+        for(auto const& [known_row, content] : m_raster) {
+            used_row_numbers.insert(known_row);
+        }
+        for(unsigned known_row : used_row_numbers) {
+            if(known_row > row)
+                break;
+            row++;
+        }
+    }
+    return row;
+}
+
 Breadboard::Row Breadboard::getRowForDevicePin(const DeviceID& device_id, Device::PIN_Interface::DevicePin device_pin) {
     Row row = BB_ROWS;
     for(auto const& [device_pin_row, content] : m_raster) {
@@ -15,28 +38,6 @@ Breadboard::Row Breadboard::getRowForDevicePin(const DeviceID& device_id, Device
         if(exists != content.devices.end()) {
             row = device_pin_row;
             break;
-        }
-    }
-    // if raster is not shown, new row number may have to be generated
-    if(row == BB_ROWS) {
-        if(isBreadboard()) {
-            std::cerr << "[Breadboard Raster] Could not find raster position for device pin " << device_pin << " of device '" << device_id << "'" << std::endl;
-            return BB_ROWS;
-        }
-        row = 0;
-        if(m_raster.size() < std::numeric_limits<Row>::max()) {
-            row = m_raster.size();
-        }
-        else {
-            std::set<unsigned> used_row_numbers;
-            for(auto const& [known_row, content] : m_raster) {
-                used_row_numbers.insert(known_row);
-            }
-            for(unsigned known_row : used_row_numbers) {
-                if(known_row > row)
-                    break;
-                row++;
-            }
         }
     }
     return row;
