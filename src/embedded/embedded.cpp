@@ -32,6 +32,8 @@ uint64_t Embedded::translateGpioToGlobal(State state) {
 }
 
 gpio::PinNumber Embedded::invalidPin() {
+    static_assert(gpio::max_num_pins < numeric_limits<gpio::PinNumber>::max(),
+                  "Invalid Pin hides a valid pin number");
     return numeric_limits<gpio::PinNumber>::max();
 }
 
