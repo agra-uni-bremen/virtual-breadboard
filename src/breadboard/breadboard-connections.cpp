@@ -71,7 +71,8 @@ void Breadboard::addPinToRow(Row row, Index index, gpio::PinNumber global, std::
 void Breadboard::addPinToRowContent(Row row, Index index, gpio::PinNumber global, std::string name) {
     if(isBreadboard() && (!isValidRasterIndex(index) || !isValidRasterRow(row))) return;
     if(!m_embedded->isPin(global)) return;
-    // TODO: check if global already exists somewhere
+    removeSPI(global, false);
+    removePin(global, false);
     PinConnection new_connection = PinConnection{
             .global_pin = global,
             .name = name,
@@ -79,7 +80,12 @@ void Breadboard::addPinToRowContent(Row row, Index index, gpio::PinNumber global
     };
     auto row_obj = m_raster.find(row);
     if(row_obj != m_raster.end()) {
-        // TODO: check if there already is an object at position index
+        for(const auto& row_pin : row_obj->second.pins) {
+            if(row_pin.index == index) {
+                cerr << "[Breadboard] There is already a pin at this position" << endl;
+                return;
+            }
+        }
         row_obj->second.pins.push_back(new_connection);
     }
     else {
@@ -325,6 +331,7 @@ void Breadboard::removePin(gpio::PinNumber global, bool keep_on_raster) {
     if(!keep_on_raster) {
         removePinFromRaster(global);
     }
+    updateOverlay();
 }
 
 void Breadboard::removePinForDevice(gpio::PinNumber global, const DeviceID& device_id) {

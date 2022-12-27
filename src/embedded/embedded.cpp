@@ -2,6 +2,8 @@
 
 #include <QJsonArray>
 #include <QPainter>
+#include <QMimeData>
+#include <QDrag>
 
 using namespace gpio;
 using namespace std;
@@ -143,6 +145,31 @@ void Embedded::paintEvent(QPaintEvent *) {
 
 void Embedded::resizeEvent(QResizeEvent*) {
     updateBackground();
+}
+
+void Embedded::mousePressEvent(QMouseEvent *e) {
+    for(const auto& [pin, info] : m_pins) {
+        if(QRect(getDistortedPosition(info.pos), getDistortedSize(QSize(iconSizeMinimum(), iconSizeMinimum()))).contains(e->pos())) {
+            QSize image_size = getDistortedSize(QSize(iconSizeMinimum(), iconSizeMinimum()));
+            QPoint hotspot = QPoint(image_size.width()/2,image_size.height()/2);
+
+            QImage buffer = QImage(image_size, QImage::Format_RGBA8888);
+            buffer.fill(Qt::red);
+
+            QByteArray itemData;
+            QDataStream dataStream(&itemData, QIODevice::WriteOnly);
+            dataStream << (quint8) pin;
+
+            auto *mimeData = new QMimeData;
+            mimeData->setData(DRAG_TYPE_CABLE, itemData);
+            auto *drag = new QDrag(this);
+            drag->setMimeData(mimeData);
+            drag->setPixmap(QPixmap::fromImage(buffer));
+            drag->setHotSpot(hotspot);
+
+            drag->exec(Qt::MoveAction);
+        }
+    }
 }
 
 /* JSON */

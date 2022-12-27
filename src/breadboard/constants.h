@@ -10,7 +10,7 @@ const unsigned BB_ROWS = 80;
 const unsigned BB_ONE_ROW = BB_ROWS/2;
 const unsigned BB_INDEXES = 5;
 
-const QString DEVICE_DRAG_TYPE = "device";
+const QString DRAG_TYPE_DEVICE = "device";
 
 const unsigned BB_ROW_X = 5;
 const unsigned BB_ROW_Y = 50;
