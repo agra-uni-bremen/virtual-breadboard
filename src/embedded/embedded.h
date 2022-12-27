@@ -23,8 +23,11 @@ class Embedded : public QWidget {
 
 	QPixmap m_bkgnd;
     QString m_bkgnd_path = ":/img/virtual_hifive.png";
-    QSize m_windowsize = QSize(417, 231);
+    QSize m_windowsize = QSize(420, 231);
 
+    QSize getDistortedSize(QSize minimum);
+
+    void paintEvent(QPaintEvent *e) override;
 	void resizeEvent(QResizeEvent*) override;
     void setBackground(QString path);
     void updateBackground();
@@ -48,6 +51,10 @@ public:
     QJsonObject toJSON();
 
     void openPinOptions();
+
+    QPoint getDistortedPositionPin(gpio::PinNumber global);
+    unsigned iconSizeMinimum();
+    QPoint getDistortedPosition(QPoint pos);
 
 private slots:
     void pinsChanged(std::list<std::pair<gpio::PinNumber, IOF>> iofs);

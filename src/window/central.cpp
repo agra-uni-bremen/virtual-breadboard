@@ -15,6 +15,13 @@ Central::Central(const std::string& host, const std::string& port, QWidget *pare
 	layout->addWidget(m_embedded);
 	layout->addWidget(m_breadboard);
 
+    m_overlay = new Overlay(this);
+    m_overlay->resize(width(), height());
+
+    m_breadboard->stackUnder(m_overlay);
+    m_breadboard->setOverlay(m_overlay);
+    m_embedded->stackUnder(m_overlay);
+
 	auto *timer = new QTimer(this);
 	connect(timer, &QTimer::timeout, this, &Central::timerUpdate);
 	timer->start(250);
@@ -27,6 +34,10 @@ Central::Central(const std::string& host, const std::string& port, QWidget *pare
 }
 
 Central::~Central() = default;
+
+void Central::resizeEvent(QResizeEvent*) {
+    m_overlay->resize(width(), height());
+}
 
 void Central::destroyConnection() {
 	m_embedded->destroyConnection();
@@ -59,6 +70,8 @@ void Central::loadJSON(const QString& file) {
         std::cerr << error.errorString().toStdString() << std::endl;
         return;
     }
+    m_overlay->setCables(QMap<QPoint,QPoint>());
+
     QJsonObject json = json_doc.object();
     m_embedded->fromJSON(json["embedded"].toObject());
     m_breadboard->fromJSON(json["breadboard"].toObject());

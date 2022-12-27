@@ -2,6 +2,7 @@
 
 #include "constants.h"
 #include "dialog/device_configurations.h"
+#include "overlay.h"
 
 #include <factory/factory.h>
 #include <embedded.h>
@@ -22,6 +23,7 @@ class Breadboard : public QWidget {
 	Q_OBJECT
 
     Embedded *m_embedded;
+    Overlay *m_overlay;
 
     typedef unsigned Row;
     typedef unsigned Index;
@@ -84,6 +86,7 @@ class Breadboard : public QWidget {
 
 	void setBackground(QString path);
 	void updateBackground();
+    void updateOverlay();
 
 	// Device
 	bool addDevice(const DeviceClass& classname, QPoint pos, DeviceID id="");
@@ -101,7 +104,7 @@ class Breadboard : public QWidget {
     void setPinSync(gpio::PinNumber global, Device::PIN_Interface::DevicePin device_pin, const DeviceID& device_id, bool synchronous);
 	void registerSPI(gpio::PinNumber global, Device::PIN_Interface::DevicePin cs_pin, const DeviceID& device_id, bool noresponse);
     void setSPInoresponse(gpio::PinNumber global, bool noresponse);
-    std::pair<Row,Index> removeConnection(const DeviceID& device_id, Device::PIN_Interface::DevicePin device_pin);
+    Row removeConnection(const DeviceID& device_id, Device::PIN_Interface::DevicePin device_pin);
     void removeConnections(gpio::PinNumber global, bool keep_on_raster);
     void removeSPI(gpio::PinNumber global, bool keep_on_raster);
     void removeSPIForDevice(gpio::PinNumber global, const DeviceID& device_id);
@@ -159,6 +162,7 @@ public:
 	bool toggleDebug();
 
     void setEmbedded(Embedded *embedded);
+    void setOverlay(Overlay *overlay);
 
 	// JSON
     void fromJSON(QJsonObject json);

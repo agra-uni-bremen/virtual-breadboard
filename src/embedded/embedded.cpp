@@ -1,6 +1,7 @@
 #include "embedded.h"
 
 #include <QJsonArray>
+#include <QPainter>
 
 using namespace gpio;
 using namespace std;
@@ -97,11 +98,54 @@ void Embedded::setBit(gpio::PinNumber global, gpio::Tristate state) {
 	}
 }
 
-/* JSON */
+/* QT */
+
+unsigned Embedded::iconSizeMinimum() {
+    return 20;
+}
+
+QPoint Embedded::getDistortedPosition(QPoint pos) {
+    return {(pos.x()*width())/minimumWidth(), (pos.y()*height())/minimumHeight()};
+}
+
+QSize Embedded::getDistortedSize(QSize minimum) {
+    return {(minimum.width()*width())/minimumWidth(), (minimum.height()*height())/minimumHeight()};
+}
+
+QPoint Embedded::getDistortedPositionPin(gpio::PinNumber global) {
+    auto pin = m_pins.find(global);
+    if(pin == m_pins.end()) {
+        cerr << "Pin " << (int) global << " could not be found on the board" << endl;
+        return {0,0};
+    }
+    return getDistortedPosition(pin->second.pos);
+}
+
+void Embedded::paintEvent(QPaintEvent *) {
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing);
+
+    QColor dark("#101010");
+    dark.setAlphaF(0.5);
+    painter.setBrush(QBrush(dark));
+
+    painter.setFont(QFont("Arial", 3*iconSizeMinimum()/4, QFont::Bold));
+    QPen pen(Qt::black);
+    painter.setPen(pen);
+
+    for(const auto& [pin, info] : m_pins) {
+        painter.drawRect(QRect(getDistortedPosition(info.pos), getDistortedSize(QSize(iconSizeMinimum(), iconSizeMinimum()))));
+        painter.drawText(getDistortedPosition(QPoint(info.pos.x(),info.pos.y()+iconSizeMinimum())), QString::number(pin));
+    }
+
+    painter.end();
+}
 
 void Embedded::resizeEvent(QResizeEvent*) {
     updateBackground();
 }
+
+/* JSON */
 
 void Embedded::setBackground(QString path) {
     setAutoFillBackground(true);
@@ -150,7 +194,8 @@ void Embedded::fromJSON(QJsonObject json) {
             else continue;
             iofs.push_back(IOF{.type=type,.active=active});
         }
-        m_pins.emplace(global, GPIOPin{.gpio_offs=gpio_offs,.iofs=iofs});
+        QPoint pos = QPoint(pin["pos_x"].toInt(), pin["pos_y"].toInt());
+        m_pins.emplace(global, GPIOPin{.gpio_offs=gpio_offs,.iofs=iofs, .pos=pos});
     }
 }
 
@@ -190,6 +235,8 @@ QJsonObject Embedded::toJSON() {
         if(!iofs.empty()) {
             pin_obj["iofs"] = iofs;
         }
+        pin_obj["pos_x"] = pin.pos.x();
+        pin_obj["pos_y"] = pin.pos.y();
         pins.append(pin_obj);
     }
     json["pins"] = pins;

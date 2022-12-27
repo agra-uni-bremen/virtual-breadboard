@@ -3,6 +3,7 @@
 #include <gpio-client.hpp>
 
 #include <list>
+#include <QPoint>
 
 enum IOFType {
     SPI,
@@ -18,5 +19,6 @@ struct IOF {
 struct GPIOPin {
     gpio::PinNumber gpio_offs;
     std::list<IOF> iofs;
+    QPoint pos;
 };
 typedef std::unordered_map<gpio::PinNumber, GPIOPin> GPIOPinLayout; // GLOBAL to information

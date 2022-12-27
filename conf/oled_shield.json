@@ -4,6 +4,8 @@
             {
                 "global": 0,
                 "gpio_offs": 16,
+                "pos_x": 70,
+                "pos_y": 185,
                 "iofs": [
                     {
                         "type": "UART",
@@ -14,6 +16,8 @@
             {
                 "global": 1,
                 "gpio_offs": 17,
+                "pos_x": 90,
+                "pos_y": 185,
                 "iofs": [
                     {
                         "type": "UART",
@@ -23,11 +27,15 @@
             },
             {
                 "global": 2,
-                "gpio_offs": 18
+                "gpio_offs": 18,
+                "pos_x": 110,
+                "pos_y": 185
             },
             {
                 "global": 3,
                 "gpio_offs": 19,
+                "pos_x": 130,
+                "pos_y": 185,
                 "iofs": [
                     {
                         "type": "PWM",
@@ -38,6 +46,8 @@
             {
                 "global": 4,
                 "gpio_offs": 20,
+                "pos_x": 150,
+                "pos_y": 185,
                 "iofs": [
                     {
                         "type": "PWM",
@@ -48,6 +58,8 @@
             {
                 "global": 5,
                 "gpio_offs": 21,
+                "pos_x": 170,
+                "pos_y": 185,
                 "iofs": [
                     {
                         "type": "PWM",
@@ -58,6 +70,8 @@
             {
                 "global": 6,
                 "gpio_offs": 22,
+                "pos_x": 190,
+                "pos_y": 185,
                 "iofs": [
                     {
                         "type": "PWM",
@@ -67,11 +81,15 @@
             },
             {
                 "global": 7,
-                "gpio_offs": 23
+                "gpio_offs": 23,
+                "pos_x": 210,
+                "pos_y": 185
             },
             {
                 "global": 8,
                 "gpio_offs": 0,
+                "pos_x": 230,
+                "pos_y": 185,
                 "iofs": [
                     {
                         "type": "PWM",
@@ -82,6 +100,8 @@
             {
                 "global": 9,
                 "gpio_offs": 1,
+                "pos_x": 250,
+                "pos_y": 185,
                 "iofs": [
                     {
                         "type": "PWM",
@@ -92,6 +112,8 @@
             {
                 "global": 10,
                 "gpio_offs": 2,
+                "pos_x": 270,
+                "pos_y": 185,
                 "iofs": [
                     {
                         "type": "PWM",
@@ -106,6 +128,8 @@
             {
                 "global": 11,
                 "gpio_offs": 3,
+                "pos_x": 290,
+                "pos_y": 185,
                 "iofs": [
                     {
                         "type": "PWM",
@@ -116,6 +140,8 @@
             {
                 "global": 12,
                 "gpio_offs": 4,
+                "pos_x": 310,
+                "pos_y": 185,
                 "iofs": [
                     {
                         "type": "SPI",
@@ -126,6 +152,8 @@
             {
                 "global": 13,
                 "gpio_offs": 5,
+                "pos_x": 330,
+                "pos_y": 185,
                 "iofs": [
                     {
                         "type": "SPI",
@@ -136,6 +164,8 @@
             {
                 "global": 15,
                 "gpio_offs": 9,
+                "pos_x": 70,
+                "pos_y": 0,
                 "iofs": [
                     {
                         "type": "SPI",
@@ -146,6 +176,8 @@
             {
                 "global": 16,
                 "gpio_offs": 10,
+                "pos_x": 90,
+                "pos_y": 0,
                 "iofs": [
                     {
                         "type": "SPI",
@@ -160,6 +192,8 @@
             {
                 "global": 17,
                 "gpio_offs": 11,
+                "pos_x": 110,
+                "pos_y": 0,
                 "iofs": [
                     {
                         "type": "PWM",
@@ -170,6 +204,8 @@
             {
                 "global": 18,
                 "gpio_offs": 12,
+                "pos_x": 130,
+                "pos_y": 0,
                 "iofs": [
                     {
                         "type": "PWM",
@@ -180,6 +216,8 @@
             {
                 "global": 19,
                 "gpio_offs": 13,
+                "pos_x": 150,
+                "pos_y": 0,
                 "iofs": [
                     {
                         "type": "PWM",

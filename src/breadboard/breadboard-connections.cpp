@@ -38,19 +38,18 @@ void Breadboard::printConnections() {
 
 /* Register */
 
-pair<Breadboard::Row, Breadboard::Index> Breadboard::removeConnection(const DeviceID& device_id, Device::PIN_Interface::DevicePin device_pin) {
+Breadboard::Row Breadboard::removeConnection(const DeviceID& device_id, Device::PIN_Interface::DevicePin device_pin) {
     Row row = getRowForDevicePin(device_id, device_pin);
-    Index index = getNextIndex(row);
-    if(isBreadboard() && (!isValidRasterRow(row) || !isValidRasterIndex(index))) {
+    if(isBreadboard() && (!isValidRasterRow(row))) {
         cerr << "[Breadboard] Could not find the device pin in the connection raster" << endl;
-        return {BB_ROWS, BB_INDEXES};
+        return BB_ROWS;
     }
     unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber> current_globals = getPinsToDevicePins(device_id);
     auto old_pin = current_globals.find(device_pin);
     if(old_pin != current_globals.end() && m_embedded->isPin(old_pin->second)) {
         removePin(old_pin->second, false);
     }
-    return {row, index};
+    return row;
 }
 
 void Breadboard::addPinToDevicePin(const DeviceID& device_id, Device::PIN_Interface::DevicePin device_pin, gpio::PinNumber global, std::string name) {
@@ -59,7 +58,8 @@ void Breadboard::addPinToDevicePin(const DeviceID& device_id, Device::PIN_Interf
         m_error_dialog->showMessage("Device does not implement pin interface.");
         return;
     }
-    auto const [row, index] = removeConnection(device_id, device_pin);
+    Row row = removeConnection(device_id, device_pin);
+    Index index = getNextIndex(row);
     addPinToRow(row, index, global, name);
 }
 
