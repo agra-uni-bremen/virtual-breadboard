@@ -114,21 +114,21 @@ QJsonObject Device::toJSON() {
 }
 
 Device::Layout Device::getLayout() {
-       return {};
+	   return {};
 }
 
 void Device::initializeBuffer() {
-    QPoint offset = m_buffer.offset();
-    QSize size = m_buffer.size();
-    m_buffer = QImage(":/img/default.png");
-    m_buffer = m_buffer.scaled(size);
-    m_buffer.setOffset(offset);
+	QPoint offset = m_buffer.offset();
+	QSize size = m_buffer.size();
+	m_buffer = QImage(":/img/default.png");
+	m_buffer = m_buffer.scaled(size);
+	m_buffer.setOffset(offset);
 }
 
 void Device::createBuffer(unsigned iconSizeMinimum, QPoint offset) {
 	if(!m_buffer.isNull()) return;
 	Layout layout = getLayout();
-    m_buffer = QImage(layout.width * iconSizeMinimum, layout.height * iconSizeMinimum, QImage::Format_RGBA8888);
+	m_buffer = QImage(layout.width * iconSizeMinimum, layout.height * iconSizeMinimum, QImage::Format_RGBA8888);
 	m_buffer.setOffset(offset);
 	initializeBuffer();
 }

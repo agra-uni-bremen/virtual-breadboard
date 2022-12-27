@@ -3,8 +3,8 @@
 #include <cmath>
 
 RGB::RGB(const DeviceID& id) : CDevice(id) {
-    m_pin = std::make_unique<RGB_Pin>(this);
-    m_layout = Layout{1, 1, "rgba"};
+	m_pin = std::make_unique<RGB_Pin>(this);
+	m_layout = Layout{1, 1, "rgba"};
 }
 
 RGB::~RGB() = default;
@@ -47,7 +47,7 @@ void RGB::draw(PIN_Interface::DevicePin num, bool val) {
 /* PIN */
 
 RGB::RGB_Pin::RGB_Pin(CDevice* device) : CDevice::PIN_Interface_C(device) {
-    m_pinLayout = PinLayout();
+	m_pinLayout = PinLayout();
 	m_pinLayout.emplace(0, PinDesc{.dir=Dir::input, .name="r", .row=0, .index=0});
 	m_pinLayout.emplace(1, PinDesc{.dir=Dir::input, .name="g", .row=0, .index=0});
 	m_pinLayout.emplace(2, PinDesc{.dir=Dir::input, .name="b", .row=0, .index=0});

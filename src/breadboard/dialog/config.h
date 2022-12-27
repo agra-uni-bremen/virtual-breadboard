@@ -20,7 +20,7 @@ class ConfigDialog : public QWidget {
 public:
 	ConfigDialog();
 	void setConfig(DeviceID device, const Config& config);
-    void removeConfig();
+	void removeConfig();
 
 public slots:
 	void accept();

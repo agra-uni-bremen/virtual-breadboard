@@ -1,8 +1,8 @@
 #include "sevensegment.h"
 
 Sevensegment::Sevensegment(const DeviceID& id) : CDevice(id) {
-    m_pin = std::make_unique<Segment_PIN>(this);
-    m_layout = Layout{4, 5, "rgba"};
+	m_pin = std::make_unique<Segment_PIN>(this);
+	m_layout = Layout{4, 5, "rgba"};
 }
 
 Sevensegment::~Sevensegment() = default;
@@ -77,7 +77,7 @@ void Sevensegment::draw(PIN_Interface::DevicePin num, bool val) {
 /* PIN Interface */
 
 Sevensegment::Segment_PIN::Segment_PIN(CDevice* device) : CDevice::PIN_Interface_C(device) {
-    m_pinLayout = PinLayout();
+	m_pinLayout = PinLayout();
 	m_pinLayout.emplace(0, PinDesc{.dir=Dir::input, .name="top", .row=1, .index=0});
 	m_pinLayout.emplace(1, PinDesc{.dir=Dir::input, .name="top_right", .row=3, .index=1});
 	m_pinLayout.emplace(2, PinDesc{.dir=Dir::input, .name="bottom_right", .row=3, .index=3});

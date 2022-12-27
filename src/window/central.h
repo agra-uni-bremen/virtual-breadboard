@@ -11,7 +11,7 @@ class Central : public QWidget {
 
 	Breadboard *m_breadboard;
 	Embedded *m_embedded;
-    Overlay *m_overlay;
+	Overlay *m_overlay;
 
 public:
 	Central(const std::string& host, const std::string& port, QWidget *parent);
@@ -21,15 +21,15 @@ public:
 	void saveJSON(const QString& file);
 	void loadJSON(const QString& file);
 	void loadLUA(const std::string& dir, bool overwrite_integrated_devices);
-    void resizeEvent(QResizeEvent*) override;
+	void resizeEvent(QResizeEvent*) override;
 
 public slots:
 	void clearBreadboard();
-    void openEmbeddedOptions();
+	void openEmbeddedOptions();
 
 private slots:
 	void timerUpdate();
-    void pinSettingsChanged(const std::list<std::pair<gpio::PinNumber, IOF>>& iofs);
+	void pinSettingsChanged(const std::list<std::pair<gpio::PinNumber, IOF>>& iofs);
 
 signals:
 	void connectionUpdate(bool active);
