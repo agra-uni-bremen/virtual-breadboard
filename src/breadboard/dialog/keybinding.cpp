@@ -11,7 +11,7 @@ KeybindingDialog::KeybindingDialog() : QWidget() {
 	auto *addButton = new QPushButton("Add");
 	connect(addButton, &QPushButton::pressed, [this](){add(0);});
 
-    m_layout = new QFormLayout(this);
+	m_layout = new QFormLayout(this);
 	m_layout->addRow(addButton);
 	m_layout->addRow(saveButton);
 }
@@ -49,9 +49,9 @@ void KeybindingDialog::setKeys(DeviceID device, const Keys& keys) {
 }
 
 void KeybindingDialog::removeKeys() {
-    while(m_layout->rowCount() > 2) {
-        m_layout->removeRow(0);
-    }
-    m_keys.clear();
-    m_device = "";
+	while(m_layout->rowCount() > 2) {
+		m_layout->removeRow(0);
+	}
+	m_keys.clear();
+	m_device = "";
 }

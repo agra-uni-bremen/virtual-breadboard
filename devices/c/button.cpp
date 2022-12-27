@@ -2,13 +2,13 @@
 
 
 Button::Button(const DeviceID& id) : CDevice(id) {
-    m_input = std::make_unique<Button_Input>(this);
-    m_pin = std::make_unique<Button_PIN>(this);
-    m_layout = Layout{2, 2, "rgba"};
-    m_conf = std::make_unique<CDevice::Config_Interface_C>(this);
-    Config c;
-    c.emplace("active_low", ConfigElem(true));
-    m_conf->setConfig(c);
+	m_input = std::make_unique<Button_Input>(this);
+	m_pin = std::make_unique<Button_PIN>(this);
+	m_layout = Layout{2, 2, "rgba"};
+	m_conf = std::make_unique<CDevice::Config_Interface_C>(this);
+	Config c;
+	c.emplace("active_low", ConfigElem(true));
+	m_conf->setConfig(c);
 }
 
 Button::~Button() = default;
@@ -37,20 +37,20 @@ void Button::draw() {
 /* PIN Interface */
 
 Button::Button_PIN::Button_PIN(CDevice* device) : CDevice::PIN_Interface_C(device) {
-    m_pinLayout = PinLayout();
+	m_pinLayout = PinLayout();
 	m_pinLayout.emplace(1, PinDesc{.dir = Dir::output, .name = "output", .row = 0, .index=0});
 }
 
 gpio::Tristate Button::Button_PIN::getPin(DevicePin num) {
 	if(num == 1) {
-        bool active_low = true;
-        if(m_device->m_conf) {
-            Config c = m_device->m_conf->getConfig();
-            auto al_it = c.find("active_low");
-            if(al_it != c.end() && al_it->second.type == ConfigElem::Type::boolean) {
-                active_low = al_it->second.value.boolean;
-            }
-        }
+		bool active_low = true;
+		if(m_device->m_conf) {
+			Config c = m_device->m_conf->getConfig();
+			auto al_it = c.find("active_low");
+			if(al_it != c.end() && al_it->second.type == ConfigElem::Type::boolean) {
+				active_low = al_it->second.value.boolean;
+			}
+		}
 		auto button_device = static_cast<Button*>(m_device);
 		return button_device->m_active ? (active_low ? gpio::Tristate::LOW : gpio::Tristate::HIGH) : gpio::Tristate::UNSET;
 	}

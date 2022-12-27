@@ -15,8 +15,8 @@ const QString DRAG_TYPE_CABLE = "cable";
 class Embedded : public QWidget {
 	Q_OBJECT
 
-    PinOptions *m_pin_dialog;
-    GPIOPinLayout m_pins;
+	PinOptions *m_pin_dialog;
+	GPIOPinLayout m_pins;
 
 	GpioClient m_gpio;
 
@@ -25,19 +25,19 @@ class Embedded : public QWidget {
 	bool m_connected = false;
 
 	QPixmap m_bkgnd;
-    QString m_bkgnd_path = ":/img/virtual_hifive.png";
-    QSize m_windowsize = QSize(420, 231);
+	QString m_bkgnd_path = ":/img/virtual_hifive.png";
+	QSize m_windowsize = QSize(420, 231);
 
-    QSize getDistortedSize(QSize minimum);
+	QSize getDistortedSize(QSize minimum);
 
-    void mousePressEvent(QMouseEvent *e) override;
-    void paintEvent(QPaintEvent *e) override;
+	void mousePressEvent(QMouseEvent *e) override;
+	void paintEvent(QPaintEvent *e) override;
 	void resizeEvent(QResizeEvent*) override;
-    void setBackground(QString path);
-    void updateBackground();
+	void setBackground(QString path);
+	void updateBackground();
 
-    gpio::PinNumber translatePinToGpioOffs(gpio::PinNumber pin);
-    uint64_t translateGpioToGlobal(gpio::State state);
+	gpio::PinNumber translatePinToGpioOffs(gpio::PinNumber pin);
+	uint64_t translateGpioToGlobal(gpio::State state);
 
 public:
 	Embedded(const std::string& host, const std::string& port);
@@ -47,21 +47,21 @@ public:
 	uint64_t getState();
 	bool gpioConnected() const;
 	void destroyConnection();
-    GPIOPinLayout getPins();
-    bool isPin(gpio::PinNumber pin);
-    gpio::PinNumber invalidPin();
+	GPIOPinLayout getPins();
+	bool isPin(gpio::PinNumber pin);
+	gpio::PinNumber invalidPin();
 
-    void fromJSON(QJsonObject json);
-    QJsonObject toJSON();
+	void fromJSON(QJsonObject json);
+	QJsonObject toJSON();
 
-    void openPinOptions();
+	void openPinOptions();
 
-    QPoint getDistortedPositionPin(gpio::PinNumber global);
-    unsigned iconSizeMinimum();
-    QPoint getDistortedPosition(QPoint pos);
+	QPoint getDistortedPositionPin(gpio::PinNumber global);
+	unsigned iconSizeMinimum();
+	QPoint getDistortedPosition(QPoint pos);
 
 private slots:
-    void pinsChanged(std::list<std::pair<gpio::PinNumber, IOF>> iofs);
+	void pinsChanged(std::list<std::pair<gpio::PinNumber, IOF>> iofs);
 
 public slots:
 	void registerIOF_PIN(gpio::PinNumber global, GpioClient::OnChange_PIN fun);
@@ -71,5 +71,5 @@ public slots:
 
 signals:
 	void connectionLost();
-    void pinSettingsChanged(std::list<std::pair<gpio::PinNumber, IOF>> iofs);
+	void pinSettingsChanged(std::list<std::pair<gpio::PinNumber, IOF>> iofs);
 };

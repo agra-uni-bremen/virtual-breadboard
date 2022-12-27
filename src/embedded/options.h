@@ -11,22 +11,22 @@
 class PinOptions : public QDialog {
 Q_OBJECT
 
-    QFormLayout *m_layout;
+	QFormLayout *m_layout;
 
-    GPIOPinLayout m_pins_input;
-    std::list<std::pair<gpio::PinNumber, IOF>> m_pins_output;
+	GPIOPinLayout m_pins_input;
+	std::list<std::pair<gpio::PinNumber, IOF>> m_pins_output;
 
-    void addPin(gpio::PinNumber global, const GPIOPin& pin);
+	void addPin(gpio::PinNumber global, const GPIOPin& pin);
 
 public:
-    PinOptions(QWidget *parent);
-    void setPins(const GPIOPinLayout& pins);
-    void removePins();
+	PinOptions(QWidget *parent);
+	void setPins(const GPIOPinLayout& pins);
+	void removePins();
 
 public slots:
-    void accept() override;
-    void reject() override;
+	void accept() override;
+	void reject() override;
 
 signals:
-    void pinsChanged(std::list<std::pair<gpio::PinNumber, IOF>> iofs);
+	void pinsChanged(std::list<std::pair<gpio::PinNumber, IOF>> iofs);
 };

@@ -61,20 +61,20 @@ public:
 
 	class PIN_Interface {
 	public:
-        typedef unsigned DevicePin;
-        enum class Dir {
-            input,
-            output,
-            inout
-        };
-        struct PinDesc {
-            Dir dir;
-            // TODO: In future, add 'type' for analog values/pwm?
-            std::string name;
-            DeviceRow row;
-            DeviceIndex index;
-        };
-        typedef std::unordered_map<DevicePin,PinDesc> PinLayout;
+		typedef unsigned DevicePin;
+		enum class Dir {
+			input,
+			output,
+			inout
+		};
+		struct PinDesc {
+			Dir dir;
+			// TODO: In future, add 'type' for analog values/pwm?
+			std::string name;
+			DeviceRow row;
+			DeviceIndex index;
+		};
+		typedef std::unordered_map<DevicePin,PinDesc> PinLayout;
 
 		virtual ~PIN_Interface();
 		virtual PinLayout getPinLayout() = 0;

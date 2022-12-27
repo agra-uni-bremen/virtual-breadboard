@@ -10,8 +10,8 @@ ConfigDialog::ConfigDialog() : QWidget() {
 	connect(saveButton, &QAbstractButton::pressed, this, &ConfigDialog::accept);
 	saveButton->setDefault(true);
 
-    m_layout = new QFormLayout(this);
-    m_layout->addRow(saveButton);
+	m_layout = new QFormLayout(this);
+	m_layout->addRow(saveButton);
 }
 
 void ConfigDialog::addValue(const ConfigDescription& name, QWidget* value) {
@@ -81,11 +81,11 @@ void ConfigDialog::setConfig(DeviceID device, const Config& config) {
 }
 
 void ConfigDialog::removeConfig() {
-    while(m_layout->rowCount() > 1) {
-        m_layout->removeRow(0);
-    }
-    m_config.clear();
-    m_device = "";
+	while(m_layout->rowCount() > 1) {
+		m_layout->removeRow(0);
+	}
+	m_config.clear();
+	m_device = "";
 }
 
 void ConfigDialog::accept() {

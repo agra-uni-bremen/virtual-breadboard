@@ -17,7 +17,7 @@ class KeybindingDialog : public QWidget {
 public:
 	KeybindingDialog();
 	void setKeys(DeviceID device, const Keys& keys);
-    void removeKeys();
+	void removeKeys();
 
 public slots:
 	void accept();

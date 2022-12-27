@@ -5,11 +5,11 @@
 
 class Overlay : public QWidget {
 
-    QMap<QPoint,QPoint> m_cables;
+	QMap<QPoint,QPoint> m_cables;
 
-    void paintEvent(QPaintEvent*) override;
+	void paintEvent(QPaintEvent*) override;
 
 public:
-    Overlay(QWidget* parent);
-    void setCables(QMap<QPoint,QPoint> cables);
+	Overlay(QWidget* parent);
+	void setCables(QMap<QPoint,QPoint> cables);
 };

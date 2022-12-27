@@ -49,7 +49,7 @@ Config CDevice::Config_Interface_C::getConfig() {
 }
 
 bool CDevice::Config_Interface_C::setConfig(Config conf) {
-    m_config = conf;
+	m_config = conf;
 	return true;
 }
 
