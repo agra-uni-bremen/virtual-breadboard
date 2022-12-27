@@ -80,6 +80,8 @@ class Breadboard : public QWidget {
 
 	DeviceID m_menu_device_id;
 	QMenu *m_devices_menu;
+    gpio::PinNumber m_menu_pin;
+    QMenu *m_pin_menu;
     DeviceConfigurations *m_device_configurations;
 	QErrorMessage *m_error_dialog;
     QMenu *m_bb_menu;
@@ -181,6 +183,7 @@ public slots:
 	void connectionUpdate(bool active);
 
 private slots:
+    void removePinTriggered();
 	void openContextMenu(QPoint pos);
 	void removeActiveDevice();
     void scaleActiveDevice();

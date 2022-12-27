@@ -27,6 +27,11 @@ Breadboard::Breadboard() : QWidget() {
     connect(open_configurations, &QAction::triggered, this, &Breadboard::openDeviceConfigurations);
     m_devices_menu->addAction(open_configurations);
 
+    m_pin_menu = new QMenu(this);
+    auto *delete_pin = new QAction("Remove");
+    connect(delete_pin, &QAction::triggered, this, &Breadboard::removePinTriggered);
+    m_pin_menu->addAction(delete_pin);
+
     m_device_configurations = new DeviceConfigurations(this);
     connect(m_device_configurations, &DeviceConfigurations::keysChanged, this, &Breadboard::updateKeybinding);
     connect(m_device_configurations, &DeviceConfigurations::configChanged, this, &Breadboard::updateConfig);
@@ -206,15 +211,31 @@ bool Breadboard::addDevice(const DeviceClass& classname, QPoint pos, DeviceID id
 /* Context Menu */
 
 void Breadboard::openContextMenu(QPoint pos) {
-	for(auto const& [id, device] : m_devices) {
+	for(const auto& [id, device] : m_devices) {
 		if(getDistortedGraphicBounds(device->getBuffer(), device->getScale()).contains(pos)) {
             m_menu_device_id = id;
 			m_devices_menu->popup(mapToGlobal(pos));
 			return;
 		}
 	}
+    if(isBreadboard()) {
+        for(const auto& [row, content] : m_raster) {
+            for(const auto& pin : content.pins) {
+                QRect pin_rect = QRect(getAbsolutePosition(row, pin.index), getDistortedSize(QSize(iconSizeMinimum(), iconSizeMinimum())));
+                if(pin_rect.contains(pos)) {
+                    m_menu_pin = pin.global_pin;
+                    m_pin_menu->popup(mapToGlobal(pos));
+                    return;
+                }
+            }
+        }
+    }
 	if(isBreadboard() && !isOnRaster(pos)) return;
     m_bb_menu->popup(mapToGlobal(pos));
+}
+
+void Breadboard::removePinTriggered() {
+    removePin(m_menu_pin, false);
 }
 
 void Breadboard::removeActiveDevice() {

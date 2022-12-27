@@ -78,7 +78,7 @@ void Breadboard::mousePressEvent(QMouseEvent *e) {
 				buffer = buffer.scaled(buffer_bounds.size());
 
 				auto *mimeData = new QMimeData;
-				mimeData->setData(DEVICE_DRAG_TYPE, itemData);
+				mimeData->setData(DRAG_TYPE_DEVICE, itemData);
 				auto *drag = new QDrag(this);
 				drag->setMimeData(mimeData);
 				drag->setPixmap(QPixmap::fromImage(buffer));
@@ -139,7 +139,7 @@ void Breadboard::mouseMoveEvent(QMouseEvent *e) {
 /* Drag and Drop */
 
 void Breadboard::dragMoveEvent(QDragMoveEvent *e) {
-	if(e->mimeData()->hasFormat(DEVICE_DRAG_TYPE) && (isBreadboard()?isOnRaster(e->pos()):true)) {
+	if((e->mimeData()->hasFormat(DRAG_TYPE_DEVICE) || e->mimeData()->hasFormat(DRAG_TYPE_CABLE)) && (isBreadboard() ? isOnRaster(e->pos()) : true)) {
 		e->acceptProposedAction();
 	} else {
 		e->ignore();
@@ -147,7 +147,7 @@ void Breadboard::dragMoveEvent(QDragMoveEvent *e) {
 }
 
 void Breadboard::dragEnterEvent(QDragEnterEvent *e)  {
-	if(e->mimeData()->hasFormat(DEVICE_DRAG_TYPE)) {
+	if((e->mimeData()->hasFormat(DRAG_TYPE_DEVICE) || e->mimeData()->hasFormat(DRAG_TYPE_CABLE))) {
 		e->acceptProposedAction();
 	} else {
 		e->ignore();
@@ -155,25 +155,45 @@ void Breadboard::dragEnterEvent(QDragEnterEvent *e)  {
 }
 
 void Breadboard::dropEvent(QDropEvent *e) {
-	if(e->mimeData()->hasFormat(DEVICE_DRAG_TYPE)) {
-		QByteArray itemData = e->mimeData()->data(DEVICE_DRAG_TYPE);
-		QDataStream dataStream(&itemData, QIODevice::ReadOnly);
+    if(e->mimeData()->hasFormat(DRAG_TYPE_DEVICE)) {
+        QByteArray itemData = e->mimeData()->data(DRAG_TYPE_DEVICE);
+        QDataStream dataStream(&itemData, QIODevice::ReadOnly);
 
-		QString q_id;
-		QPoint hotspot;
-		dataStream >> q_id >> hotspot;
+        QString q_id;
+        QPoint hotspot;
+        dataStream >> q_id >> hotspot;
 
-		if(moveDevice(q_id.toStdString(), e->pos(), hotspot)) {
-			e->acceptProposedAction();
-		} else {
-			e->ignore();
-		}
+        if(moveDevice(q_id.toStdString(), e->pos(), hotspot)) {
+            e->acceptProposedAction();
+        } else {
+            e->ignore();
+        }
 
-		e->acceptProposedAction();
-	} else {
-		cerr << "[Breadboard] New device position invalid: Invalid Mime data type." << endl;
-		e->ignore();
-	}
+        e->acceptProposedAction();
+    }
+    else if(e->mimeData()->hasFormat(DRAG_TYPE_CABLE)) {
+        QByteArray itemData = e->mimeData()->data(DRAG_TYPE_CABLE);
+        QDataStream dataStream(&itemData, QIODevice::ReadOnly);
+
+        quint8 q_pin;
+        dataStream >> q_pin;
+        auto pin = (gpio::PinNumber) q_pin;
+
+        const auto [row, index] = getRasterPosition(e->pos());
+        if(isValidRasterRow(row) && isValidRasterIndex(index)) {
+            addPinToRow(row, index, pin, "cable");
+            updateOverlay();
+            e->acceptProposedAction();
+        }
+        else {
+            cerr << "[Breadboard] Attempted to add cable in invalid position" << endl;
+            e->ignore();
+        }
+    }
+    else {
+        cerr << "[Breadboard] New device position invalid: Invalid Mime data type." << endl;
+        e->ignore();
+    }
 }
 
 /* PAINT */

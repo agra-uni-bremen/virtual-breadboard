@@ -8,6 +8,9 @@
 #include <QWidget>
 #include <QJsonObject>
 #include <QDialog>
+#include <QMouseEvent>
+
+const QString DRAG_TYPE_CABLE = "cable";
 
 class Embedded : public QWidget {
 	Q_OBJECT
@@ -27,6 +30,7 @@ class Embedded : public QWidget {
 
     QSize getDistortedSize(QSize minimum);
 
+    void mousePressEvent(QMouseEvent *e) override;
     void paintEvent(QPaintEvent *e) override;
 	void resizeEvent(QResizeEvent*) override;
     void setBackground(QString path);
