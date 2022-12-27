@@ -121,7 +121,7 @@ bool Breadboard::moveDevice(const DeviceID& device_id, QPoint position, QPoint h
 	if(!device->second->m_pin) return true;
 
 	Device::PIN_Interface::PinLayout device_layout = device->second->m_pin->getPinLayout();
-	for(auto const& [device_pin, desc] : device_layout) {
+	for(const auto& [device_pin, desc] : device_layout) {
 		Row old_row = getRowForDevicePin(device_id, device_pin);
 		Row new_row;
 		if(isBreadboard()) {
@@ -147,6 +147,7 @@ bool Breadboard::moveDevice(const DeviceID& device_id, QPoint position, QPoint h
 				new_row = getNewRowNumber();
 			}
 		}
+		if(!isValidRasterRow(new_row)) continue;
 		DeviceConnection new_connection = DeviceConnection{
 			.id = device_id,
 			.pin = device_pin
@@ -161,14 +162,13 @@ bool Breadboard::moveDevice(const DeviceID& device_id, QPoint position, QPoint h
 		}
 		createRowConnections(new_row);
 	}
-	printConnections();
 	return true;
 }
 
 bool Breadboard::addDevice(const DeviceClass& classname, QPoint pos, DeviceID id) {
 	if(id.empty()) {
 		std::set<unsigned> used_ids;
-		for(auto const& [id_it, device_it] : m_devices) {
+		for(const auto& [id_it, device_it] : m_devices) {
 			if(find_if(id_it.begin(), id_it.end(), [](unsigned char c){return !isdigit(c);}) == id_it.end()) {
 				used_ids.insert(stoi(id_it));
 			}
@@ -303,8 +303,8 @@ void Breadboard::updateConfig(const DeviceID& device_id, Config config) {
 	device->second->m_conf->setConfig(config);
 }
 
-void Breadboard::updatePins(const DeviceID &device_id, const unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber>& globals, pair<Device::PIN_Interface::DevicePin, bool> sync) {
-	for(auto const& [device_pin, global] : globals) {
+void Breadboard::updatePins(const DeviceID &device_id, const unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber>& globals, PinDialog::ChangedSync sync) {
+	for(const auto& [device_pin, global] : globals) {
 		addPinToDevicePin(device_id, device_pin, global, "dialog");
 	}
 	unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber> device_pins = getPinsToDevicePins(device_id);
@@ -313,6 +313,5 @@ void Breadboard::updatePins(const DeviceID &device_id, const unordered_map<Devic
 		setPinSync(sync_pin->second, sync.first, device_id, sync.second);
 	}
 	updateOverlay();
-	printConnections();
 	// TODO update dialog content?
 }

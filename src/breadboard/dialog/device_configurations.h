@@ -29,5 +29,5 @@ public:
 signals:
 	void keysChanged(DeviceID device_id, Keys keys);
 	void configChanged(DeviceID device, Config config);
-	void pinsChanged(DeviceID device_id, std::unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber> globals, std::pair<Device::PIN_Interface::DevicePin, bool> sync);
+	void pinsChanged(DeviceID device_id, std::unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber> globals, PinDialog::ChangedSync sync);
 };

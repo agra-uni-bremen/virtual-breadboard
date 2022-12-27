@@ -4,7 +4,7 @@
 
 std::list<DeviceClass> CFactory::getAvailableDevices() {
 	std::list<DeviceClass> devices;
-	for(auto const& [classname, creator] : m_deviceCreators) {
+	for(const auto& [classname, creator] : m_deviceCreators) {
 		devices.push_back(classname);
 	}
 	return devices;

@@ -5,14 +5,14 @@
 #include <list>
 #include <QPoint>
 
-enum IOFType {
+enum class IOFType {
 	SPI,
 	UART,
 	PWM
 };
 
 struct IOF {
-	IOFType type;
+	IOFType type = IOFType::SPI;
 	bool active=false;
 };
 

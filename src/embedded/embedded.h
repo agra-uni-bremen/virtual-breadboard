@@ -15,6 +15,10 @@ const QString DRAG_TYPE_CABLE = "cable";
 class Embedded : public QWidget {
 	Q_OBJECT
 
+public:
+	typedef uint64_t PinRegister;
+
+private:
 	PinOptions *m_pin_dialog;
 	GPIOPinLayout m_pins;
 
@@ -37,14 +41,14 @@ class Embedded : public QWidget {
 	void updateBackground();
 
 	gpio::PinNumber translatePinToGpioOffs(gpio::PinNumber pin);
-	uint64_t translateGpioToGlobal(gpio::State state);
+	PinRegister translateGpioToGlobal(gpio::State state);
 
 public:
 	Embedded(const std::string& host, const std::string& port);
 	~Embedded();
 
 	bool timerUpdate();
-	uint64_t getState();
+	PinRegister getState();
 	bool gpioConnected() const;
 	void destroyConnection();
 	GPIOPinLayout getPins();

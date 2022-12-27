@@ -60,7 +60,7 @@ void ConfigDialog::addString(const ConfigDescription& name, const QString& value
 void ConfigDialog::setConfig(DeviceID device, const Config& config) {
 	this->m_device = device;
 	this->m_config = config;
-	for(auto const& [description, element] : config) {
+	for(const auto& [description, element] : config) {
 		switch(element.type) {
 		case ConfigElem::Type::integer: {
 			addInt(description, element.value.integer);

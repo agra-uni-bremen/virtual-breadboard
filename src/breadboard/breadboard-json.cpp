@@ -48,10 +48,22 @@ void Breadboard::fromJSON(QJsonObject json) {
 			cout << "[Breadboard] reserving space for " << device_descriptions.count() << " devices." << endl;
 		for(const auto& device_description : device_descriptions) {
 			QJsonObject device_desc = device_description.toObject();
+			if(!device_desc.contains("id") || !device_desc["id"].isString() || !device_desc.contains("graphics") || !device_desc["graphics"].isObject()) {
+				cerr << "[Breadboard] Config misses information/malformed for a device" << endl;
+				continue;
+			}
 			const string& classname = device_desc["class"].toString("undefined").toStdString();
-			const string& id = device_desc["id"].toString("undefined").toStdString();
+			const string& id = device_desc["id"].toString().toStdString();
 			QJsonObject graphics = device_desc["graphics"].toObject();
+			if(!graphics.contains("offs") || !graphics["offs"].isArray()) {
+				cerr << "[Breadboard] Config misses position of a device" << endl;
+				continue;
+			}
 			const QJsonArray offs_desc = graphics["offs"].toArray();
+			if(offs_desc.size() != 2) {
+				cerr << "[Breadboard] Config misses position of a device" << endl;
+				continue;
+			}
 			QPoint offs(offs_desc[0].toInt(), offs_desc[1].toInt());
 
 			if(!addDevice(classname, getDistortedPosition(offs), id)) {
@@ -77,6 +89,9 @@ void Breadboard::fromJSON(QJsonObject json) {
 					bool sync = connection_obj["synchronous"].toBool(false);
 					addPinToDevicePin(id, device_pin, global, name);
 					if(sync) setPinSync(global, device_pin, id, true);
+					if(connection_obj.contains("spi_noresponse") && connection_obj["spi_noresponse"].isBool()) {
+						setSPInoresponse(global, connection_obj["spi_noresponse"].toBool());
+					}
 				}
 			}
 		}
@@ -112,12 +127,12 @@ QJsonObject Breadboard::toJSON() {
 		current_state["window"] = window;
 	}
 	QJsonArray devices_json;
-	for(auto const& [id, device] : m_devices) {
+	for(const auto& [id, device] : m_devices) {
 		QJsonObject dev_json = device->toJSON();
 		unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber> pins = getPinsToDevicePins(id);
 		QJsonArray pins_json;
 		auto sync_pin = m_pin_channels.find(id);
-		for(auto const& [device_pin, global] : pins) {
+		for(const auto& [device_pin, global] : pins) {
 			if(!m_embedded->isPin(global)) continue;
 			QJsonObject pin_json;
 			pin_json["global_pin"] = global;

@@ -64,8 +64,10 @@ void Device::fromJSON(QJsonObject json) {
 
 	if(json.contains("graphics") && json["graphics"].isObject()) {
 		QJsonObject graphics = json["graphics"].toObject();
-		unsigned scale = graphics["scale"].toInt();
-		setScale(scale);
+		if(graphics.contains("scale") && graphics["scale"].isDouble()) {
+			unsigned scale = graphics["scale"].toInt();
+			setScale(scale);
+		}
 	}
 	else {
 		std::cerr << "[Device] Config does not specify scale and position correctly." << std::endl;
@@ -87,7 +89,7 @@ QJsonObject Device::toJSON() {
 
 	if(m_conf) {
 		QJsonObject conf_json;
-		for(auto const& [desc, elem] : m_conf->getConfig()) {
+		for(const auto& [desc, elem] : m_conf->getConfig()) {
 			if(elem.type == ConfigElem::Type::integer) {
 				conf_json[QString::fromStdString(desc)] = (int) elem.value.integer;
 			}

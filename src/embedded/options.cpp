@@ -65,7 +65,7 @@ void PinOptions::addPin(gpio::PinNumber global, const GPIOPin& pin) {
 
 void PinOptions::setPins(const GPIOPinLayout& pins) {
 	m_pins_input = pins;
-	for(auto const& [global, pin] : pins) {
+	for(const auto& [global, pin] : pins) {
 		addPin(global, pin);
 	}
 }
