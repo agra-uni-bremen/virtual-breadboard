@@ -180,6 +180,31 @@ void Breadboard::dropEvent(QDropEvent *e) {
 
 void Breadboard::resizeEvent(QResizeEvent*) {
 	updateBackground();
+    updateOverlay();
+}
+
+inline bool operator<(const QPoint &p1, const QPoint &p2)
+{
+    if(p1.x() != p2.x()) {
+        return p1.x() < p2.x();
+    }
+    return p1.y() < p2.y();
+}
+
+void Breadboard::updateOverlay() {
+    if(!isBreadboard()) return;
+    QMap<QPoint,QPoint> qt_cables;
+    for(const auto& [row, content] : m_raster) {
+        for(const auto& pin : content.pins) {
+            const QPoint pos_bb = this->mapToParent(getAbsolutePosition(row, pin.index)+
+                    getDistortedPosition(QPoint(iconSizeMinimum()/2,iconSizeMinimum()/2)));
+            const QPoint pos_embedded = m_embedded->mapToParent(m_embedded->getDistortedPositionPin(pin.global_pin)+
+                    m_embedded->getDistortedPosition(QPoint(m_embedded->iconSizeMinimum()/2, m_embedded->iconSizeMinimum()/2)));
+            qt_cables.insert(pos_bb, pos_embedded);
+        }
+    }
+    m_overlay->setCables(qt_cables);
+    m_overlay->update();
 }
 
 void Breadboard::paintEvent(QPaintEvent*) {
@@ -197,6 +222,15 @@ void Breadboard::paintEvent(QPaintEvent*) {
 						getDistortedSize(QSize(iconSizeMinimum(),iconSizeMinimum()))));
 			}
 		}
+        QColor red("red");
+        red.setAlphaF(0.5);
+        painter.setBrush(QBrush(red));
+        for(const auto& [row, content] : m_raster) {
+            for(const auto& pin : content.pins) {
+                painter.drawRect(QRect(getAbsolutePosition(row, pin.index),
+                                       getDistortedSize(QSize(iconSizeMinimum(), iconSizeMinimum()))));
+            }
+        }
 		painter.restore();
 	}
 

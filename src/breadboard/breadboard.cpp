@@ -59,6 +59,10 @@ void Breadboard::setEmbedded(Embedded *embedded) {
     this->m_embedded = embedded;
 }
 
+void Breadboard::setOverlay(Overlay *overlay) {
+    this->m_overlay = overlay;
+}
+
 /* DEVICE */
 
 QPoint Breadboard::checkDevicePosition(const DeviceID& id, const QImage& buffer, int scale, QPoint position, QPoint hotspot) {
@@ -287,7 +291,7 @@ void Breadboard::updatePins(const DeviceID &device_id, const unordered_map<Devic
     if(sync_pin != device_pins.end()) {
         setPinSync(sync_pin->second, sync.first, device_id, sync.second);
     }
+    updateOverlay();
     printConnections();
     // TODO update dialog content?
-    // save does not close window like it did before
 }

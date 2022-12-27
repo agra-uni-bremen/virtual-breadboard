@@ -66,7 +66,19 @@ bool Breadboard::isValidRasterIndex(Index index) { return index < BB_INDEXES; }
 
 Breadboard::Index Breadboard::getNextIndex(Row row) {
     auto row_content = m_raster.find(row);
-    return row_content != m_raster.end() ? row_content->second.devices.size() + row_content->second.pins.size() : 0;
+    if(isBreadboard() && row_content->second.devices.size()+row_content->second.pins.size() >= BB_INDEXES)
+        return BB_INDEXES;
+    std::set<Index> indexes;
+    for (const auto& pin : row_content->second.pins) {
+        indexes.insert(pin.index);
+    }
+    Index index = 0;
+    for(Index known_index : indexes) {
+        if(known_index > index) break;
+        index++;
+    }
+    return index;
+    // TODO device position...
 }
 
 QRect Breadboard::getRasterBounds() {
