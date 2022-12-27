@@ -70,9 +70,17 @@ void Central::loadJSON(const QString& file) {
 		std::cerr << error.errorString().toStdString() << std::endl;
 		return;
 	}
-	m_overlay->setCables(QMap<QPoint,QPoint>());
 
 	QJsonObject json = json_doc.object();
+	if(!json.contains("embedded") || !json["embedded"].isObject()) {
+		std::cerr << "[Central] Config file missing/malformed entry for embedded" << std::endl;
+		return;
+	}
+	if(!json.contains("breadboard") || !json["breadboard"].isObject()) {
+		std::cerr << "[Central] Config file missing/malformed entry for breadboard" << std::endl;
+		return;
+	}
+	m_overlay->setCables(QMap<QPoint,QPoint>());
 	m_embedded->fromJSON(json["embedded"].toObject());
 	m_breadboard->fromJSON(json["breadboard"].toObject());
 	if(m_breadboard->isBreadboard()) {
@@ -81,6 +89,7 @@ void Central::loadJSON(const QString& file) {
 	else {
 		m_embedded->hide();
 	}
+	m_breadboard->updateOverlay();
 	if(m_embedded->gpioConnected()) {
 		m_breadboard->connectionUpdate(true);
 	}
@@ -113,7 +122,7 @@ void Central::loadLUA(const std::string& dir, bool overwrite_integrated_devices)
 }
 
 void Central::pinSettingsChanged(const std::list<std::pair<gpio::PinNumber, IOF>>& iofs) {
-	for(auto const& [global, iof] : iofs) {
+	for(const auto& [global, iof] : iofs) {
 		if(iof.type == IOFType::SPI) {
 			m_breadboard->setSPI(global, iof.active);
 		}

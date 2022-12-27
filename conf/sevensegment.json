@@ -1,106 +1,315 @@
 {
-    "devices": [
-        {
-            "class": "sevensegment",
-            "graphics": {
-                "offs": [
-                    5,
-                    50
-                ],
-                "scale": 1
+    "breadboard": {
+        "devices": [
+            {
+                "class": "button",
+                "conf": {
+                    "active_low": true
+                },
+                "graphics": {
+                    "offs": [
+                        245,
+                        134
+                    ],
+                    "scale": 1
+                },
+                "id": "1",
+                "pins": [
+                    {
+                        "device_pin": 1,
+                        "global_pin": 3,
+                        "name": "dialog"
+                    }
+                ]
             },
-            "id": "display",
-            "pins": [
-                {
-                    "device_pin": 0,
-                    "global_pin": 15,
-                    "name": "top"
+            {
+                "class": "sevensegment",
+                "graphics": {
+                    "offs": [
+                        137,
+                        86
+                    ],
+                    "scale": 1
                 },
-                {
-                    "device_pin": 1,
-                    "global_pin": 16,
-                    "name": "top_right"
-                },
-                {
-                    "device_pin": 2,
-                    "global_pin": 17,
-                    "name": "bottom_right"
-                },
-                {
-                    "device_pin": 3,
-                    "global_pin": 18,
-                    "name": "bottom"
-                },
-                {
-                    "device_pin": 4,
-                    "global_pin": 19,
-                    "name": "bottom_left"
-                },
-                {
-                    "device_pin": 5,
-                    "global_pin": 7,
-                    "name": "top_left"
-                },
-                {
-                    "device_pin": 6,
-                    "global_pin": 6,
-                    "name": "center"
-                },
-                {
-                    "device_pin": 7,
-                    "global_pin": 5,
-                    "name": "dot"
-                }
-            ]
-        },
-        {
-            "class": "button",
-            "graphics": {
-                "offs": [
-                    89,
-                    62
+                "id": "0",
+                "pins": [
+                    {
+                        "device_pin": 0,
+                        "global_pin": 15,
+                        "name": "dialog"
+                    },
+                    {
+                        "device_pin": 1,
+                        "global_pin": 16,
+                        "name": "dialog"
+                    },
+                    {
+                        "device_pin": 2,
+                        "global_pin": 17,
+                        "name": "cable"
+                    },
+                    {
+                        "device_pin": 3,
+                        "global_pin": 18,
+                        "name": "cable"
+                    },
+                    {
+                        "device_pin": 4,
+                        "global_pin": 19,
+                        "name": "cable"
+                    },
+                    {
+                        "device_pin": 5,
+                        "global_pin": 7,
+                        "name": "dialog"
+                    },
+                    {
+                        "device_pin": 6,
+                        "global_pin": 6,
+                        "name": "dialog"
+                    },
+                    {
+                        "device_pin": 7,
+                        "global_pin": 5,
+                        "name": "cable"
+                    }
+                ]
+            }
+        ]
+    },
+    "embedded": {
+        "pins": [
+            {
+                "global": 12,
+                "gpio_offs": 4,
+                "iofs": [
+                    {
+                        "active": false,
+                        "type": "SPI"
+                    }
                 ],
-                "scale": 1
+                "pos_x": 310,
+                "pos_y": 185
             },
-            "id": "reverse_count",
-            "keybindings": [
-                "Up"
-            ],
-            "pins": [
-                {
-                    "device_pin": 1,
-                    "global_pin": 3,
-                    "name": "output"
-                }
-            ]
-        },
-        {
-            "class": "rgb",
-            "graphics": {
-                "offs": [
-                    137,
-                    62
+            {
+                "global": 11,
+                "gpio_offs": 3,
+                "iofs": [
+                    {
+                        "active": false,
+                        "type": "PWM"
+                    }
                 ],
-                "scale": 2
+                "pos_x": 290,
+                "pos_y": 185
             },
-            "id": "rgb",
-            "pins": [
-                {
-                    "device_pin": 0,
-                    "global_pin": 6,
-                    "name": "r"
-                },
-                {
-                    "device_pin": 1,
-                    "global_pin": 3,
-                    "name": "g"
-                },
-                {
-                    "device_pin": 2,
-                    "global_pin": 5,
-                    "name": "b"
-                }
+            {
+                "global": 10,
+                "gpio_offs": 2,
+                "iofs": [
+                    {
+                        "active": false,
+                        "type": "PWM"
+                    },
+                    {
+                        "active": false,
+                        "type": "SPI"
+                    }
+                ],
+                "pos_x": 270,
+                "pos_y": 185
+            },
+            {
+                "global": 9,
+                "gpio_offs": 1,
+                "iofs": [
+                    {
+                        "active": false,
+                        "type": "PWM"
+                    }
+                ],
+                "pos_x": 250,
+                "pos_y": 185
+            },
+            {
+                "global": 8,
+                "gpio_offs": 0,
+                "iofs": [
+                    {
+                        "active": false,
+                        "type": "PWM"
+                    }
+                ],
+                "pos_x": 230,
+                "pos_y": 185
+            },
+            {
+                "global": 7,
+                "gpio_offs": 23,
+                "pos_x": 210,
+                "pos_y": 185
+            },
+            {
+                "global": 6,
+                "gpio_offs": 22,
+                "iofs": [
+                    {
+                        "active": false,
+                        "type": "PWM"
+                    }
+                ],
+                "pos_x": 190,
+                "pos_y": 185
+            },
+            {
+                "global": 5,
+                "gpio_offs": 21,
+                "iofs": [
+                    {
+                        "active": false,
+                        "type": "PWM"
+                    }
+                ],
+                "pos_x": 170,
+                "pos_y": 185
+            },
+            {
+                "global": 4,
+                "gpio_offs": 20,
+                "iofs": [
+                    {
+                        "active": false,
+                        "type": "PWM"
+                    }
+                ],
+                "pos_x": 150,
+                "pos_y": 185
+            },
+            {
+                "global": 3,
+                "gpio_offs": 19,
+                "iofs": [
+                    {
+                        "active": false,
+                        "type": "PWM"
+                    }
+                ],
+                "pos_x": 130,
+                "pos_y": 185
+            },
+            {
+                "global": 2,
+                "gpio_offs": 18,
+                "pos_x": 110,
+                "pos_y": 185
+            },
+            {
+                "global": 1,
+                "gpio_offs": 17,
+                "iofs": [
+                    {
+                        "active": false,
+                        "type": "UART"
+                    }
+                ],
+                "pos_x": 90,
+                "pos_y": 185
+            },
+            {
+                "global": 0,
+                "gpio_offs": 16,
+                "iofs": [
+                    {
+                        "active": false,
+                        "type": "UART"
+                    }
+                ],
+                "pos_x": 70,
+                "pos_y": 185
+            },
+            {
+                "global": 13,
+                "gpio_offs": 5,
+                "iofs": [
+                    {
+                        "active": false,
+                        "type": "SPI"
+                    }
+                ],
+                "pos_x": 330,
+                "pos_y": 185
+            },
+            {
+                "global": 15,
+                "gpio_offs": 9,
+                "iofs": [
+                    {
+                        "active": false,
+                        "type": "SPI"
+                    }
+                ],
+                "pos_x": 70,
+                "pos_y": 0
+            },
+            {
+                "global": 16,
+                "gpio_offs": 10,
+                "iofs": [
+                    {
+                        "active": false,
+                        "type": "SPI"
+                    },
+                    {
+                        "active": false,
+                        "type": "PWM"
+                    }
+                ],
+                "pos_x": 90,
+                "pos_y": 0
+            },
+            {
+                "global": 17,
+                "gpio_offs": 11,
+                "iofs": [
+                    {
+                        "active": false,
+                        "type": "PWM"
+                    }
+                ],
+                "pos_x": 110,
+                "pos_y": 0
+            },
+            {
+                "global": 18,
+                "gpio_offs": 12,
+                "iofs": [
+                    {
+                        "active": false,
+                        "type": "PWM"
+                    }
+                ],
+                "pos_x": 130,
+                "pos_y": 0
+            },
+            {
+                "global": 19,
+                "gpio_offs": 13,
+                "iofs": [
+                    {
+                        "active": false,
+                        "type": "PWM"
+                    }
+                ],
+                "pos_x": 150,
+                "pos_y": 0
+            }
+        ],
+        "window": {
+            "background": ":/img/virtual_hifive.png",
+            "windowsize": [
+                420,
+                231
             ]
         }
-    ]
+    }
 }

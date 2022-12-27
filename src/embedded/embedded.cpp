@@ -26,10 +26,10 @@ PinNumber Embedded::translatePinToGpioOffs(PinNumber pin) {
 	return pin_obj->second.gpio_offs;
 }
 
-uint64_t Embedded::translateGpioToGlobal(State state) {
-	uint64_t ext = 0;
-	for(auto const& [global, pin_obj] : m_pins) {
-		ext |= (state.pins[pin_obj.gpio_offs] == gpio::Pinstate::HIGH ? 1 : 0) << (pin_obj.gpio_offs-global);
+Embedded::PinRegister Embedded::translateGpioToGlobal(State state) {
+	PinRegister ext = 0;
+	for(const auto& [global, pin_obj] : m_pins) {
+		ext |= (state.pins[pin_obj.gpio_offs] == gpio::Pinstate::HIGH ? 1 : 0) << global;
 	}
 	return ext;
 }
@@ -55,7 +55,16 @@ bool Embedded::timerUpdate() { // return: new connection?
 		emit(connectionLost());
 		m_connected = false;
 	}
-	if(!m_connected) {
+	if(m_connected) {
+		for (auto &[global, info]: m_pins) {
+			for (auto &iof: info.iofs) {
+				if (iof.type == IOFType::SPI) {
+					iof.active = m_gpio.state.pins[info.gpio_offs] == gpio::Pinstate::IOF_SPI;
+				}
+			}
+		}
+	}
+	else {
 		m_connected = m_gpio.setupConnection(m_host.c_str(), m_port.c_str());
 		if(m_connected) {
 			return true;
@@ -64,7 +73,7 @@ bool Embedded::timerUpdate() { // return: new connection?
 	return false;
 }
 
-uint64_t Embedded::getState() {
+Embedded::PinRegister Embedded::getState() {
 	return translateGpioToGlobal(m_gpio.state);
 }
 
@@ -206,20 +215,36 @@ void Embedded::fromJSON(QJsonObject json) {
 	QJsonArray pins = json["pins"].toArray();
 	for(const auto& pin_obj : pins) {
 		QJsonObject pin = pin_obj.toObject();
+		if(!pin.contains("global") || !pin["global"].isDouble()
+		|| !pin.contains("gpio_offs") || !pin["gpio_offs"].isDouble()
+		|| !pin.contains("pos_x") || !pin["pos_x"].isDouble()
+		|| !pin.contains("pos_y") || !pin["pos_y"].isDouble()) {
+			cerr << "[Embedded] JSON missing global/gpio offs/position entry for a pin" << endl;
+			continue;
+		}
 		gpio::PinNumber global = pin["global"].toInt();
 		gpio::PinNumber gpio_offs = pin["gpio_offs"].toInt();
 		list<IOF> iofs;
-		QJsonArray iofs_obj = pin["iofs"].toArray();
-		for(const auto& iof_obj : iofs_obj) {
-			QJsonObject iof = iof_obj.toObject();
-			bool active = iof["active"].toBool();
-			IOFType type;
-			QString type_str = iof["type"].toString();
-			if(type_str == "UART") type = IOFType::UART;
-			else if(type_str == "SPI") type = IOFType::SPI;
-			else if(type_str == "PWM") type = IOFType::PWM;
-			else continue;
-			iofs.push_back(IOF{.type=type,.active=active});
+		if(pin.contains("iofs") && pin["iofs"].isArray()) {
+			QJsonArray iofs_obj = pin["iofs"].toArray();
+			for (const auto &iof_obj: iofs_obj) {
+				QJsonObject iof = iof_obj.toObject();
+				if(!iof.contains("type") || !iof["type"].isString()) {
+					cerr << "[Embedded] JSON missing type for iof of pin " << (int) global << endl;
+					continue;
+				}
+				bool active = iof["active"].toBool(false);
+				IOFType type;
+				QString type_str = iof["type"].toString();
+				if (type_str == "UART") type = IOFType::UART;
+				else if (type_str == "SPI") type = IOFType::SPI;
+				else if (type_str == "PWM") type = IOFType::PWM;
+				else {
+					cerr << "[Embedded] JSON has invalid iof type " << type_str.toStdString() << " for pin " << (int) global << endl;
+					continue;
+				}
+				iofs.push_back(IOF{.type=type, .active=active});
+			}
 		}
 		QPoint pos = QPoint(pin["pos_x"].toInt(), pin["pos_y"].toInt());
 		m_pins.emplace(global, GPIOPin{.gpio_offs=gpio_offs,.iofs=iofs, .pos=pos});
@@ -236,22 +261,22 @@ QJsonObject Embedded::toJSON() {
 	window["windowsize"] = windowsize;
 	json["window"] = window;
 	QJsonArray pins;
-	for(auto const& [global, pin] : m_pins) {
+	for(const auto& [global, pin] : m_pins) {
 		QJsonObject pin_obj;
 		pin_obj["global"] = global;
 		pin_obj["gpio_offs"] = pin.gpio_offs;
 		QJsonArray iofs;
-		for(auto const& iof : pin.iofs) {
+		for(const auto& iof : pin.iofs) {
 			QJsonObject iof_obj;
 			QString type;
 			switch(iof.type) {
 				case IOFType::PWM:
 					type = "PWM";
 					break;
-				case SPI:
+				case IOFType::SPI:
 					type = "SPI";
 					break;
-				case UART:
+				case IOFType::UART:
 					type = "UART";
 					break;
 			}
@@ -273,7 +298,7 @@ QJsonObject Embedded::toJSON() {
 /* DIALOG */
 
 void Embedded::pinsChanged(std::list<std::pair<gpio::PinNumber, IOF>> iofs) {
-	for(auto const& [global, iof] : iofs) {
+	for(const auto& [global, iof] : iofs) {
 		auto pin = m_pins.find(global);
 		if(pin == m_pins.end()) continue;
 		IOFType type = iof.type;

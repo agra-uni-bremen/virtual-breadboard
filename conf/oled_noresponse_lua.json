@@ -1,229 +1,415 @@
 {
-    "devices": [
-        {
-            "class": "button_lua",
-            "graphics": {
-                "offs": [
-                    88,
-                    632
-                ],
-                "scale": 2
+    "embedded" : {
+        "pins": [
+            {
+                "global": 0,
+                "gpio_offs": 16,
+                "pos_x": 70,
+                "pos_y": 185,
+                "iofs": [
+                    {
+                        "type": "UART",
+                        "active": false
+                    }
+                ]
             },
-            "id": "button_b",
-            "keybindings": [
-                "B",
-                "X",
-                "Y",
-                "Z"
-            ],
-            "pins": [
-                {
-                    "device_pin": 1,
-                    "global_pin": 19,
-                    "name": "output"
-                }
-            ]
-        },
-        {
-            "class": "LED",
-            "conf": {
-                "colour_b": 10,
-                "colour_g": 10,
-                "colour_r": 255
+            {
+                "global": 1,
+                "gpio_offs": 17,
+                "pos_x": 90,
+                "pos_y": 185,
+                "iofs": [
+                    {
+                        "type": "UART",
+                        "active": false
+                    }
+                ]
             },
-            "graphics": {
-                "offs": [
-                    165,
-                    460
-                ],
-                "scale": 2
+            {
+                "global": 2,
+                "gpio_offs": 18,
+                "pos_x": 110,
+                "pos_y": 185
             },
-            "id": "led2_dc",
-            "pins": [
-                {
-                    "device_pin": 1,
-                    "global_pin": 16,
-                    "name": "led_pin"
-                }
-            ]
-        },
-        {
-            "class": "button_lua",
-            "graphics": {
-                "offs": [
-                    90,
-                    549
-                ],
-                "scale": 2
+            {
+                "global": 3,
+                "gpio_offs": 19,
+                "pos_x": 130,
+                "pos_y": 185,
+                "iofs": [
+                    {
+                        "type": "PWM",
+                        "active": false
+                    }
+                ]
             },
-            "id": "button_a",
-            "keybindings": [
-                "A"
-            ],
-            "pins": [
-                {
-                    "device_pin": 1,
-                    "global_pin": 18,
-                    "name": "output"
-                }
-            ]
-        },
-        {
-            "class": "button_lua",
-            "graphics": {
-                "offs": [
-                    228,
-                    661
-                ],
-                "scale": 2
+            {
+                "global": 4,
+                "gpio_offs": 20,
+                "pos_x": 150,
+                "pos_y": 185,
+                "iofs": [
+                    {
+                        "type": "PWM",
+                        "active": false
+                    }
+                ]
             },
-            "id": "button_down",
-            "keybindings": [
-                "Down"
-            ],
-            "pins": [
-                {
-                    "device_pin": 1,
-                    "global_pin": 3,
-                    "name": "output"
-                }
-            ]
-        },
-        {
-            "class": "LED",
-            "conf": {
-                "colour_b": 10,
-                "colour_g": 10,
-                "colour_r": 255
+            {
+                "global": 5,
+                "gpio_offs": 21,
+                "pos_x": 170,
+                "pos_y": 185,
+                "iofs": [
+                    {
+                        "type": "PWM",
+                        "active": false
+                    }
+                ]
             },
-            "graphics": {
-                "offs": [
-                    186,
-                    460
-                ],
-                "scale": 2
+            {
+                "global": 6,
+                "gpio_offs": 22,
+                "pos_x": 190,
+                "pos_y": 185,
+                "iofs": [
+                    {
+                        "type": "PWM",
+                        "active": false
+                    }
+                ]
             },
-            "id": "led1_down",
-            "pins": [
-                {
-                    "device_pin": 1,
-                    "global_pin": 3,
-                    "name": "led_pin"
-                }
-            ]
-        },
-        {
-            "class": "button_lua",
-            "graphics": {
-                "offs": [
-                    300,
-                    593
-                ],
-                "scale": 2
+            {
+                "global": 7,
+                "gpio_offs": 23,
+                "pos_x": 210,
+                "pos_y": 185
             },
-            "id": "button_right",
-            "keybindings": [
-                "Right"
-            ],
-            "pins": [
-                {
-                    "device_pin": 1,
-                    "global_pin": 5,
-                    "name": "output"
-                }
-            ]
-        },
-        {
-            "class": "button_lua",
-            "graphics": {
-                "offs": [
-                    158,
-                    592
-                ],
-                "scale": 2
+            {
+                "global": 8,
+                "gpio_offs": 0,
+                "pos_x": 230,
+                "pos_y": 185,
+                "iofs": [
+                    {
+                        "type": "PWM",
+                        "active": false
+                    }
+                ]
             },
-            "id": "button_left",
-            "keybindings": [
-                "Left"
-            ],
-            "pins": [
-                {
-                    "device_pin": 1,
-                    "global_pin": 6,
-                    "name": "output"
-                }
-            ]
-        },
-        {
-            "class": "SSD1106",
-            "graphics": {
-                "offs": [
-                    113,
-                    306
-                ],
-                "scale": 2
+            {
+                "global": 9,
+                "gpio_offs": 1,
+                "pos_x": 250,
+                "pos_y": 185,
+                "iofs": [
+                    {
+                        "type": "PWM",
+                        "active": false
+                    }
+                ]
             },
-            "id": "display",
-            "pins": [
-                {
-                    "device_pin": 1,
-                    "global_pin": 16,
-                    "synchronous": true
-                }
-            ],
-            "spi": {
-                "cs_pin": 15,
-                "noresponse": true
+            {
+                "global": 10,
+                "gpio_offs": 2,
+                "pos_x": 270,
+                "pos_y": 185,
+                "iofs": [
+                    {
+                        "type": "PWM",
+                        "active": false
+                    },
+                    {
+                        "type": "SPI",
+                        "active": false
+                    }
+                ]
+            },
+            {
+                "global": 11,
+                "gpio_offs": 3,
+                "pos_x": 290,
+                "pos_y": 185,
+                "iofs": [
+                    {
+                        "type": "PWM",
+                        "active": false
+                    }
+                ]
+            },
+            {
+                "global": 12,
+                "gpio_offs": 4,
+                "pos_x": 310,
+                "pos_y": 185,
+                "iofs": [
+                    {
+                        "type": "SPI",
+                        "active": false
+                    }
+                ]
+            },
+            {
+                "global": 13,
+                "gpio_offs": 5,
+                "pos_x": 330,
+                "pos_y": 185,
+                "iofs": [
+                    {
+                        "type": "SPI",
+                        "active": false
+                    }
+                ]
+            },
+            {
+                "global": 15,
+                "gpio_offs": 9,
+                "pos_x": 70,
+                "pos_y": 0,
+                "iofs": [
+                    {
+                        "type": "SPI",
+                        "active": true
+                    }
+                ]
+            },
+            {
+                "global": 16,
+                "gpio_offs": 10,
+                "pos_x": 90,
+                "pos_y": 0,
+                "iofs": [
+                    {
+                        "type": "SPI",
+                        "active": false
+                    },
+                    {
+                        "type": "PWM",
+                        "active": false
+                    }
+                ]
+            },
+            {
+                "global": 17,
+                "gpio_offs": 11,
+                "pos_x": 110,
+                "pos_y": 0,
+                "iofs": [
+                    {
+                        "type": "PWM",
+                        "active": false
+                    }
+                ]
+            },
+            {
+                "global": 18,
+                "gpio_offs": 12,
+                "pos_x": 130,
+                "pos_y": 0,
+                "iofs": [
+                    {
+                        "type": "PWM",
+                        "active": false
+                    }
+                ]
+            },
+            {
+                "global": 19,
+                "gpio_offs": 13,
+                "pos_x": 150,
+                "pos_y": 0,
+                "iofs": [
+                    {
+                        "type": "PWM",
+                        "active": false
+                    }
+                ]
             }
-        },
-        {
-            "class": "button_lua",
-            "graphics": {
-                "offs": [
-                    230,
-                    524
+        ]
+    },
+    "breadboard": {
+        "devices": [
+            {
+                "class": "button_lua",
+                "graphics": {
+                    "offs": [
+                        88,
+                        632
+                    ],
+                    "scale": 2
+                },
+                "id": "button_b",
+                "keybindings": [
+                    "B",
+                    "X",
+                    "Y",
+                    "Z"
                 ],
-                "scale": 2
+                "pins": [
+                    {
+                        "global_pin": 19,
+                        "device_pin": 1,
+                        "name": "output"
+                    }
+                ]
             },
-            "id": "button_up",
-            "keybindings": [
-                "Up"
-            ],
-            "pins": [
-                {
-                    "device_pin": 1,
-                    "global_pin": 7,
-                    "name": "output"
-                }
-            ]
-        },
-        {
-            "class": "button_lua",
-            "graphics": {
-                "offs": [
-                    226,
-                    592
+            {
+                "class": "button_lua",
+                "graphics": {
+                    "offs": [
+                        90,
+                        549
+                    ],
+                    "scale": 2
+                },
+                "id": "button_a",
+                "keybindings": [
+                    "A"
                 ],
-                "scale": 2
+                "pins": [
+                    {
+                        "device_pin": 1,
+                        "global_pin": 18,
+                        "name": "output"
+                    }
+                ]
             },
-            "id": "button_center",
-            "keybindings": [
-                "C"
-            ],
-            "pins": [
-                {
-                    "device_pin": 1,
-                    "global_pin": 4,
-                    "name": "output"
-                }
+            {
+                "class": "button_lua",
+                "graphics": {
+                    "offs": [
+                        228,
+                        661
+                    ],
+                    "scale": 2
+                },
+                "id": "button_down",
+                "keybindings": [
+                    "Down"
+                ],
+                "pins": [
+                    {
+                        "device_pin": 1,
+                        "global_pin": 3,
+                        "name": "output"
+                    }
+                ]
+            },
+            {
+                "class": "button_lua",
+                "graphics": {
+                    "offs": [
+                        300,
+                        593
+                    ],
+                    "scale": 2
+                },
+                "id": "button_right",
+                "keybindings": [
+                    "Right"
+                ],
+                "pins": [
+                    {
+                        "device_pin": 1,
+                        "global_pin": 5,
+                        "name": "output"
+                    }
+                ]
+            },
+            {
+                "class": "button_lua",
+                "graphics": {
+                    "offs": [
+                        158,
+                        592
+                    ],
+                    "scale": 2
+                },
+                "id": "button_left",
+                "keybindings": [
+                    "Left"
+                ],
+                "pins": [
+                    {
+                        "device_pin": 1,
+                        "global_pin": 6,
+                        "name": "output"
+                    }
+                ]
+            },
+            {
+                "class": "SSD1106",
+                "graphics": {
+                    "offs": [
+                        113,
+                        306
+                    ],
+                    "scale": 2
+                },
+                "id": "display",
+                "pins": [
+                    {
+                        "device_pin": 1,
+                        "global_pin": 16,
+                        "synchronous": true,
+                        "name": "cmd"
+                    },
+                    {
+                        "device_pin": 2,
+                        "global_pin": 15,
+                        "name": "cs"
+                    }
+                ]
+            },
+            {
+                "class": "button_lua",
+                "graphics": {
+                    "offs": [
+                        230,
+                        524
+                    ],
+                    "scale": 2
+                },
+                "id": "button_up",
+                "keybindings": [
+                    "Up"
+                ],
+                "pins": [
+                    {
+                        "device_pin": 1,
+                        "global_pin": 7,
+                        "name": "output"
+                    }
+                ]
+            },
+            {
+                "class": "button_lua",
+                "graphics": {
+                    "offs": [
+                        226,
+                        592
+                    ],
+                    "scale": 2
+                },
+                "id": "button_center",
+                "keybindings": [
+                    "C"
+                ],
+                "pins": [
+                    {
+                        "device_pin": 1,
+                        "global_pin": 4,
+                        "name": "output"
+                    }
+                ]
+            }
+        ],
+        "window": {
+            "background": ":/img/oled_shield.jpg",
+            "windowsize": [
+                470,
+                750
             ]
         }
-    ],
-    "window": {
-        "background": ":/img/oled_shield.jpg",
-        "windowsize": [
-            470,
-            750
-        ]
     }
 }

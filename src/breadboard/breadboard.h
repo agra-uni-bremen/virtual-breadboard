@@ -88,7 +88,6 @@ class Breadboard : public QWidget {
 
 	void setBackground(QString path);
 	void updateBackground();
-	void updateOverlay();
 
 	// Device
 	bool addDevice(const DeviceClass& classname, QPoint pos, DeviceID id="");
@@ -141,8 +140,10 @@ class Breadboard : public QWidget {
 	QPoint getDeviceAbsolutePosition(DeviceRow row, DeviceIndex index);
 
 	Index getNextIndex(Row row);
-	static bool isValidRasterRow(Row row);
-	static bool isValidRasterIndex(Index index);
+	Row invalidRasterRow();
+	Index invalidRasterIndex();
+	bool isValidRasterRow(Row row);
+	bool isValidRasterIndex(Index index);
 	QRect getRasterBounds();
 	bool isOnRaster(QPoint pos);
 	Row getRow(QPoint pos);
@@ -165,6 +166,7 @@ public:
 
 	void setEmbedded(Embedded *embedded);
 	void setOverlay(Overlay *overlay);
+	void updateOverlay();
 
 	// JSON
 	void fromJSON(QJsonObject json);
@@ -173,7 +175,7 @@ public:
 	void clear();
 
 	// GPIO
-	void timerUpdate(uint64_t state);
+	void timerUpdate(Embedded::PinRegister state);
 	bool isBreadboard();
 
 	void printConnections();
@@ -190,5 +192,5 @@ private slots:
 	void openDeviceConfigurations();
 	void updateKeybinding(const DeviceID& device, Keys keys);
 	void updateConfig(const DeviceID& device, Config config);
-	void updatePins(const DeviceID& device, const std::unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber>& globals, std::pair<Device::PIN_Interface::DevicePin, bool> sync);
+	void updatePins(const DeviceID& device, const std::unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber>& globals, PinDialog::ChangedSync sync);
 };

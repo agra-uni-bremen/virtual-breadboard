@@ -5,7 +5,7 @@ using namespace std;
 void Breadboard::printConnections() {
 	cout << "--------------------------" << endl;
 	cout << "Raster:" << endl;
-	for(auto const& [row, content] : m_raster) {
+	for(const auto& [row, content] : m_raster) {
 		cout << "\tRow " << row << endl;
 		cout << "\t\tPins: " << endl;
 		for(const PinConnection& pin : content.pins) {
@@ -26,11 +26,11 @@ void Breadboard::printConnections() {
 		cout << "\t\tGlobal pin " << (int) mapping.global_pin << " connected with device " << mapping.device << endl;
 	}
 	cout << "\tSync pins:" << endl;
-	for(auto const& [device_id, req] : m_pin_channels) {
+	for(const auto& [device_id, req] : m_pin_channels) {
 		cout << "\t\tGlobal pin " << (int) req.global_pin << " connected with device " << device_id << endl;
 	}
 	cout << "\tSync SPI:" << endl;
-	for(auto const& [device_id, req] : m_spi_channels) {
+	for(const auto& [device_id, req] : m_spi_channels) {
 		cout << "\t\tGlobal pin " << (int) req.global_pin << " connected with device " << device_id << endl;
 	}
 	cout << "--------------------------" << endl;
@@ -40,9 +40,9 @@ void Breadboard::printConnections() {
 
 Breadboard::Row Breadboard::removeConnection(const DeviceID& device_id, Device::PIN_Interface::DevicePin device_pin) {
 	Row row = getRowForDevicePin(device_id, device_pin);
-	if(isBreadboard() && (!isValidRasterRow(row))) {
+	if(!isValidRasterRow(row)) {
 		cerr << "[Breadboard] Could not find the device pin in the connection raster" << endl;
-		return BB_ROWS;
+		return invalidRasterRow();
 	}
 	unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber> current_globals = getPinsToDevicePins(device_id);
 	auto old_pin = current_globals.find(device_pin);
@@ -104,14 +104,14 @@ void Breadboard::createRowConnections(Row row) {
 	GPIOPinLayout embedded_pins = m_embedded->getPins();
 	for (auto &device_obj: row_obj->second.devices) {
 		unordered_set<gpio::PinNumber> connected = getPinsToDevice(device_obj.id);
-		for(auto const& pin_obj : row_obj->second.pins) {
+		for(const auto& pin_obj : row_obj->second.pins) {
 			if(connected.contains(pin_obj.global_pin)) continue;
 			auto e_pin = embedded_pins.find(pin_obj.global_pin);
 			if(e_pin == embedded_pins.end()) continue;
 			bool iof_set = false;
 			for(auto iof : e_pin->second.iofs) {
 				if(iof.type == IOFType::SPI && iof.active) {
-					registerSPI(pin_obj.global_pin, device_obj.pin, device_obj.id, false);
+					registerSPI(pin_obj.global_pin, device_obj.pin, device_obj.id, true);
 					iof_set = true;
 					break;
 				}
@@ -133,12 +133,12 @@ unordered_set<gpio::PinNumber> Breadboard::getPinsToDevice(const DeviceID& devic
 	if(spi != m_spi_channels.end()) {
 		connected_global.insert(spi->second.global_pin);
 	}
-	for(auto const& mapping : m_reading_connections) {
+	for(const auto& mapping : m_reading_connections) {
 		if(mapping.device == device_id) {
 			connected_global.insert(mapping.global_pin);
 		}
 	}
-	for(auto const& mapping : m_writing_connections) {
+	for(const auto& mapping : m_writing_connections) {
 		if(mapping.device == device_id) {
 			connected_global.insert(mapping.global_pin);
 		}
@@ -147,7 +147,7 @@ unordered_set<gpio::PinNumber> Breadboard::getPinsToDevice(const DeviceID& devic
 }
 
 std::string Breadboard::getPinName(gpio::PinNumber global) {
-	for(auto const& [row, content] : m_raster) {
+	for(const auto& [row, content] : m_raster) {
 		auto pin_obj = find_if(content.pins.begin(), content.pins.end(),[global](const PinConnection& connection){return connection.global_pin==global;});
 		if(pin_obj != content.pins.end()) return pin_obj->name;
 	}
@@ -166,18 +166,18 @@ unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber> Breadboard::get
 	if(spi!=m_spi_channels.end()) {
 		connected_global.emplace(spi->second.cs_pin, spi->second.global_pin);
 	}
-	for(auto const& mapping : m_reading_connections) {
+	for(const auto& mapping : m_reading_connections) {
 		if(mapping.device == device_id) {
 			connected_global.emplace(mapping.device_pin, mapping.global_pin);
 		}
 	}
-	for(auto const& mapping : m_writing_connections) {
+	for(const auto& mapping : m_writing_connections) {
 		if(mapping.device == device_id) {
 			connected_global.emplace(mapping.device_pin, mapping.global_pin);
 		}
 	}
 	// invalid for all other device pins
-	for(auto const& [device_pin, desc] : device->second->m_pin->getPinLayout()) {
+	for(const auto& [device_pin, desc] : device->second->m_pin->getPinLayout()) {
 		if(!connected_global.contains(device_pin)) {
 			connected_global.emplace(device_pin, numeric_limits<gpio::PinNumber>::max());
 		}
@@ -250,7 +250,7 @@ void Breadboard::setSPI(gpio::PinNumber global, bool active) {
 	else {
 		removePin(global, true);
 	}
-	for(auto const& [row, content] : m_raster) {
+	for(const auto& [row, content] : m_raster) {
 		createRowConnections(row);
 	}
 }
@@ -371,10 +371,10 @@ void Breadboard::removeDevice(const DeviceID& id) {
 }
 
 void Breadboard::clear() {
-	for(auto const& [id,spi] : m_spi_channels) {
+	for(const auto& [id,spi] : m_spi_channels) {
 		m_embedded->closeIOF(spi.global_pin);
 	}
-	for(auto const& [id,pin] : m_pin_channels) {
+	for(const auto& [id,pin] : m_pin_channels) {
 		m_embedded->closeIOF(pin.global_pin);
 	}
 	m_spi_channels.clear();
@@ -384,15 +384,17 @@ void Breadboard::clear() {
 	m_raster.clear();
 	m_devices.clear();
 
+	updateOverlay();
+
 	setMinimumSize(DEFAULT_SIZE);
 	setBackground(DEFAULT_PATH);
 }
 
 /* Update */
 
-void Breadboard::timerUpdate(uint64_t state) {
+void Breadboard::timerUpdate(Embedded::PinRegister state) {
 	m_lua_access.lock();
-	for(auto const& mapping : m_reading_connections) {
+	for(const auto& mapping : m_reading_connections) {
 		auto device = m_devices.find(mapping.device);
 		if(device == m_devices.end()) {
 			removeDevice(mapping.device);
@@ -401,7 +403,7 @@ void Breadboard::timerUpdate(uint64_t state) {
 		if(!device->second->m_pin) continue;
 		device->second->m_pin->setPin(mapping.device_pin, ((state >> mapping.global_pin)&1 ? gpio::Tristate::HIGH : gpio::Tristate::LOW));
 	}
-	for(auto const& mapping : m_writing_connections) {
+	for(const auto& mapping : m_writing_connections) {
 		auto device = m_devices.find(mapping.device);
 		if(device == m_devices.end()) {
 			removeDevice(mapping.device);
@@ -433,7 +435,7 @@ void Breadboard::writeDevice(const DeviceID& id) {
 	}
 	if(!device->second->m_pin) return;
 	m_lua_access.lock();
-	for(auto const& mapping : m_writing_connections) {
+	for(const auto& mapping : m_writing_connections) {
 		if(mapping.device != id) continue;
 		m_embedded->setBit(mapping.global_pin, device->second->m_pin->getPin(mapping.device_pin));
 	}

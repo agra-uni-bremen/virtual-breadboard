@@ -9,6 +9,11 @@
 class PinDialog : public QWidget {
 	Q_OBJECT
 
+public:
+	typedef std::pair<Device::PIN_Interface::DevicePin, bool> ChangedSync;
+
+private:
+
 	QFormLayout *m_layout;
 	std::unordered_map<Device::PIN_Interface::DevicePin, QCheckBox*> m_sync_boxes;
 
@@ -16,7 +21,7 @@ class PinDialog : public QWidget {
 	std::unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber> m_globals_input;
 	std::unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber> m_globals_output;
 
-	std::pair<Device::PIN_Interface::DevicePin, bool> m_sync_output;
+	ChangedSync m_sync_output;
 
 	void addPin(Device::PIN_Interface::DevicePin device_pin, gpio::PinNumber global, bool sync);
 
@@ -29,5 +34,5 @@ public slots:
 	void accept();
 
 signals:
-	void pinsChanged(DeviceID device_id, std::unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber> globals, std::pair<Device::PIN_Interface::DevicePin, bool> sync);
+	void pinsChanged(DeviceID device_id, std::unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber> globals, ChangedSync sync);
 };

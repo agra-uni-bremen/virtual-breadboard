@@ -46,7 +46,7 @@ void PinDialog::addPin(Device::PIN_Interface::DevicePin device_pin, gpio::PinNum
 void PinDialog::setPins(DeviceID device_id, const std::unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber>& globals, Device::PIN_Interface::DevicePin sync) {
 	m_device = device_id;
 	m_globals_input = globals;
-	for(auto const& [device_pin, global] : globals) {
+	for(const auto& [device_pin, global] : globals) {
 		addPin(device_pin, global, sync == device_pin);
 	}
 }

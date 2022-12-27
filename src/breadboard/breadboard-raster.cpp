@@ -9,14 +9,14 @@ Breadboard::Row Breadboard::getNewRowNumber() {
 	Row row = 0;
 	if(isBreadboard()) {
 		std::cerr << "[Breadboard Raster] New row numbers can only be generated in custom view mode" << std::endl;
-		return BB_ROWS;
+		return invalidRasterRow();
 	}
 	if(m_raster.size() < std::numeric_limits<Row>::max()) {
 		row = m_raster.size();
 	}
 	else {
 		std::set<unsigned> used_row_numbers;
-		for(auto const& [known_row, content] : m_raster) {
+		for(const auto& [known_row, content] : m_raster) {
 			used_row_numbers.insert(known_row);
 		}
 		for(unsigned known_row : used_row_numbers) {
@@ -29,8 +29,8 @@ Breadboard::Row Breadboard::getNewRowNumber() {
 }
 
 Breadboard::Row Breadboard::getRowForDevicePin(const DeviceID& device_id, Device::PIN_Interface::DevicePin device_pin) {
-	Row row = BB_ROWS;
-	for(auto const& [device_pin_row, content] : m_raster) {
+	Row row = invalidRasterRow();
+	for(const auto& [device_pin_row, content] : m_raster) {
 		auto exists = find_if(content.devices.begin(), content.devices.end(),
 							  [device_id, device_pin](const DeviceConnection& content_obj){
 								  return content_obj.id == device_id && content_obj.pin == device_pin;
@@ -61,13 +61,24 @@ QPoint Breadboard::getDeviceAbsolutePosition(DeviceRow row, DeviceIndex index) {
 
 /* Breadboard */
 
-bool Breadboard::isValidRasterRow(Row row) { return row < BB_ROWS; }
-bool Breadboard::isValidRasterIndex(Index index) { return index < BB_INDEXES; }
+Breadboard::Row Breadboard::invalidRasterRow() { return std::numeric_limits<Row>::max(); }
+Breadboard::Index Breadboard::invalidRasterIndex() { return std::numeric_limits<Index>::max(); }
+
+bool Breadboard::isValidRasterRow(Row row) {
+	if(isBreadboard()) return row < BB_ROWS;
+	return row < invalidRasterRow();
+}
+bool Breadboard::isValidRasterIndex(Index index) {
+	if(isBreadboard()) return index < BB_INDEXES;
+	return index < invalidRasterIndex();
+}
 
 Breadboard::Index Breadboard::getNextIndex(Row row) {
 	auto row_content = m_raster.find(row);
-	if(isBreadboard() && row_content->second.devices.size()+row_content->second.pins.size() >= BB_INDEXES)
-		return BB_INDEXES;
+	if((row_content == m_raster.end()) || (isBreadboard() && row_content->second.devices.size()+row_content->second.pins.size() >= BB_INDEXES)) {
+		std::cerr << "[Breadboard] Could not find row " << row << std::endl;
+		return invalidRasterIndex();
+	}
 	std::set<Index> indexes;
 	for (const auto& pin : row_content->second.pins) {
 		indexes.insert(pin.index);
@@ -89,14 +100,14 @@ QRect Breadboard::getRasterBounds() {
 bool Breadboard::isOnRaster(QPoint pos) {
 	return getDistortedRect(BB_ROW_X,BB_ROW_Y,BB_ONE_ROW*iconSizeMinimum(),
 							BB_INDEXES*iconSizeMinimum()).contains(pos)
-		   || getDistortedRect(BB_ROW_X,BB_ROW_Y+(BB_INDEXES+1)*iconSizeMinimum(),
+		   || getDistortedRect(BB_ROW_X,BB_ROW_Y+(BB_INDEXES)*iconSizeMinimum(),
 							   BB_ONE_ROW*iconSizeMinimum(),BB_INDEXES*iconSizeMinimum()).contains(pos);
 }
 
 Breadboard::Row Breadboard::getRow(QPoint pos) {
 	if(!isOnRaster(pos)) {
 		std::cerr << "[Breadboard Raster] Could not calculate row number: position is not on raster." << std::endl;
-		return BB_ROWS;
+		return invalidRasterRow();
 	}
 	QPoint rel_pos_min = (getMinimumPosition(pos) - QPoint(BB_ROW_X, BB_ROW_Y));
 	return (rel_pos_min.x() / iconSizeMinimum()) + (rel_pos_min.y() >= BB_INDEXES*iconSizeMinimum() ? BB_ONE_ROW : 0);
@@ -105,7 +116,7 @@ Breadboard::Row Breadboard::getRow(QPoint pos) {
 Breadboard::Index Breadboard::getIndex(QPoint pos) {
 	if(!isOnRaster(pos)) {
 		std::cerr << "[Breadboard Raster] Could not calculate index number: position is not on raster." << std::endl;
-		return BB_INDEXES;
+		return invalidRasterIndex();
 	}
 	Index index = (getMinimumPosition(pos) - QPoint(BB_ROW_X, BB_ROW_Y)).y()/iconSizeMinimum();
 	return index<BB_INDEXES?index:index-BB_INDEXES-1;
