@@ -2,6 +2,7 @@
 VBB is a Virtual Breadboard / PCB simultation for Prototyping and Educational Purposes.
 It is featured in [this journal](https://www.mdpi.com/2079-9268/12/4/52/htm) and was originally in the [riscv-vp](https://github.com/agra-uni-bremen/riscv-vp) repository.
 It is however not limited to risc-v specific hardware and thus was moved.
+If you are using thethe Virtual Breadboard GUI in a scientific paper, please cite this journal: https://www.mdpi.com/2079-9268/12/4/52.
 
 It features a TCP protocol that connects GPIO-Modules of virtual Processors to this interactive GUI.
 Devices can be modelled in either C++ or Lua for the speed/flexibility tradeoff.
