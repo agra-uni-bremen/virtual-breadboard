@@ -212,21 +212,25 @@ void Breadboard::registerPin(gpio::PinNumber global, Device::PIN_Interface::Devi
 			return;
 		}
 		auto device_ptr = device->second.get();
-		m_pin_channels.emplace(device_id, PIN_IOF_Request{
+		device_ptr->initializeBuffer();
+		auto req = PIN_IOF_Request{
 				.global_pin = global,
 				.device_pin = device_pin,
 				.fun = [this, device_ptr, device_pin](gpio::Tristate pin) {
 					m_lua_access.lock();
 					device_ptr->m_pin->setPin(device_pin, pin);
 					m_lua_access.unlock();
-				}
-		});
+				}};
+		m_pin_channels.emplace(device_id, req);
+		if(m_embedded->gpioConnected()) {
+			m_embedded->registerIOF_PIN(req.global_pin, req.fun);
+		}
 	}
 	else {
 		PinMapping mapping = PinMapping{
-			.global_pin = global,
-			.device_pin = device_pin,
-			.device = device_id
+				.global_pin = global,
+				.device_pin = device_pin,
+				.device = device_id
 		};
 		if(desc.dir == Device::PIN_Interface::Dir::input || desc.dir == Device::PIN_Interface::Dir::inout) {
 			m_reading_connections.push_back(mapping);
@@ -268,24 +272,29 @@ void Breadboard::registerSPI(gpio::PinNumber global, Device::PIN_Interface::Devi
 		return;
 	}
 	auto device_ptr = device->second.get();
-	m_spi_channels.emplace(device_id, SPI_IOF_Request{
-								   .global_pin = global,
-								   .cs_pin = cs_pin,
-								   .noresponse = noresponse,
-								   .fun = [this, device_ptr](gpio::SPI_Command cmd){
-									   m_lua_access.lock();
-									   const gpio::SPI_Response ret = device_ptr->m_spi->send(cmd);
-									   m_lua_access.unlock();
-									   return ret;
-								   }
-						   }
-	);
+	device_ptr->initializeBuffer();
+	auto req = SPI_IOF_Request{
+			.global_pin = global,
+			.cs_pin = cs_pin,
+			.noresponse = noresponse,
+			.fun = [this, device_ptr](gpio::SPI_Command cmd){
+				m_lua_access.lock();
+				const gpio::SPI_Response ret = device_ptr->m_spi->send(cmd);
+				m_lua_access.unlock();
+				return ret;
+			}};
+	m_spi_channels.emplace(device_id, req);
+	if(m_embedded->gpioConnected()) {
+		m_embedded->registerIOF_SPI(req.global_pin, req.fun, req.noresponse);
+	}
 }
 
 void Breadboard::setSPInoresponse(gpio::PinNumber global, bool noresponse) {
 	for(auto& [device, spi] : m_spi_channels) {
 		if(spi.global_pin == global) {
-			spi.noresponse = noresponse;
+			removeSPI(global, true);
+			registerSPI(global, spi.cs_pin, device, noresponse);
+			break;
 		}
 	}
 }
