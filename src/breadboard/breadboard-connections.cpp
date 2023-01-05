@@ -292,8 +292,10 @@ void Breadboard::registerSPI(gpio::PinNumber global, Device::PIN_Interface::Devi
 void Breadboard::setSPInoresponse(gpio::PinNumber global, bool noresponse) {
 	for(auto& [device, spi] : m_spi_channels) {
 		if(spi.global_pin == global) {
+			Device::PIN_Interface::DevicePin cs_pin = spi.cs_pin;
+			DeviceID device_id = device;
 			removeSPI(global, true);
-			registerSPI(global, spi.cs_pin, device, noresponse);
+			registerSPI(global, cs_pin, device_id, noresponse);
 			break;
 		}
 	}
