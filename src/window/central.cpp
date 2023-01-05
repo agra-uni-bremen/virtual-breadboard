@@ -90,9 +90,6 @@ void Central::loadJSON(const QString& file) {
 		m_embedded->hide();
 	}
 	m_breadboard->updateOverlay();
-	if(m_embedded->gpioConnected()) {
-		m_breadboard->connectionUpdate(true);
-	}
 }
 
 void Central::saveJSON(const QString& file) {
