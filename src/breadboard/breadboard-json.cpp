@@ -30,8 +30,6 @@ void Breadboard::additionalLuaDir(const string& additional_device_dir, bool over
 }
 
 void Breadboard::fromJSON(QJsonObject json) {
-	clear();
-
 	if(json.contains("window") && json["window"].isObject()) {
 		QJsonObject window = json["window"].toObject();
 		unsigned windowsize_x = window["windowsize"].toArray().at(0).toInt();
@@ -73,7 +71,9 @@ void Breadboard::fromJSON(QJsonObject json) {
 			auto device = m_devices.find(id);
 			if(device == m_devices.end()) continue;
 
+			m_lua_access.lock();
 			device->second->fromJSON(device_desc);
+			m_lua_access.unlock();
 
 			if(device_desc.contains("pins") && device_desc["pins"].isArray()) {
 				QJsonArray device_connections = device_desc["pins"].toArray();
@@ -98,6 +98,7 @@ void Breadboard::fromJSON(QJsonObject json) {
 
 		if(debug_logging) {
 			cout << "Instatiated devices:" << endl;
+			m_lua_access.lock();
 			for (auto& [id, device] : m_devices) {
 				cout << "\t" << id << " of class " << device->getClass() << endl;
 				cout << "\t minimum buffer size " << device->getBuffer().width() << "x" << device->getBuffer().height() << " pixel." << endl;
@@ -109,6 +110,7 @@ void Breadboard::fromJSON(QJsonObject json) {
 				if(device->m_conf)
 					cout << "\t\timplements conf" << endl;
 			}
+			m_lua_access.unlock();
 
 			printConnections();
 		}
@@ -128,7 +130,9 @@ QJsonObject Breadboard::toJSON() {
 	}
 	QJsonArray devices_json;
 	for(const auto& [id, device] : m_devices) {
+		m_lua_access.lock();
 		QJsonObject dev_json = device->toJSON();
+		m_lua_access.unlock();
 		unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber> pins = getPinsToDevicePins(id);
 		QJsonArray pins_json;
 		auto sync_pin = m_pin_channels.find(id);

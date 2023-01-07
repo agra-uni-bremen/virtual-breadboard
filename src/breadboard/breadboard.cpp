@@ -93,8 +93,12 @@ QPoint Breadboard::checkDevicePosition(const DeviceID& id, const QImage& buffer,
 
 	for(const auto& [id_it, device_it] : m_devices) {
 		if(id_it == id) continue;
-		if(getDistortedGraphicBounds(device_it->getBuffer(),
-				device_it->getScale()).intersects(device_bounds)) {
+		m_lua_access.lock();
+		auto current_buffer = device_it->getBuffer();
+		auto current_scale = device_it->getScale();
+		m_lua_access.unlock();
+		if(getDistortedGraphicBounds(current_buffer,
+				current_scale).intersects(device_bounds)) {
 			cerr << "[Breadboard] Device position invalid: Overlaps with other device." << endl;
 			return {-1,-1};
 		}
@@ -105,22 +109,29 @@ QPoint Breadboard::checkDevicePosition(const DeviceID& id, const QImage& buffer,
 bool Breadboard::moveDevice(const DeviceID& device_id, QPoint position, QPoint hotspot) {
 	auto device = m_devices.find(device_id);
 	if(device == m_devices.end()) return false;
+	m_lua_access.lock();
 	unsigned scale = device->second->getScale();
 	if(!scale) scale = 1;
-
-	QPoint upper_left = checkDevicePosition(device->second->getID(), device->second->getBuffer(), scale, position, hotspot);
+	auto buffer = device->second->getBuffer();
+	m_lua_access.unlock();
+	QPoint upper_left = checkDevicePosition(device_id, buffer, scale, position, hotspot);
 
 	if(upper_left.x()<0) {
 		cerr << "[Breadboard] New device position is invalid." << endl;
 		return false;
 	}
 
+	m_lua_access.lock();
 	device->second->getBuffer().setOffset(upper_left);
 	device->second->setScale(scale);
+	m_lua_access.unlock();
 
-	if(!device->second->m_pin) return true;
-
+	if(!device->second->m_pin) {
+		return true;
+	}
+	m_lua_access.lock();
 	Device::PIN_Interface::PinLayout device_layout = device->second->m_pin->getPinLayout();
+	m_lua_access.unlock();
 	for(const auto& [device_pin, desc] : device_layout) {
 		Row old_row = getRowForDevicePin(device_id, device_pin);
 		Row new_row;
@@ -196,7 +207,9 @@ bool Breadboard::addDevice(const DeviceClass& classname, QPoint pos, DeviceID id
 	}
 
 	unique_ptr<Device> device = m_factory.instantiateDevice(id, classname);
+	m_lua_access.lock();
 	device->createBuffer(iconSizeMinimum(), pos);
+	m_lua_access.unlock();
 
 	m_devices.insert(make_pair(id, std::move(device)));
 
@@ -211,13 +224,16 @@ bool Breadboard::addDevice(const DeviceClass& classname, QPoint pos, DeviceID id
 /* Context Menu */
 
 void Breadboard::openContextMenu(QPoint pos) {
+	m_lua_access.lock();
 	for(const auto& [id, device] : m_devices) {
 		if(getDistortedGraphicBounds(device->getBuffer(), device->getScale()).contains(pos)) {
 			m_menu_device_id = id;
 			m_devices_menu->popup(mapToGlobal(pos));
+			m_lua_access.unlock();
 			return;
 		}
 	}
+	m_lua_access.unlock();
 	if(isBreadboard()) {
 		for(const auto& [row, content] : m_raster) {
 			for(const auto& pin : content.pins) {
@@ -251,11 +267,19 @@ void Breadboard::scaleActiveDevice() {
 		return;
 	}
 	bool ok;
+	m_lua_access.lock();
+	auto old_scale = device->second->getScale();
+	m_lua_access.unlock();
 	int scale = QInputDialog::getInt(this, "Input new scale value", "Scale",
-									 device->second->getScale(), 1, 10, 1, &ok);
-	if(ok && checkDevicePosition(device->second->getID(), device->second->getBuffer(),
-								 scale, getDistortedPosition(device->second->getBuffer().offset())).x()>=0) {
+									 old_scale, 1, 10, 1, &ok);
+	m_lua_access.lock();
+	auto buffer = device->second->getBuffer();
+	m_lua_access.unlock();
+	if(ok && checkDevicePosition(m_menu_device_id, buffer,
+								 scale, getDistortedPosition(buffer.offset())).x()>=0) {
+		m_lua_access.lock();
 		device->second->setScale(scale);
+		m_lua_access.unlock();
 	}
 	m_menu_device_id = "";
 }
@@ -267,10 +291,12 @@ void Breadboard::openDeviceConfigurations() {
 		m_menu_device_id = "";
 		return;
 	}
+	m_lua_access.lock();
 	if(device->second->m_conf) m_device_configurations->setConfig(m_menu_device_id, device->second->m_conf->getConfig());
 	else m_device_configurations->hideConfig();
 	if(device->second->m_input) m_device_configurations->setKeys(m_menu_device_id, device->second->m_input->getKeys());
 	else m_device_configurations->hideKeys();
+	m_lua_access.unlock();
 	if(device->second->m_pin) {
 		Device::PIN_Interface::DevicePin sync = numeric_limits<Device::PIN_Interface::DevicePin>::max();
 		auto sync_pin = m_pin_channels.find(m_menu_device_id);
@@ -291,7 +317,9 @@ void Breadboard::updateKeybinding(const DeviceID& device_id, Keys keys) {
 		m_error_dialog->showMessage("Device does not implement input interface.");
 		return;
 	}
+	m_lua_access.lock();
 	device->second->m_input->setKeys(keys);
+	m_lua_access.unlock();
 }
 
 void Breadboard::updateConfig(const DeviceID& device_id, Config config) {
@@ -300,7 +328,9 @@ void Breadboard::updateConfig(const DeviceID& device_id, Config config) {
 		m_error_dialog->showMessage("Device does not implement config interface.");
 		return;
 	}
+	m_lua_access.lock();
 	device->second->m_conf->setConfig(config);
+	m_lua_access.unlock();
 }
 
 void Breadboard::updatePins(const DeviceID &device_id, const unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber>& globals, PinDialog::ChangedSync sync) {

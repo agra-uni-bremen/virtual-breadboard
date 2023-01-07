@@ -80,7 +80,7 @@ void Central::loadJSON(const QString& file) {
 		std::cerr << "[Central] Config file missing/malformed entry for breadboard" << std::endl;
 		return;
 	}
-	m_overlay->setCables(QMap<QPoint,QPoint>());
+	m_breadboard->clear();
 	m_embedded->fromJSON(json["embedded"].toObject());
 	m_breadboard->fromJSON(json["breadboard"].toObject());
 	if(m_breadboard->isBreadboard()) {

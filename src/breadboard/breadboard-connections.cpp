@@ -177,11 +177,13 @@ unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber> Breadboard::get
 		}
 	}
 	// invalid for all other device pins
+	m_lua_access.lock();
 	for(const auto& [device_pin, desc] : device->second->m_pin->getPinLayout()) {
 		if(!connected_global.contains(device_pin)) {
 			connected_global.emplace(device_pin, numeric_limits<gpio::PinNumber>::max());
 		}
 	}
+	m_lua_access.unlock();
 	return connected_global;
 }
 
@@ -193,26 +195,30 @@ void Breadboard::registerPin(gpio::PinNumber global, Device::PIN_Interface::Devi
 		return;
 	}
 	if(!device->second->m_pin) {
-		cerr << "[Breadboard] Attempting to add pin connection for device '" << device->second->getClass() <<
+		cerr << "[Breadboard] Attempting to add pin connection for device '" << device_id <<
 			 "', but device does not implement PIN interface." << endl;
 		return;
 	}
+	m_lua_access.lock();
 	const Device::PIN_Interface::PinLayout layout = device->second->m_pin->getPinLayout();
+	m_lua_access.unlock();
 	if(layout.find(device_pin) == layout.end()) {
 		cerr << "[Breadboard] Attempting to add pin '" << (int)device_pin << "' for device " <<
-			 device->second->getClass() << " that is not offered by device" << endl;
+			 device_id << " that is not offered by device" << endl;
 		return;
 	}
 	const Device::PIN_Interface::PinDesc& desc = layout.at(device_pin);
 	if(synchronous) {
 		if(desc.dir != Device::PIN_Interface::Dir::input) {
 			cerr << "[Breadboard] Attempting to add pin '" << (int)device_pin << "' as synchronous for device " <<
-				 device->second->getClass() << ", but device labels pin not as input."
+				 device_id << ", but device labels pin not as input."
 									   " This is not supported for inout-pins and unnecessary for output pins." << endl;
 			return;
 		}
 		auto device_ptr = device->second.get();
+		m_lua_access.lock();
 		device_ptr->initializeBuffer();
+		m_lua_access.unlock();
 		auto req = PIN_IOF_Request{
 				.global_pin = global,
 				.device_pin = device_pin,
@@ -267,12 +273,14 @@ void Breadboard::registerSPI(gpio::PinNumber global, Device::PIN_Interface::Devi
 		return;
 	}
 	if(!device->second->m_spi) {
-		cerr << "[Breadboard] Attempting to add SPI connection for device '" << device->second->getClass() <<
+		cerr << "[Breadboard] Attempting to add SPI connection for device '" << device_id <<
 			 "', but device does not implement SPI interface." << endl;
 		return;
 	}
 	auto device_ptr = device->second.get();
+	m_lua_access.lock();
 	device_ptr->initializeBuffer();
+	m_lua_access.unlock();
 	auto req = SPI_IOF_Request{
 			.global_pin = global,
 			.cs_pin = cs_pin,

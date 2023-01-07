@@ -8,13 +8,13 @@ PinOptions::PinOptions(QWidget *parent) : QDialog(parent) {
 	setWindowTitle("Embedded device options");
 	auto *closeButton = new QPushButton("Close");
 	connect(closeButton, &QAbstractButton::pressed, this, &QDialog::reject);
-	auto *saveButton = new QPushButton("Save");
-	connect(saveButton, &QAbstractButton::pressed, this, &QDialog::accept);
-	saveButton->setDefault(true);
+//	auto *saveButton = new QPushButton("Save");
+//	connect(saveButton, &QAbstractButton::pressed, this, &QDialog::accept);
+//	saveButton->setDefault(true);
 
 	auto *buttons_close = new QHBoxLayout;
 	buttons_close->addWidget(closeButton);
-	buttons_close->addWidget(saveButton);
+//	buttons_close->addWidget(saveButton);
 
 	m_layout = new QFormLayout(this);
 	m_layout->addRow(buttons_close);
@@ -38,6 +38,7 @@ void PinOptions::addPin(gpio::PinNumber global, const GPIOPin& pin) {
 		if(iof.type == IOFType::SPI) {
 			auto *box = new QCheckBox(iof_label);
 			box->setChecked(iof.active);
+			box->setDisabled(true);
 			connect(box, &QCheckBox::stateChanged, [this, global, iof](int state) {
 				m_pins_output.remove_if([global, iof](auto iof_pair) {
 					return iof_pair.first == global && iof_pair.second.type == iof.type;
