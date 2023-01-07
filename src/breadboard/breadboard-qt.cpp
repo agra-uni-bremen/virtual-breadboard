@@ -28,7 +28,9 @@ void Breadboard::keyPressEvent(QKeyEvent *e) {
 		default:
 			for(const auto& [id, device] : m_devices) {
 				if(device->m_input) {
+					m_lua_access.lock();
 					Keys device_keys = device->m_input->getKeys();
+					m_lua_access.unlock();
 					if(device_keys.find(e->key()) != device_keys.end()) {
 						m_lua_access.lock();
 						device->m_input->onKeypress(e->key(), true);
@@ -48,7 +50,9 @@ void Breadboard::keyReleaseEvent(QKeyEvent *e)
 	if(!m_debugmode) {
 		for(const auto& [id, device] : m_devices) {
 			if(device->m_input) {
+				m_lua_access.lock();
 				Keys device_keys = device->m_input->getKeys();
+				m_lua_access.unlock();
 				if(device_keys.find(e->key()) != device_keys.end()) {
 					m_lua_access.lock();
 					device->m_input->onKeypress(e->key(), false);
@@ -63,8 +67,10 @@ void Breadboard::keyReleaseEvent(QKeyEvent *e)
 
 void Breadboard::mousePressEvent(QMouseEvent *e) {
 	for(const auto& [id, device] : m_devices) {
+		m_lua_access.lock();
 		QImage buffer = device->getBuffer();
 		unsigned scale = device->getScale();
+		m_lua_access.unlock();
 		if(!scale) scale = 1;
 		QRect buffer_bounds = getDistortedGraphicBounds(buffer, scale);
 		if(buffer_bounds.contains(e->pos()) && e->button() == Qt::LeftButton)  {
@@ -118,6 +124,7 @@ void Breadboard::mouseReleaseEvent(QMouseEvent *e) {
 
 void Breadboard::mouseMoveEvent(QMouseEvent *e) {
 	bool device_hit = false;
+	m_lua_access.lock();
 	for(const auto& [id, device] : m_devices) {
 		QRect device_bounds = getDistortedGraphicBounds(device->getBuffer(), device->getScale());
 		if(device_bounds.contains(e->pos())) {
@@ -129,6 +136,7 @@ void Breadboard::mouseMoveEvent(QMouseEvent *e) {
 			device_hit = true;
 		}
 	}
+	m_lua_access.unlock();
 	if(!device_hit) {
 		QCursor current_cursor = cursor();
 		current_cursor.setShape(Qt::ArrowCursor);
@@ -261,6 +269,7 @@ void Breadboard::paintEvent(QPaintEvent*) {
 	}
 
 	// Graph Buffers
+	m_lua_access.lock();
 	for (auto& [id, device] : m_devices) {
 		QImage buffer = device->getBuffer();
 		QRect graphic_bounds = getDistortedGraphicBounds(buffer, device->getScale());
@@ -269,6 +278,7 @@ void Breadboard::paintEvent(QPaintEvent*) {
 			painter.drawRect(graphic_bounds);
 		}
 	}
+	m_lua_access.unlock();
 
 	painter.end();
 }
