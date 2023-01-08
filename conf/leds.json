@@ -1,165 +1,402 @@
 {
-    "devices": [
-        {
-            "class": "LED",
-            "conf": {
-                "colour_b": 255,
-                "colour_g": 255,
-                "colour_r": 10
+    "breadboard": {
+        "devices": [
+            {
+                "class": "LED",
+                "conf": {
+                    "colour_b": 255,
+                    "colour_g": 100,
+                    "colour_r": 10
+                },
+                "graphics": {
+                    "offs": [
+                        197,
+                        86
+                    ],
+                    "scale": 1
+                },
+                "id": "5",
+                "pins": [
+                    {
+                        "device_pin": 1,
+                        "global_pin": 6,
+                        "name": "dialog"
+                    }
+                ]
             },
-            "graphics": {
-                "offs": [
-                    185,
-                    62
+            {
+                "class": "LED",
+                "conf": {
+                    "colour_b": 10,
+                    "colour_g": 255,
+                    "colour_r": 10
+                },
+                "graphics": {
+                    "offs": [
+                        173,
+                        86
+                    ],
+                    "scale": 1
+                },
+                "id": "4",
+                "pins": [
+                    {
+                        "device_pin": 1,
+                        "global_pin": 16,
+                        "name": "dialog"
+                    }
+                ]
+            },
+            {
+                "class": "LED",
+                "conf": {
+                    "colour_b": 255,
+                    "colour_g": 255,
+                    "colour_r": 10
+                },
+                "graphics": {
+                    "offs": [
+                        149,
+                        86
+                    ],
+                    "scale": 1
+                },
+                "id": "3",
+                "pins": [
+                    {
+                        "device_pin": 1,
+                        "global_pin": 18,
+                        "name": "dialog"
+                    }
+                ]
+            },
+            {
+                "class": "LED",
+                "conf": {
+                    "colour_b": 10,
+                    "colour_g": 10,
+                    "colour_r": 255
+                },
+                "graphics": {
+                    "offs": [
+                        125,
+                        86
+                    ],
+                    "scale": 1
+                },
+                "id": "2",
+                "pins": [
+                    {
+                        "device_pin": 1,
+                        "global_pin": 17,
+                        "name": "dialog"
+                    }
+                ]
+            },
+            {
+                "class": "LED",
+                "conf": {
+                    "colour_b": 255,
+                    "colour_g": 10,
+                    "colour_r": 255
+                },
+                "graphics": {
+                    "offs": [
+                        101,
+                        86
+                    ],
+                    "scale": 1
+                },
+                "id": "1",
+                "pins": [
+                    {
+                        "device_pin": 1,
+                        "global_pin": 19,
+                        "name": "dialog"
+                    }
+                ]
+            },
+            {
+                "class": "LED",
+                "conf": {
+                    "colour_b": 255,
+                    "colour_g": 10,
+                    "colour_r": 10
+                },
+                "graphics": {
+                    "offs": [
+                        221,
+                        86
+                    ],
+                    "scale": 1
+                },
+                "id": "6",
+                "pins": [
+                    {
+                        "device_pin": 1,
+                        "global_pin": 15,
+                        "name": "dialog"
+                    }
+                ]
+            },
+            {
+                "class": "LED",
+                "conf": {
+                    "colour_b": 10,
+                    "colour_g": 255,
+                    "colour_r": 255
+                },
+                "graphics": {
+                    "offs": [
+                        77,
+                        86
+                    ],
+                    "scale": 1
+                },
+                "id": "0",
+                "pins": [
+                    {
+                        "device_pin": 1,
+                        "global_pin": 7,
+                        "name": "dialog"
+                    }
+                ]
+            }
+        ]
+    },
+    "embedded": {
+        "pins": [
+            {
+                "global": 19,
+                "gpio_offs": 13,
+                "iofs": [
+                    {
+                        "active": false,
+                        "type": "PWM"
+                    }
                 ],
-                "scale": 2
+                "pos_x": 150,
+                "pos_y": 0
             },
-            "id": "led_turquoise",
-            "pins": [
-                {
-                    "device_pin": 1,
-                    "global_pin": 7,
-                    "name": "led_pin"
-                }
-            ]
-        },
-        {
-            "class": "LED",
-            "conf": {
-                "colour_b": 255,
-                "colour_g": 10,
-                "colour_r": 255
-            },
-            "graphics": {
-                "offs": [
-                    149,
-                    62
+            {
+                "global": 18,
+                "gpio_offs": 12,
+                "iofs": [
+                    {
+                        "active": false,
+                        "type": "PWM"
+                    }
                 ],
-                "scale": 2
+                "pos_x": 130,
+                "pos_y": 0
             },
-            "id": "led_purple",
-            "pins": [
-                {
-                    "device_pin": 1,
-                    "global_pin": 19,
-                    "name": "led_pin"
-                }
-            ]
-        },
-        {
-            "class": "LED",
-            "conf": {
-                "colour_b": 255,
-                "colour_g": 10,
-                "colour_r": 10
-            },
-            "graphics": {
-                "offs": [
-                    77,
-                    62
+            {
+                "global": 17,
+                "gpio_offs": 11,
+                "iofs": [
+                    {
+                        "active": false,
+                        "type": "PWM"
+                    }
                 ],
-                "scale": 2
+                "pos_x": 110,
+                "pos_y": 0
             },
-            "id": "led_blue",
-            "pins": [
-                {
-                    "device_pin": 1,
-                    "global_pin": 17,
-                    "name": "led_pin"
-                }
-            ]
-        },
-        {
-            "class": "LED",
-            "conf": {
-                "colour_b": 10,
-                "colour_g": 255,
-                "colour_r": 255
-            },
-            "graphics": {
-                "offs": [
-                    113,
-                    62
+            {
+                "global": 16,
+                "gpio_offs": 10,
+                "iofs": [
+                    {
+                        "active": false,
+                        "type": "SPI"
+                    },
+                    {
+                        "active": false,
+                        "type": "PWM"
+                    }
                 ],
-                "scale": 2
+                "pos_x": 90,
+                "pos_y": 0
             },
-            "id": "led_yellow",
-            "pins": [
-                {
-                    "device_pin": 1,
-                    "global_pin": 18,
-                    "name": "led_pin"
-                }
-            ]
-        },
-        {
-            "class": "LED",
-            "conf": {
-                "colour_b": 10,
-                "colour_g": 255,
-                "colour_r": 10
-            },
-            "graphics": {
-                "offs": [
-                    41,
-                    62
+            {
+                "global": 15,
+                "gpio_offs": 9,
+                "iofs": [
+                    {
+                        "active": false,
+                        "type": "SPI"
+                    }
                 ],
-                "scale": 2
+                "pos_x": 70,
+                "pos_y": 0
             },
-            "id": "led_green",
-            "pins": [
-                {
-                    "device_pin": 1,
-                    "global_pin": 16,
-                    "name": "led_pin"
-                }
-            ]
-        },
-        {
-            "class": "LED",
-            "conf": {
-                "colour_b": 10,
-                "colour_g": 100,
-                "colour_r": 255
-            },
-            "graphics": {
-                "offs": [
-                    221,
-                    62
+            {
+                "global": 13,
+                "gpio_offs": 5,
+                "iofs": [
+                    {
+                        "active": false,
+                        "type": "SPI"
+                    }
                 ],
-                "scale": 2
+                "pos_x": 330,
+                "pos_y": 185
             },
-            "id": "led_orange",
-            "pins": [
-                {
-                    "device_pin": 1,
-                    "global_pin": 6,
-                    "name": "led_pin"
-                }
-            ]
-        },
-        {
-            "class": "LED",
-            "conf": {
-                "colour_b": 10,
-                "colour_g": 10,
-                "colour_r": 255
-            },
-            "graphics": {
-                "offs": [
-                    5,
-                    62
+            {
+                "global": 0,
+                "gpio_offs": 16,
+                "iofs": [
+                    {
+                        "active": false,
+                        "type": "UART"
+                    }
                 ],
-                "scale": 2
+                "pos_x": 70,
+                "pos_y": 185
             },
-            "id": "led_red",
-            "pins": [
-                {
-                    "device_pin": 1,
-                    "global_pin": 15,
-                    "name": "led_pin"
-                }
+            {
+                "global": 1,
+                "gpio_offs": 17,
+                "iofs": [
+                    {
+                        "active": false,
+                        "type": "UART"
+                    }
+                ],
+                "pos_x": 90,
+                "pos_y": 185
+            },
+            {
+                "global": 2,
+                "gpio_offs": 18,
+                "pos_x": 110,
+                "pos_y": 185
+            },
+            {
+                "global": 3,
+                "gpio_offs": 19,
+                "iofs": [
+                    {
+                        "active": false,
+                        "type": "PWM"
+                    }
+                ],
+                "pos_x": 130,
+                "pos_y": 185
+            },
+            {
+                "global": 4,
+                "gpio_offs": 20,
+                "iofs": [
+                    {
+                        "active": false,
+                        "type": "PWM"
+                    }
+                ],
+                "pos_x": 150,
+                "pos_y": 185
+            },
+            {
+                "global": 5,
+                "gpio_offs": 21,
+                "iofs": [
+                    {
+                        "active": false,
+                        "type": "PWM"
+                    }
+                ],
+                "pos_x": 170,
+                "pos_y": 185
+            },
+            {
+                "global": 6,
+                "gpio_offs": 22,
+                "iofs": [
+                    {
+                        "active": false,
+                        "type": "PWM"
+                    }
+                ],
+                "pos_x": 190,
+                "pos_y": 185
+            },
+            {
+                "global": 7,
+                "gpio_offs": 23,
+                "pos_x": 210,
+                "pos_y": 185
+            },
+            {
+                "global": 8,
+                "gpio_offs": 0,
+                "iofs": [
+                    {
+                        "active": false,
+                        "type": "PWM"
+                    }
+                ],
+                "pos_x": 230,
+                "pos_y": 185
+            },
+            {
+                "global": 9,
+                "gpio_offs": 1,
+                "iofs": [
+                    {
+                        "active": false,
+                        "type": "PWM"
+                    }
+                ],
+                "pos_x": 250,
+                "pos_y": 185
+            },
+            {
+                "global": 10,
+                "gpio_offs": 2,
+                "iofs": [
+                    {
+                        "active": false,
+                        "type": "PWM"
+                    },
+                    {
+                        "active": false,
+                        "type": "SPI"
+                    }
+                ],
+                "pos_x": 270,
+                "pos_y": 185
+            },
+            {
+                "global": 11,
+                "gpio_offs": 3,
+                "iofs": [
+                    {
+                        "active": false,
+                        "type": "PWM"
+                    }
+                ],
+                "pos_x": 290,
+                "pos_y": 185
+            },
+            {
+                "global": 12,
+                "gpio_offs": 4,
+                "iofs": [
+                    {
+                        "active": false,
+                        "type": "SPI"
+                    }
+                ],
+                "pos_x": 310,
+                "pos_y": 185
+            }
+        ],
+        "window": {
+            "background": ":/img/virtual_hifive.png",
+            "windowsize": [
+                420,
+                231
             ]
         }
-    ]
+    }
 }

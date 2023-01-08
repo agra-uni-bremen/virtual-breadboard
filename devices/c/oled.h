@@ -40,7 +40,7 @@ public:
 	class OLED_PIN : public CDevice::PIN_Interface_C {
 	public:
 		OLED_PIN(CDevice* device);
-		void setPin(PinNumber num, gpio::Tristate val) override;
+		void setPin(DevicePin num, gpio::Tristate val) override;
 	};
 
 	class OLED_SPI : public CDevice::SPI_Interface_C {

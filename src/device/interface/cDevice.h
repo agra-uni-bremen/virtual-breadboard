@@ -14,8 +14,8 @@ public:
 		PIN_Interface_C(CDevice* device);
 		~PIN_Interface_C();
 		PinLayout getPinLayout() override;
-		gpio::Tristate getPin(PinNumber num) override; // implement this
-		void setPin(PinNumber num, gpio::Tristate val) override;	// implement this
+		gpio::Tristate getPin(DevicePin num) override; // implement this
+		void setPin(DevicePin num, gpio::Tristate val) override;	// implement this
 	};
 
 	class SPI_Interface_C : public Device::SPI_Interface {

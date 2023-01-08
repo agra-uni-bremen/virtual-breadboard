@@ -11,22 +11,6 @@
 typedef int Key;
 typedef std::set<Key> Keys;
 
-// PIN_Interface
-
-typedef unsigned PinNumber;
-
-struct PinDesc {
-	enum class Dir {
-		input,
-		output,
-		inout
-	} dir;
-	// TODO: In future, add 'type' for analog values/pwm?
-	std::string name;
-};
-
-typedef std::unordered_map<PinNumber,PinDesc> PinLayout; // device pin
-
 //ConfigInterface
 
 struct ConfigElem {

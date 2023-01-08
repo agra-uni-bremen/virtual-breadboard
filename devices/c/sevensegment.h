@@ -12,12 +12,12 @@ public:
 	const DeviceClass getClass() const override;
 
 	void initializeBuffer() override;
-	void draw(PinNumber num, bool val);
+	void draw(PIN_Interface::DevicePin num, bool val);
 
 	class Segment_PIN : public CDevice::PIN_Interface_C {
 	public:
 		Segment_PIN(CDevice* device);
-		void setPin(PinNumber num, gpio::Tristate val) override;
+		void setPin(DevicePin num, gpio::Tristate val) override;
 	};
 };
 

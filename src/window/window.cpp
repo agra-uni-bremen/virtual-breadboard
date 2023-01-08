@@ -11,7 +11,7 @@ MainWindow::MainWindow(const std::string& additional_device_dir,
 		bool overwrite_integrated_devices, QWidget *parent) : QMainWindow(parent) {
 	setWindowTitle("MainWindow");
 
-    m_central = new Central(host, port, this);
+	m_central = new Central(host, port, this);
 	m_central->loadLUA(additional_device_dir, overwrite_integrated_devices);
 	setCentralWidget(m_central);
 	connect(m_central, &Central::connectionUpdate, [this](bool active){
@@ -38,7 +38,7 @@ void MainWindow::saveJSON(const QString& file) {
 
 void MainWindow::removeJsonDir(const QString& dir) {
 	auto dir_menu = std::find_if(m_json_dirs.begin(), m_json_dirs.end(),
-                                 [dir](QMenu* menu){return menu->title() == dir;});
+								 [dir](QMenu* menu){return menu->title() == dir;});
 	if(dir_menu == m_json_dirs.end()) return;
 	statusBar()->showMessage("Remove JSON directory", 10000);
 	QAction* json_dir_action = (*dir_menu)->menuAction();
@@ -49,7 +49,7 @@ void MainWindow::removeJsonDir(const QString& dir) {
 void MainWindow::loadJsonDirEntries(const QString& dir) {
 	QString title = dir.startsWith(":") ? "Integrated" : dir;
 	auto dir_menu = std::find_if(m_json_dirs.begin(), m_json_dirs.end(),
-                                 [title](QMenu* menu){ return menu->title() == title; });
+								 [title](QMenu* menu){ return menu->title() == title; });
 	if(dir_menu == m_json_dirs.end()) return;
 	QDirIterator it(dir, {"*.json"}, QDir::Files);
 	if(!it.hasNext()) {
@@ -63,7 +63,7 @@ void MainWindow::loadJsonDirEntries(const QString& dir) {
 	}
 	while(it.hasNext()) {
 		QString file = it.next();
-        auto *cur = new QAction(file.right(file.size()-(dir.size() + 1)));
+		auto *cur = new QAction(file.right(file.size()-(dir.size() + 1)));
 		connect(cur, &QAction::triggered, [this, file](){
 			loadJSON(file);
 		});
@@ -73,7 +73,7 @@ void MainWindow::loadJsonDirEntries(const QString& dir) {
 
 void MainWindow::addJsonDir(const QString& dir) {
 	if(std::find_if(m_json_dirs.begin(), m_json_dirs.end(),
-                    [dir](QMenu* menu){return menu->title() == dir;}) != m_json_dirs.end()) return;
+					[dir](QMenu* menu){return menu->title() == dir;}) != m_json_dirs.end()) return;
 	statusBar()->showMessage("Add JSON directory " + dir, 10000);
 	auto dir_menu = new QMenu(dir.startsWith(":") ? "Integrated" : dir, m_config);
 	m_json_dirs.push_back(dir_menu);
@@ -95,7 +95,7 @@ void MainWindow::addJsonDir(const QString& dir) {
 }
 
 void MainWindow::createDropdown() {
-    m_config = menuBar()->addMenu("Config");
+	m_config = menuBar()->addMenu("Config");
 	auto load_config_file = new QAction("Load JSON file");
 	load_config_file->setShortcut(QKeySequence(QKeySequence::Open));
 	connect(load_config_file, &QAction::triggered, [this](){
@@ -128,7 +128,7 @@ void MainWindow::createDropdown() {
 	m_config->addSeparator();
 	addJsonDir(":/conf");
 
-    m_lua = menuBar()->addMenu("LUA");
+	m_lua = menuBar()->addMenu("LUA");
 	auto add_lua_dir = new QAction("Add directory");
 	connect(add_lua_dir, &QAction::triggered, [this](){
 		QString path = QFileDialog::getExistingDirectory(parentWidget(), "Open Directory",
@@ -151,6 +151,9 @@ void MainWindow::createDropdown() {
 		m_debug_label->setText(m_central->toggleDebug() ? "Debug" : "");
 	});
 	window->addAction(debug);
+	auto embedded_options = new QAction("GPIO Pins");
+	connect(embedded_options, &QAction::triggered, m_central, &Central::openEmbeddedOptions);
+	window->addAction(embedded_options);
 	window->addSeparator();
 	auto quit = new QAction("Quit");
 	quit->setShortcut(QKeySequence(QKeySequence::Quit));
@@ -160,8 +163,8 @@ void MainWindow::createDropdown() {
 	});
 	window->addAction(quit);
 
-    m_debug_label = new QLabel();
+	m_debug_label = new QLabel();
 	statusBar()->addPermanentWidget(m_debug_label);
-    m_connection_label = new QLabel("Disconnected");
+	m_connection_label = new QLabel("Disconnected");
 	statusBar()->addPermanentWidget(m_connection_label);
 }

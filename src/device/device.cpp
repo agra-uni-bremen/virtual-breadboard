@@ -64,8 +64,10 @@ void Device::fromJSON(QJsonObject json) {
 
 	if(json.contains("graphics") && json["graphics"].isObject()) {
 		QJsonObject graphics = json["graphics"].toObject();
-		unsigned scale = graphics["scale"].toInt();
-		setScale(scale);
+		if(graphics.contains("scale") && graphics["scale"].isDouble()) {
+			unsigned scale = graphics["scale"].toInt();
+			setScale(scale);
+		}
 	}
 	else {
 		std::cerr << "[Device] Config does not specify scale and position correctly." << std::endl;
@@ -87,7 +89,7 @@ QJsonObject Device::toJSON() {
 
 	if(m_conf) {
 		QJsonObject conf_json;
-		for(auto const& [desc, elem] : m_conf->getConfig()) {
+		for(const auto& [desc, elem] : m_conf->getConfig()) {
 			if(elem.type == ConfigElem::Type::integer) {
 				conf_json[QString::fromStdString(desc)] = (int) elem.value.integer;
 			}
@@ -114,21 +116,21 @@ QJsonObject Device::toJSON() {
 }
 
 Device::Layout Device::getLayout() {
-       return {};
+	   return {};
 }
 
 void Device::initializeBuffer() {
-    QPoint offset = m_buffer.offset();
-    QSize size = m_buffer.size();
-    m_buffer = QImage(":/img/default.png");
-    m_buffer = m_buffer.scaled(size);
-    m_buffer.setOffset(offset);
+	QPoint offset = m_buffer.offset();
+	QSize size = m_buffer.size();
+	m_buffer = QImage(":/img/default.png");
+	m_buffer = m_buffer.scaled(size);
+	m_buffer.setOffset(offset);
 }
 
 void Device::createBuffer(unsigned iconSizeMinimum, QPoint offset) {
 	if(!m_buffer.isNull()) return;
 	Layout layout = getLayout();
-    m_buffer = QImage(layout.width * iconSizeMinimum, layout.height * iconSizeMinimum, QImage::Format_RGBA8888);
+	m_buffer = QImage(layout.width * iconSizeMinimum, layout.height * iconSizeMinimum, QImage::Format_RGBA8888);
 	m_buffer.setOffset(offset);
 	initializeBuffer();
 }

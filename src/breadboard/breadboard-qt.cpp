@@ -15,20 +15,22 @@ void Breadboard::keyPressEvent(QKeyEvent *e) {
 		case Qt::Key_0: {
 			uint8_t until = 6;
 			for (uint8_t i = 0; i < 8; i++) {
-				emit(setBit(i, i < until ? gpio::Tristate::HIGH : gpio::Tristate::LOW));
+				m_embedded->setBit(i, i < until ? gpio::Tristate::HIGH : gpio::Tristate::LOW);
 			}
 			break;
 		}
 		case Qt::Key_1: {
 			for (uint8_t i = 0; i < 8; i++) {
-				emit(setBit(i, gpio::Tristate::LOW));
+				m_embedded->setBit(i, gpio::Tristate::LOW);
 			}
 			break;
 		}
 		default:
-			for(auto const& [id, device] : m_devices) {
+			for(const auto& [id, device] : m_devices) {
 				if(device->m_input) {
+					m_lua_access.lock();
 					Keys device_keys = device->m_input->getKeys();
+					m_lua_access.unlock();
 					if(device_keys.find(e->key()) != device_keys.end()) {
 						m_lua_access.lock();
 						device->m_input->onKeypress(e->key(), true);
@@ -46,9 +48,11 @@ void Breadboard::keyPressEvent(QKeyEvent *e) {
 void Breadboard::keyReleaseEvent(QKeyEvent *e)
 {
 	if(!m_debugmode) {
-		for(auto const& [id, device] : m_devices) {
+		for(const auto& [id, device] : m_devices) {
 			if(device->m_input) {
+				m_lua_access.lock();
 				Keys device_keys = device->m_input->getKeys();
+				m_lua_access.unlock();
 				if(device_keys.find(e->key()) != device_keys.end()) {
 					m_lua_access.lock();
 					device->m_input->onKeypress(e->key(), false);
@@ -62,9 +66,11 @@ void Breadboard::keyReleaseEvent(QKeyEvent *e)
 }
 
 void Breadboard::mousePressEvent(QMouseEvent *e) {
-	for(auto const& [id, device] : m_devices) {
+	for(const auto& [id, device] : m_devices) {
+		m_lua_access.lock();
 		QImage buffer = device->getBuffer();
 		unsigned scale = device->getScale();
+		m_lua_access.unlock();
 		if(!scale) scale = 1;
 		QRect buffer_bounds = getDistortedGraphicBounds(buffer, scale);
 		if(buffer_bounds.contains(e->pos()) && e->button() == Qt::LeftButton)  {
@@ -78,7 +84,7 @@ void Breadboard::mousePressEvent(QMouseEvent *e) {
 				buffer = buffer.scaled(buffer_bounds.size());
 
 				auto *mimeData = new QMimeData;
-				mimeData->setData(DEVICE_DRAG_TYPE, itemData);
+				mimeData->setData(DRAG_TYPE_DEVICE, itemData);
 				auto *drag = new QDrag(this);
 				drag->setMimeData(mimeData);
 				drag->setPixmap(QPixmap::fromImage(buffer));
@@ -101,7 +107,7 @@ void Breadboard::mousePressEvent(QMouseEvent *e) {
 }
 
 void Breadboard::mouseReleaseEvent(QMouseEvent *e) {
-	for(auto const& [id, device] : m_devices) {
+	for(const auto& [id, device] : m_devices) {
 		if(e->button() == Qt::LeftButton) {
 			if(!m_debugmode) {
 				if(device->m_input) {
@@ -118,7 +124,8 @@ void Breadboard::mouseReleaseEvent(QMouseEvent *e) {
 
 void Breadboard::mouseMoveEvent(QMouseEvent *e) {
 	bool device_hit = false;
-	for(auto const& [id, device] : m_devices) {
+	m_lua_access.lock();
+	for(const auto& [id, device] : m_devices) {
 		QRect device_bounds = getDistortedGraphicBounds(device->getBuffer(), device->getScale());
 		if(device_bounds.contains(e->pos())) {
 			QCursor current_cursor = cursor();
@@ -129,6 +136,7 @@ void Breadboard::mouseMoveEvent(QMouseEvent *e) {
 			device_hit = true;
 		}
 	}
+	m_lua_access.unlock();
 	if(!device_hit) {
 		QCursor current_cursor = cursor();
 		current_cursor.setShape(Qt::ArrowCursor);
@@ -139,7 +147,7 @@ void Breadboard::mouseMoveEvent(QMouseEvent *e) {
 /* Drag and Drop */
 
 void Breadboard::dragMoveEvent(QDragMoveEvent *e) {
-	if(e->mimeData()->hasFormat(DEVICE_DRAG_TYPE) && (isBreadboard()?isOnRaster(e->pos()):true)) {
+	if((e->mimeData()->hasFormat(DRAG_TYPE_DEVICE) || e->mimeData()->hasFormat(DRAG_TYPE_CABLE)) && (isBreadboard() ? isOnRaster(e->pos()) : true)) {
 		e->acceptProposedAction();
 	} else {
 		e->ignore();
@@ -147,7 +155,7 @@ void Breadboard::dragMoveEvent(QDragMoveEvent *e) {
 }
 
 void Breadboard::dragEnterEvent(QDragEnterEvent *e)  {
-	if(e->mimeData()->hasFormat(DEVICE_DRAG_TYPE)) {
+	if((e->mimeData()->hasFormat(DRAG_TYPE_DEVICE) || e->mimeData()->hasFormat(DRAG_TYPE_CABLE))) {
 		e->acceptProposedAction();
 	} else {
 		e->ignore();
@@ -155,22 +163,42 @@ void Breadboard::dragEnterEvent(QDragEnterEvent *e)  {
 }
 
 void Breadboard::dropEvent(QDropEvent *e) {
-	if(e->mimeData()->hasFormat(DEVICE_DRAG_TYPE)) {
-		QByteArray itemData = e->mimeData()->data(DEVICE_DRAG_TYPE);
+	if(e->mimeData()->hasFormat(DRAG_TYPE_DEVICE)) {
+		QByteArray itemData = e->mimeData()->data(DRAG_TYPE_DEVICE);
 		QDataStream dataStream(&itemData, QIODevice::ReadOnly);
 
 		QString q_id;
 		QPoint hotspot;
 		dataStream >> q_id >> hotspot;
 
-		if(moveDevice(m_devices.at(q_id.toStdString()).get(), e->pos(), hotspot)) {
+		if(moveDevice(q_id.toStdString(), e->pos(), hotspot)) {
 			e->acceptProposedAction();
 		} else {
 			e->ignore();
 		}
 
 		e->acceptProposedAction();
-	} else {
+	}
+	else if(e->mimeData()->hasFormat(DRAG_TYPE_CABLE)) {
+		QByteArray itemData = e->mimeData()->data(DRAG_TYPE_CABLE);
+		QDataStream dataStream(&itemData, QIODevice::ReadOnly);
+
+		quint8 q_pin;
+		dataStream >> q_pin;
+		auto pin = (gpio::PinNumber) q_pin;
+
+		const auto [row, index] = getRasterPosition(e->pos());
+		if(isValidRasterRow(row) && isValidRasterIndex(index)) {
+			addPinToRow(row, index, pin, "cable");
+			updateOverlay();
+			e->acceptProposedAction();
+		}
+		else {
+			cerr << "[Breadboard] Attempted to add cable in invalid position" << endl;
+			e->ignore();
+		}
+	}
+	else {
 		cerr << "[Breadboard] New device position invalid: Invalid Mime data type." << endl;
 		e->ignore();
 	}
@@ -180,6 +208,31 @@ void Breadboard::dropEvent(QDropEvent *e) {
 
 void Breadboard::resizeEvent(QResizeEvent*) {
 	updateBackground();
+	updateOverlay();
+}
+
+inline bool operator<(const QPoint &p1, const QPoint &p2)
+{
+	if(p1.x() != p2.x()) {
+		return p1.x() < p2.x();
+	}
+	return p1.y() < p2.y();
+}
+
+void Breadboard::updateOverlay() {
+	if(!isBreadboard()) return;
+	QMap<QPoint,QPoint> qt_cables;
+	for(const auto& [row, content] : m_raster) {
+		for(const auto& pin : content.pins) {
+			const QPoint pos_bb = this->mapToParent(getAbsolutePosition(row, pin.index)+
+					getDistortedPosition(QPoint(iconSizeMinimum()/2,iconSizeMinimum()/2)));
+			const QPoint pos_embedded = m_embedded->mapToParent(m_embedded->getDistortedPositionPin(pin.global_pin)+
+					m_embedded->getDistortedPosition(QPoint(m_embedded->iconSizeMinimum()/2, m_embedded->iconSizeMinimum()/2)));
+			qt_cables.insert(pos_bb, pos_embedded);
+		}
+	}
+	m_overlay->setCables(qt_cables);
+	m_overlay->update();
 }
 
 void Breadboard::paintEvent(QPaintEvent*) {
@@ -197,6 +250,15 @@ void Breadboard::paintEvent(QPaintEvent*) {
 						getDistortedSize(QSize(iconSizeMinimum(),iconSizeMinimum()))));
 			}
 		}
+		QColor red("red");
+		red.setAlphaF(0.5);
+		painter.setBrush(QBrush(red));
+		for(const auto& [row, content] : m_raster) {
+			for(const auto& pin : content.pins) {
+				painter.drawRect(QRect(getAbsolutePosition(row, pin.index),
+									   getDistortedSize(QSize(iconSizeMinimum(), iconSizeMinimum()))));
+			}
+		}
 		painter.restore();
 	}
 
@@ -207,6 +269,7 @@ void Breadboard::paintEvent(QPaintEvent*) {
 	}
 
 	// Graph Buffers
+	m_lua_access.lock();
 	for (auto& [id, device] : m_devices) {
 		QImage buffer = device->getBuffer();
 		QRect graphic_bounds = getDistortedGraphicBounds(buffer, device->getScale());
@@ -215,6 +278,7 @@ void Breadboard::paintEvent(QPaintEvent*) {
 			painter.drawRect(graphic_bounds);
 		}
 	}
+	m_lua_access.unlock();
 
 	painter.end();
 }
