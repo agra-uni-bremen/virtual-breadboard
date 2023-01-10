@@ -7,7 +7,7 @@
 #include <QDialog>
 #include <QTabWidget>
 
-class DeviceConfigurations : public QDialog {
+class DeviceConfiguration : public QDialog {
 	Q_OBJECT
 
 	QTabWidget *m_tabs;
@@ -18,7 +18,7 @@ class DeviceConfigurations : public QDialog {
 	void hide(int);
 
 public:
-	DeviceConfigurations(QWidget *parent);
+	DeviceConfiguration(QWidget *parent);
 	void setConfig(DeviceID device, const Config& config);
 	void hideConfig();
 	void setKeys(DeviceID device, const Keys& keys);

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "constants.h"
-#include "dialog/device_configurations.h"
+#include "dialog/device_configuration.h"
 #include "overlay.h"
 
 #include <factory/factory.h>
@@ -82,7 +82,7 @@ class Breadboard : public QWidget {
 	QMenu *m_devices_menu;
 	gpio::PinNumber m_menu_pin;
 	QMenu *m_pin_menu;
-	DeviceConfigurations *m_device_configurations;
+	DeviceConfiguration *m_device_configuration;
 	QErrorMessage *m_error_dialog;
 	QMenu *m_bb_menu;
 
@@ -189,7 +189,7 @@ private slots:
 	void openContextMenu(QPoint pos);
 	void removeActiveDevice();
 	void scaleActiveDevice();
-	void openDeviceConfigurations();
+	void openDeviceConfiguration();
 	void updateKeybinding(const DeviceID& device, Keys keys);
 	void updateConfig(const DeviceID& device, Config config);
 	void updatePins(const DeviceID& device, const std::unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber>& globals, PinDialog::ChangedSync sync);
