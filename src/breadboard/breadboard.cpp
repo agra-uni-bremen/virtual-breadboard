@@ -23,19 +23,19 @@ Breadboard::Breadboard() : QWidget() {
 	auto *scale_device = new QAction("Scale");
 	connect(scale_device, &QAction::triggered, this, &Breadboard::scaleActiveDevice);
 	m_devices_menu->addAction(scale_device);
-	auto *open_configurations = new QAction("Device Configurations");
-	connect(open_configurations, &QAction::triggered, this, &Breadboard::openDeviceConfigurations);
-	m_devices_menu->addAction(open_configurations);
+	auto *open_configuration = new QAction("Device Configuration");
+	connect(open_configuration, &QAction::triggered, this, &Breadboard::openDeviceConfiguration);
+	m_devices_menu->addAction(open_configuration);
 
 	m_pin_menu = new QMenu(this);
 	auto *delete_pin = new QAction("Remove");
 	connect(delete_pin, &QAction::triggered, this, &Breadboard::removePinTriggered);
 	m_pin_menu->addAction(delete_pin);
 
-	m_device_configurations = new DeviceConfigurations(this);
-	connect(m_device_configurations, &DeviceConfigurations::keysChanged, this, &Breadboard::updateKeybinding);
-	connect(m_device_configurations, &DeviceConfigurations::configChanged, this, &Breadboard::updateConfig);
-	connect(m_device_configurations, &DeviceConfigurations::pinsChanged, this, &Breadboard::updatePins);
+	m_device_configuration = new DeviceConfiguration(this);
+	connect(m_device_configuration, &DeviceConfiguration::keysChanged, this, &Breadboard::updateKeybinding);
+	connect(m_device_configuration, &DeviceConfiguration::configChanged, this, &Breadboard::updateConfig);
+	connect(m_device_configuration, &DeviceConfiguration::pinsChanged, this, &Breadboard::updatePins);
 	m_error_dialog = new QErrorMessage(this);
 
 	m_bb_menu = new QMenu(this);
@@ -284,7 +284,7 @@ void Breadboard::scaleActiveDevice() {
 	m_menu_device_id = "";
 }
 
-void Breadboard::openDeviceConfigurations() {
+void Breadboard::openDeviceConfiguration() {
 	auto device = m_devices.find(m_menu_device_id);
 	if(device == m_devices.end()) {
 		m_error_dialog->showMessage("Could not find device");
@@ -292,10 +292,10 @@ void Breadboard::openDeviceConfigurations() {
 		return;
 	}
 	m_lua_access.lock();
-	if(device->second->m_conf) m_device_configurations->setConfig(m_menu_device_id, device->second->m_conf->getConfig());
-	else m_device_configurations->hideConfig();
-	if(device->second->m_input) m_device_configurations->setKeys(m_menu_device_id, device->second->m_input->getKeys());
-	else m_device_configurations->hideKeys();
+	if(device->second->m_conf) m_device_configuration->setConfig(m_menu_device_id, device->second->m_conf->getConfig());
+	else m_device_configuration->hideConfig();
+	if(device->second->m_input) m_device_configuration->setKeys(m_menu_device_id, device->second->m_input->getKeys());
+	else m_device_configuration->hideKeys();
 	m_lua_access.unlock();
 	if(device->second->m_pin) {
 		Device::PIN_Interface::DevicePin sync = numeric_limits<Device::PIN_Interface::DevicePin>::max();
@@ -303,12 +303,14 @@ void Breadboard::openDeviceConfigurations() {
 		if(sync_pin != m_pin_channels.end()) {
 			sync = sync_pin->second.device_pin;
 		}
-		m_device_configurations->setPins(m_menu_device_id, getPinsToDevicePins(m_menu_device_id), sync);
+		m_device_configuration->setPins(m_menu_device_id, getPinsToDevicePins(m_menu_device_id), sync);
 	}
-	else m_device_configurations->hidePins();
+	else {
+		m_device_configuration->hidePins();
+	}
 
 	m_menu_device_id = "";
-	m_device_configurations->exec();
+	m_device_configuration->exec();
 }
 
 void Breadboard::updateKeybinding(const DeviceID& device_id, Keys keys) {
