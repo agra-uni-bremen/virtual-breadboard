@@ -54,8 +54,8 @@ public:
 		PIN_Interface_Lua(luabridge::LuaRef& ref);
 		~PIN_Interface_Lua();
 		PinLayout getPinLayout() override;
-		gpio::Tristate getPin(PinNumber num) override;
-		void setPin(PinNumber num, gpio::Tristate val) override;
+		gpio::Tristate getPin(DevicePin num) override;
+		void setPin(DevicePin num, gpio::Tristate val) override;
 		static bool implementsInterface(const luabridge::LuaRef& ref);
 	};
 

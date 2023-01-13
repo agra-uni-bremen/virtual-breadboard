@@ -3,8 +3,8 @@
 #include <cmath>
 
 RGB::RGB(const DeviceID& id) : CDevice(id) {
-    m_pin = std::make_unique<RGB_Pin>(this);
-    m_layout = Layout{1, 1, "rgba"};
+	m_pin = std::make_unique<RGB_Pin>(this);
+	m_layout = Layout{3, 1, "rgba"};
 }
 
 RGB::~RGB() = default;
@@ -14,14 +14,14 @@ const DeviceClass RGB::getClass() const { return m_classname; }
 /* Graph */
 
 void RGB::initializeBuffer() {
-	for(PinNumber num=0; num<=2; num++) {
+	for(PIN_Interface::DevicePin num=0; num<=2; num++) {
 		draw(0, false);
 	}
 }
 
-void RGB::draw(PinNumber num, bool val) {
+void RGB::draw(PIN_Interface::DevicePin num, bool val) {
 	if(num > 2) { return; }
-	int extent_center = std::ceil(m_buffer.width() / (float)2);
+	int extent_center = std::ceil(m_buffer.height() / (float)2);
 	Pixel cur = getPixel(extent_center, extent_center);
 	if(num == 0) cur.r = val?255:0;
 	else if(num == 1) cur.g = val?255:0;
@@ -47,13 +47,13 @@ void RGB::draw(PinNumber num, bool val) {
 /* PIN */
 
 RGB::RGB_Pin::RGB_Pin(CDevice* device) : CDevice::PIN_Interface_C(device) {
-    m_pinLayout = PinLayout();
-	m_pinLayout.emplace(0, PinDesc{PinDesc::Dir::input, "r"});
-	m_pinLayout.emplace(1, PinDesc{PinDesc::Dir::input, "g"});
-	m_pinLayout.emplace(2, PinDesc{PinDesc::Dir::input, "b"});
+	m_pinLayout = PinLayout();
+	m_pinLayout.emplace(0, PinDesc{.dir=Dir::input, .name="r", .row=0, .index=0});
+	m_pinLayout.emplace(1, PinDesc{.dir=Dir::input, .name="g", .row=1, .index=0});
+	m_pinLayout.emplace(2, PinDesc{.dir=Dir::input, .name="b", .row=2, .index=0});
 }
 
-void RGB::RGB_Pin::setPin(PinNumber num, gpio::Tristate val) {
+void RGB::RGB_Pin::setPin(DevicePin num, gpio::Tristate val) {
 	if(num <= 2) {
 		auto rgb_device = static_cast<RGB*>(m_device);
 		rgb_device->draw(num, val == gpio::Tristate::HIGH);

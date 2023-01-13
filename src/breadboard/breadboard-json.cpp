@@ -10,8 +10,8 @@ constexpr bool debug_logging = false;
 /* JSON */
 
 void Breadboard::setBackground(QString path) {
-    m_bkgnd_path = path;
-    m_bkgnd = QPixmap(m_bkgnd_path);
+	m_bkgnd_path = path;
+	m_bkgnd = QPixmap(m_bkgnd_path);
 	updateBackground();
 	setAutoFillBackground(true);
 }
@@ -29,34 +29,15 @@ void Breadboard::additionalLuaDir(const string& additional_device_dir, bool over
 	}
 }
 
-bool Breadboard::loadConfigFile(const QString& file) {
-    QFile confFile(file);
-    if (!confFile.open(QIODevice::ReadOnly)) {
-        std::cerr << "[Breadboard] Could not open config file " << std::endl;
-        return false;
-    }
+void Breadboard::fromJSON(QJsonObject json) {
+	if(json.contains("window") && json["window"].isObject()) {
+		QJsonObject window = json["window"].toObject();
+		unsigned windowsize_x = window["windowsize"].toArray().at(0).toInt();
+		unsigned windowsize_y = window["windowsize"].toArray().at(1).toInt();
 
-    QByteArray raw_file = confFile.readAll();
-    QJsonParseError error;
-    QJsonDocument json_doc = QJsonDocument::fromJson(raw_file, &error);
-    if(json_doc.isNull())
-    {
-        std::cerr << "[Breadboard] Config seems to be invalid: ";
-        std::cerr << error.errorString().toStdString() << std::endl;
-        return false;
-    }
-    QJsonObject json = json_doc.object();
-
-    clear();
-
-    if(json.contains("window") && json["window"].isObject()) {
-        QJsonObject window = json["window"].toObject();
-        unsigned windowsize_x = window["windowsize"].toArray().at(0).toInt();
-        unsigned windowsize_y = window["windowsize"].toArray().at(1).toInt();
-
-        setMinimumSize(windowsize_x, windowsize_y);
-        setBackground(window["background"].toString());
-    }
+		setMinimumSize(windowsize_x, windowsize_y);
+		setBackground(window["background"].toString());
+	}
 
 	if(json.contains("devices") && json["devices"].isArray()) {
 		QJsonArray device_descriptions = json["devices"].toArray();
@@ -65,10 +46,22 @@ bool Breadboard::loadConfigFile(const QString& file) {
 			cout << "[Breadboard] reserving space for " << device_descriptions.count() << " devices." << endl;
 		for(const auto& device_description : device_descriptions) {
 			QJsonObject device_desc = device_description.toObject();
+			if(!device_desc.contains("id") || !device_desc["id"].isString() || !device_desc.contains("graphics") || !device_desc["graphics"].isObject()) {
+				cerr << "[Breadboard] Config misses information/malformed for a device" << endl;
+				continue;
+			}
 			const string& classname = device_desc["class"].toString("undefined").toStdString();
-			const string& id = device_desc["id"].toString("undefined").toStdString();
+			const string& id = device_desc["id"].toString().toStdString();
 			QJsonObject graphics = device_desc["graphics"].toObject();
+			if(!graphics.contains("offs") || !graphics["offs"].isArray()) {
+				cerr << "[Breadboard] Config misses position of a device" << endl;
+				continue;
+			}
 			const QJsonArray offs_desc = graphics["offs"].toArray();
+			if(offs_desc.size() != 2) {
+				cerr << "[Breadboard] Config misses position of a device" << endl;
+				continue;
+			}
 			QPoint offs(offs_desc[0].toInt(), offs_desc[1].toInt());
 
 			if(!addDevice(classname, getDistortedPosition(offs), id)) {
@@ -78,42 +71,34 @@ bool Breadboard::loadConfigFile(const QString& file) {
 			auto device = m_devices.find(id);
 			if(device == m_devices.end()) continue;
 
+			m_lua_access.lock();
 			device->second->fromJSON(device_desc);
-
-			if(device_desc.contains("spi") && device_desc["spi"].isObject()) {
-				const QJsonObject spi = device_desc["spi"].toObject();
-				if(!spi.contains("cs_pin")) {
-					cerr << "[Breadboard] config for device '" << classname << "' sets"
-							" an SPI interface, but does not set a cs_pin." << endl;
-					continue;
-				}
-				const gpio::PinNumber cs = spi["cs_pin"].toInt();
-				const bool noresponse = spi["noresponse"].toBool(true);
-				registerSPI(cs, noresponse, device->second.get());
-			}
+			m_lua_access.unlock();
 
 			if(device_desc.contains("pins") && device_desc["pins"].isArray()) {
-				QJsonArray pin_descriptions = device_desc["pins"].toArray();
-				for (const auto& pin_desc : pin_descriptions) {
-					const QJsonObject pin = pin_desc.toObject();
-					if(!pin.contains("device_pin") ||
-							!pin.contains("global_pin")) {
-						cerr << "[Breadboard] config for device '" << classname << "' is"
-								" missing device_pin or global_pin mappings" << endl;
+				QJsonArray device_connections = device_desc["pins"].toArray();
+				for(const auto& device_connection : device_connections) {
+					QJsonObject connection_obj = device_connection.toObject();
+					if(!connection_obj.contains("device_pin") || !connection_obj.contains("global_pin")) {
+						cerr << "[Breadboard] JSON entry for a connection is missing device pin or global pin" << endl;
 						continue;
 					}
-					const gpio::PinNumber device_pin = pin["device_pin"].toInt();
-					const gpio::PinNumber global_pin = pin["global_pin"].toInt();
-					const bool synchronous = pin["synchronous"].toBool(false);
-					const string pin_name = pin["name"].toString("undef").toStdString();
-
-					registerPin(synchronous, device_pin, global_pin, pin_name, device->second.get());
+					gpio::PinNumber global = connection_obj["global_pin"].toInt();
+					Device::PIN_Interface::DevicePin device_pin = connection_obj["device_pin"].toInt();
+					string name = connection_obj["name"].toString("undefined").toStdString();
+					bool sync = connection_obj["synchronous"].toBool(false);
+					addPinToDevicePin(id, device_pin, global, name);
+					if(sync) setPinSync(global, device_pin, id, true);
+					if(connection_obj.contains("spi_noresponse") && connection_obj["spi_noresponse"].isBool()) {
+						setSPInoresponse(global, connection_obj["spi_noresponse"].toBool());
+					}
 				}
 			}
 		}
 
 		if(debug_logging) {
 			cout << "Instatiated devices:" << endl;
+			m_lua_access.lock();
 			for (auto& [id, device] : m_devices) {
 				cout << "\t" << id << " of class " << device->getClass() << endl;
 				cout << "\t minimum buffer size " << device->getBuffer().width() << "x" << device->getBuffer().height() << " pixel." << endl;
@@ -125,35 +110,14 @@ bool Breadboard::loadConfigFile(const QString& file) {
 				if(device->m_conf)
 					cout << "\t\timplements conf" << endl;
 			}
+			m_lua_access.unlock();
 
-			cout << "Active pin connections:" << endl;
-			cout << "\tReading (async): " << m_reading_connections.size() << endl;
-			for(auto& conn : m_reading_connections){
-				cout << "\t\t" << conn.dev->getID() << " (" << conn.name << "): global pin " << (int)conn.global_pin <<
-						" to device pin " << (int)conn.device_pin << endl;
-			}
-			cout << "\tReading (synchronous): " << m_pin_channels.size() << endl;
-			for(auto& conn : m_pin_channels){
-				cout << "\t\t" << conn.first << ": global pin " << (int)conn.second.global_pin << endl;
-			}
-			cout << "\tWriting: " << m_writing_connections.size() << endl;
-			for(auto& conn : m_writing_connections){
-				cout << "\t\t" << conn.dev->getID() << " (" << conn.name << "): device pin " << (int)conn.device_pin <<
-						" to global pin " << (int)conn.global_pin << endl;
-			}
+			printConnections();
 		}
 	}
-
-	return true;
 }
 
-bool Breadboard::saveConfigFile(const QString& file) {
-	QFile confFile(file);
-	if(!confFile.open(QIODevice::WriteOnly)) {
-		cerr << "[Breadboard] Could not open config file" << endl;
-		cerr << confFile.errorString().toStdString() << endl;
-		return false;
-	}
+QJsonObject Breadboard::toJSON() {
 	QJsonObject current_state;
 	if(!isBreadboard()) {
 		QJsonObject window;
@@ -165,49 +129,27 @@ bool Breadboard::saveConfigFile(const QString& file) {
 		current_state["window"] = window;
 	}
 	QJsonArray devices_json;
-	for(auto const& [id, device] : m_devices) {
+	for(const auto& [id, device] : m_devices) {
+		m_lua_access.lock();
 		QJsonObject dev_json = device->toJSON();
-		auto spi = m_spi_channels.find(id);
-		if(spi != m_spi_channels.end()) {
-			QJsonObject spi_json;
-			spi_json["cs_pin"] = (int) spi->second.global_pin;
-			spi_json["noresponse"] = spi->second.noresponse;
-			dev_json["spi"] = spi_json;
-		}
+		m_lua_access.unlock();
+		unordered_map<Device::PIN_Interface::DevicePin, gpio::PinNumber> pins = getPinsToDevicePins(id);
 		QJsonArray pins_json;
-		for(PinMapping w : m_writing_connections) {
-			if(w.dev->getID() == id) {
-				QJsonObject pin_json;
-				pin_json["device_pin"] = (int) w.device_pin;
-				pin_json["global_pin"] = (int) w.global_pin;
-				pin_json["name"] = QString::fromStdString(w.name);
-				pins_json.append(pin_json);
-			}
-		}
-		for(PinMapping w : m_reading_connections) {
-			if(w.dev->getID() == id) {
-				QJsonObject pin_json;
-				pin_json["device_pin"] = (int) w.device_pin;
-				pin_json["global_pin"] = (int) w.global_pin;
-				pin_json["name"] = QString::fromStdString(w.name);
-				pins_json.append(pin_json);
-			}
-		}
-		auto pin = m_pin_channels.find(id);
-		if(pin != m_pin_channels.end()) {
+		auto sync_pin = m_pin_channels.find(id);
+		for(const auto& [device_pin, global] : pins) {
+			if(!m_embedded->isPin(global)) continue;
 			QJsonObject pin_json;
-			pin_json["synchronous"] = true;
-			pin_json["device_pin"] = pin->second.device_pin;
-			pin_json["global_pin"] = pin->second.global_pin;
+			pin_json["global_pin"] = global;
+			pin_json["device_pin"] = (int) device_pin;
+			pin_json["name"] = QString::fromStdString(getPinName(global));
+			if(sync_pin!=m_pin_channels.end() && sync_pin->second.global_pin==global) {
+				pin_json["synchronous"] = true;
+			}
 			pins_json.append(pin_json);
 		}
-		if(!pins_json.empty()) {
-			dev_json["pins"] = pins_json;
-		}
+		dev_json["pins"] = pins_json;
 		devices_json.append(dev_json);
 	}
 	current_state["devices"] = devices_json;
-	QJsonDocument doc(current_state);
-	confFile.write(doc.toJson());
-	return true;
+	return current_state;
 }

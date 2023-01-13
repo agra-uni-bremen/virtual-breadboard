@@ -18,16 +18,16 @@ using luabridge::LuaResult;
 
 LuaDevice::LuaDevice(const DeviceID& id, LuaRef env, lua_State* l) : Device(id), m_env(env), L(l){
 	if(PIN_Interface_Lua::implementsInterface(m_env)) {
-        m_pin = std::make_unique<PIN_Interface_Lua>(m_env);
+		m_pin = std::make_unique<PIN_Interface_Lua>(m_env);
 	}
 	if(SPI_Interface_Lua::implementsInterface(m_env)) {
-        m_spi = std::make_unique<SPI_Interface_Lua>(m_env);
+		m_spi = std::make_unique<SPI_Interface_Lua>(m_env);
 	}
 	if(Config_Interface_Lua::implementsInterface(m_env)) {
-        m_conf = std::make_unique<Config_Interface_Lua>(m_env);
+		m_conf = std::make_unique<Config_Interface_Lua>(m_env);
 	}
 	if(Input_Interface_Lua::implementsInterface(m_env)) {
-        m_input = std::make_unique<Input_Interface_Lua>(m_env);
+		m_input = std::make_unique<Input_Interface_Lua>(m_env);
 	}
 
 	if(implementsGraphFunctions()) {
@@ -102,11 +102,11 @@ void LuaDevice::declarePixelFormat(lua_State* L) {
 		luabridge::getGlobalNamespace(L)
 			.beginNamespace("graphbuf")
 			  .beginClass <Pixel> ("Pixel")
-			    .addConstructor (+[](void* ptr, const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a) { return new (ptr) Pixel{r,g,b,a};})
-			    .addProperty ("r", &Pixel::r)
-			    .addProperty ("g", &Pixel::g)
-			    .addProperty ("b", &Pixel::b)
-			    .addProperty ("a", &Pixel::a)
+				.addConstructor (+[](void* ptr, const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a) { return new (ptr) Pixel{r,g,b,a};})
+				.addProperty ("r", &Pixel::r)
+				.addProperty ("g", &Pixel::g)
+				.addProperty ("b", &Pixel::b)
+				.addProperty ("a", &Pixel::a)
 			  .endClass ()
 			.endNamespace()
 		;
@@ -170,11 +170,11 @@ LuaDevice::PIN_Interface_Lua::~PIN_Interface_Lua() = default;
 bool LuaDevice::PIN_Interface_Lua::implementsInterface(const luabridge::LuaRef& ref) {
 	// TODO: Better checks
 	return ref["getPinLayout"].isFunction() &&
-	       (ref["getPin"].isFunction() ||
-	        ref["setPin"].isFunction());
+		   (ref["getPin"].isFunction() ||
+			ref["setPin"].isFunction());
 }
 
-PinLayout LuaDevice::PIN_Interface_Lua::getPinLayout() {
+Device::PIN_Interface::PinLayout LuaDevice::PIN_Interface_Lua::getPinLayout() {
 	PinLayout ret;
 	LuaResult r = m_getPinLayout();
 	//cout << r.size() << " elements in pinlayout" << endl;
@@ -189,33 +189,48 @@ PinLayout LuaDevice::PIN_Interface_Lua::getPinLayout() {
 			continue;
 		}
 		//cout << "\tElement " << i << ": " << r[i] << " with length " << r[i].length() << endl;
-		if(r[i].length() < 2 || r[i].length() > 3) {
+		if(r[i].length() < 4 || r[i].length() > 5) {
 			cerr << "[LuaDevice] Pin layout element " << i << " (" << r[i] << ") is malformed" << endl;
 			continue;
 		}
 		PinDesc desc;
-		const auto maybe_number = r[i][1].cast<PinNumber>();
+		const auto maybe_number = r[i][1].cast<DevicePin>();
 		if(!maybe_number) {
 			cerr << "[LuaDevice] Pin layout element " << i << " (" << r[i] << ") has invalid pin number" << endl;
 			continue;
 		}
 		const auto number = maybe_number.value();
 		desc.name = "undef";
-		if(r[i].length() == 3)
-			desc.name = r[i][3].tostring();
+		if(r[i].length() == 5)
+			desc.name = r[i][5].tostring();
 
 		const string direction_raw = r[i][2];
 		if(direction_raw == "input") {
-			desc.dir = PinDesc::Dir::input;
+			desc.dir = Dir::input;
 		} else if(direction_raw == "output") {
-			desc.dir = PinDesc::Dir::output;
+			desc.dir = Dir::output;
 		} else if(direction_raw == "inout") {
-			desc.dir = PinDesc::Dir::inout;
+			desc.dir = Dir::inout;
 		} else {
 			// TODO: Add PWM input here? Or better, lua script has to cope with ratios
 			cerr << "[LuaDevice] Pin layout element " << i << " (" << r[i] << "), direction " << direction_raw << " is malformed" << endl;
 			continue;
 		}
+
+		const auto maybe_row = r[i][3].cast<DeviceRow>();
+		if(!maybe_row) {
+			cerr << "[LuaDevice] Pin Layout element " << i << " (" << r[i] << ") has invalid row number" << endl;
+			cerr << maybe_row << endl;
+			continue;
+		}
+		desc.row = maybe_row.value();
+
+		const auto maybe_index = r[i][4].cast<DeviceIndex>();
+		if(!maybe_index) {
+			cerr << "[LuaDevice] Pin Layout element " << i << " (" << r[i] << ") has invalid index number" << endl;
+			continue;
+		}
+		desc.index =  maybe_index.value();
 		//cout << "Mapping Device's pin " << number << " (" << desc.name << ")" << endl;
 		ret.emplace(number, desc);
 	}
@@ -223,7 +238,7 @@ PinLayout LuaDevice::PIN_Interface_Lua::getPinLayout() {
 }
 
 
-gpio::Tristate LuaDevice::PIN_Interface_Lua::getPin(PinNumber num) {
+gpio::Tristate LuaDevice::PIN_Interface_Lua::getPin(DevicePin num) {
 	const LuaResult r = m_getPin(num);
 	if(!r || !r[0].isString()) {
 		cerr << "[LuaDevice] Device getPin returned malformed output: " << r.errorMessage() << endl;
@@ -237,7 +252,7 @@ gpio::Tristate LuaDevice::PIN_Interface_Lua::getPin(PinNumber num) {
 	return gpio::Tristate::UNSET;
 }
 
-void LuaDevice::PIN_Interface_Lua::setPin(PinNumber num, gpio::Tristate val) {
+void LuaDevice::PIN_Interface_Lua::setPin(DevicePin num, gpio::Tristate val) {
 	const LuaResult r = m_setPin(num, val == gpio::Tristate::HIGH ? true : false);
 	if(!r) {
 		cerr << "[LuaDevice] Device setPin error: " << r.errorMessage() << endl;

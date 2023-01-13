@@ -18,7 +18,7 @@ public:
 	class Button_PIN : public CDevice::PIN_Interface_C {
 	public:
 		Button_PIN(CDevice* device);
-		gpio::Tristate getPin(PinNumber num) override;
+		gpio::Tristate getPin(DevicePin num) override;
 	};
 
 	class Button_Input : public CDevice::Input_Interface_C {

@@ -1,9 +1,9 @@
 #include "oled.h"
 
 OLED::OLED(const DeviceID& id) : CDevice(id) {
-    m_pin = std::make_unique<OLED_PIN>(this);
-    m_spi = std::make_unique<OLED_SPI>(this);
-    m_layout = Layout{11, 6, "rgba"};
+	m_pin = std::make_unique<OLED_PIN>(this);
+	m_spi = std::make_unique<OLED_SPI>(this);
+	m_layout = Layout{11, 6, "rgba"};
 }
 OLED::~OLED() = default;
 
@@ -27,11 +27,12 @@ void OLED::initializeBuffer() {
 /* PIN Interface */
 
 OLED::OLED_PIN::OLED_PIN(CDevice* device) : CDevice::PIN_Interface_C(device) {
-    m_pinLayout = PinLayout();
-	m_pinLayout.emplace(1, PinDesc{PinDesc::Dir::input, "data_command"});
+	m_pinLayout = PinLayout();
+	m_pinLayout.emplace(1, PinDesc{.dir = Dir::input, .name = "data_command", .row = 0, .index=0});
+	m_pinLayout.emplace(2, PinDesc{.dir = Dir::input, .name = "cs", .row = 1, .index = 0});
 }
 
-void OLED::OLED_PIN::setPin(PinNumber num, gpio::Tristate val) {
+void OLED::OLED_PIN::setPin(DevicePin num, gpio::Tristate val) {
 	if(num == 1) {
 		auto oled_device = static_cast<OLED*>(m_device);
 		oled_device->m_is_data = val == gpio::Tristate::HIGH;

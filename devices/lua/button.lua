@@ -1,7 +1,8 @@
 classname = "button_lua"
 
 function getPinLayout ()
-	return {1, "output", "output"}
+	-- number, [input | output | inout], row on device, index on device, name
+	return {1, "output", 0, 0, "output"}
 end
 
 active_low = true
