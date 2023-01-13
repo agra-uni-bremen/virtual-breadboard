@@ -5,7 +5,7 @@
 
 using namespace std;
 
-constexpr bool debug_logging = true;
+constexpr bool debug_logging = false;
 
 /* JSON */
 
