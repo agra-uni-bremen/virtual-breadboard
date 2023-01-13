@@ -3,7 +3,7 @@
 #include <QVBoxLayout>
 
 DeviceConfiguration::DeviceConfiguration(QWidget *parent) : QDialog(parent) {
-	setWindowTitle("Device Configurations");
+	setWindowTitle("Device Configuration");
 
 	connect(this, &QDialog::finished, this, &DeviceConfiguration::hide);
 
