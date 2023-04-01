@@ -7,6 +7,7 @@ If you are using the Virtual Breadboard GUI in a scientific paper, please cite t
 It features a TCP protocol that connects GPIO-Modules of virtual Processors to this interactive GUI.
 Devices can be modelled in either C++ or Lua for the speed/flexibility tradeoff.
 
+![modelling_vp+vpbb](https://user-images.githubusercontent.com/7480344/229265789-5615a221-dc32-4719-a3ee-913c28d9a017.png)
 
 #### 1) HowTo Use
 
