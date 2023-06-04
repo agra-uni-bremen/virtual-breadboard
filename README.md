@@ -9,6 +9,13 @@ Devices can be modelled in either C++ or Lua for the speed/flexibility tradeoff.
 
 ![modelling_vp+vpbb](https://user-images.githubusercontent.com/7480344/229265789-5615a221-dc32-4719-a3ee-913c28d9a017.png)
 
+In this architecture overview, the **vp-breadboard** is the off-chip simulator, contained in this repo.
+The bi-directional protocol is specified in a [submodule](https://github.com/agra-uni-bremen/virtual-breadboard-protocol).
+The **riscv-vp** is an SoC simulator in one of the available configurations (currently the `hifive1` mode).
+Example software (SW) that runs on the SoC can be found in [this repo](https://github.com/agra-uni-bremen/sifive-hifive1).
+
+
+
 #### 1) HowTo Use
 
 This repo contains some example environments (`.json` configuration files) and loads an OLED screen with some buttons per default.
